@@ -63,13 +63,8 @@ export default async function HomePage() {
             <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">
               <Link href="/routes/submit">Submit a Route</Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white/10"
-            >
-              <Link href="/routes">Browse Routes</Link>
+            <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">
+              <Link href="/routes">Submit an FKT Attempt</Link>
             </Button>
           </div>
         </div>
