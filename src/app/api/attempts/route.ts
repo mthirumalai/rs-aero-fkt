@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { s3Client, GPX_BUCKET } from "@/lib/s3";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { GPX_BUCKET } from "@/lib/s3";
+import { readFileContent } from "@/lib/storage";
 import { parseGpxXml } from "@/lib/gpx/parser";
 import { validateGpxTrack } from "@/lib/gpx/validator";
 import { computeSog, computeAvgMaxSog } from "@/lib/gpx/sog";
@@ -44,15 +44,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Route not found or not approved" }, { status: 404 });
   }
 
-  // Fetch GPX from S3
+  // Fetch GPX from S3 (or local filesystem in dev)
   let gpxXml: string;
   try {
-    const obj = await s3Client.send(
-      new GetObjectCommand({ Bucket: GPX_BUCKET, Key: gpxS3Key })
-    );
-    gpxXml = await obj.Body!.transformToString();
+    gpxXml = await readFileContent(GPX_BUCKET, gpxS3Key);
   } catch {
-    return NextResponse.json({ error: "Failed to fetch GPX file from S3" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch GPX file" }, { status: 500 });
   }
 
   // Parse and validate GPX

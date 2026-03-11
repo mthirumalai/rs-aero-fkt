@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getPresignedUploadUrl, GPX_BUCKET, PHOTOS_BUCKET } from "@/lib/s3";
+import { GPX_BUCKET, PHOTOS_BUCKET } from "@/lib/s3";
+import { getUploadUrl } from "@/lib/storage";
 import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
@@ -23,13 +24,13 @@ export async function POST(req: NextRequest) {
 
   if (type === "gpx") {
     bucket = GPX_BUCKET;
-    maxSize = 10 * 1024 * 1024; // 10MB
+    maxSize = 10 * 1024 * 1024;
     if (!["application/gpx+xml", "application/xml", "text/xml", "application/octet-stream"].includes(contentType)) {
       return NextResponse.json({ error: "Invalid GPX content type" }, { status: 400 });
     }
   } else if (type === "photo") {
     bucket = PHOTOS_BUCKET;
-    maxSize = 5 * 1024 * 1024; // 5MB
+    maxSize = 5 * 1024 * 1024;
     if (!contentType.startsWith("image/")) {
       return NextResponse.json({ error: "Invalid photo content type" }, { status: 400 });
     }
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid upload type" }, { status: 400 });
   }
 
-  const uploadUrl = await getPresignedUploadUrl(bucket, key, contentType);
+  const uploadUrl = await getUploadUrl(bucket, key, contentType);
 
   return NextResponse.json({ uploadUrl, key, maxSize });
 }

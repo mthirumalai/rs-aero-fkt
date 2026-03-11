@@ -1,12 +1,16 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
-const sesClient = new SESClient({
-  region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
+const IS_LOCAL_DEV = process.env.USE_LOCAL_DEV === "true";
+
+const sesClient = IS_LOCAL_DEV
+  ? null
+  : new SESClient({
+      region: process.env.AWS_REGION!,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      },
+    });
 
 export async function sendRouteApprovalEmail(params: {
   routeId: string;
@@ -19,6 +23,22 @@ export async function sendRouteApprovalEmail(params: {
   const { routeId, routeName, submitterName, submitterEmail, approvalToken, baseUrl } = params;
   const approveUrl = `${baseUrl}/admin/approve-route?token=${approvalToken}`;
   const rejectUrl = `${baseUrl}/admin/approve-route?token=${approvalToken}&action=reject`;
+
+  if (IS_LOCAL_DEV) {
+    console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║  [LOCAL DEV] Route approval email (not actually sent)        ║
+╠══════════════════════════════════════════════════════════════╣
+║  Route:     ${routeName}
+║  Submitted: ${submitterName} (${submitterEmail})
+║  Route ID:  ${routeId}
+╠══════════════════════════════════════════════════════════════╣
+║  APPROVE → ${approveUrl}
+║  REJECT  → ${rejectUrl}
+╚══════════════════════════════════════════════════════════════╝
+`);
+    return;
+  }
 
   const html = `
     <h2>New Route Submission: ${routeName}</h2>
@@ -47,7 +67,7 @@ Reject: ${rejectUrl}
 This link can only be used once.
   `.trim();
 
-  await sesClient.send(
+  await sesClient!.send(
     new SendEmailCommand({
       Source: process.env.SES_FROM_EMAIL!,
       Destination: { ToAddresses: [process.env.ADMIN_EMAIL!] },

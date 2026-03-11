@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { RouteMap } from "@/components/map/RouteMap";
 import { FktAttemptsTable } from "@/components/tables/FktAttemptsTable";
-import { getPhotoUrl } from "@/lib/s3";
+import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
 
 interface Props {
   params: { routeId: string };

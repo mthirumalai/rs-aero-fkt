@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getPresignedDownloadUrl, GPX_BUCKET } from "@/lib/s3";
+import { GPX_BUCKET } from "@/lib/s3";
+import { getDownloadUrl } from "@/lib/storage";
 
 export async function GET(
   _req: NextRequest,
@@ -15,6 +16,6 @@ export async function GET(
     return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
   }
 
-  const url = await getPresignedDownloadUrl(GPX_BUCKET, attempt.gpxS3Key);
+  const url = await getDownloadUrl(GPX_BUCKET, attempt.gpxS3Key);
   return NextResponse.json({ url });
 }

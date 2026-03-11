@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/gpx/parser";
-import { getPhotoUrl } from "@/lib/s3";
+import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
 import { TrackPlayback } from "@/components/playback/TrackPlayback";
 
 interface Props {
