@@ -2,7 +2,22 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Google from "next-auth/providers/google";
 import Apple from "next-auth/providers/apple";
+import type { EmailConfig } from "@auth/core/providers/email";
 import { prisma } from "@/lib/prisma";
+import { sendMagicLinkEmail } from "@/lib/email/ses";
+
+const emailProvider: EmailConfig = {
+  id: "email",
+  type: "email",
+  name: "Email",
+  from: process.env.SES_FROM_EMAIL ?? "noreply@rsaerofkt.com",
+  server: "",
+  maxAge: 24 * 60 * 60, // 24 hours
+  sendVerificationRequest: async ({ identifier: email, url }) => {
+    await sendMagicLinkEmail({ email, url });
+  },
+  options: {},
+};
 
 const providers = [
   Google({
@@ -16,6 +31,7 @@ const providers = [
         clientSecret: process.env.APPLE_CLIENT_SECRET!,
       })]
     : []),
+  emailProvider,
 ];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -32,6 +48,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
+  },
+  pages: {
+    verifyRequest: "/auth/verify",
   },
 });
 

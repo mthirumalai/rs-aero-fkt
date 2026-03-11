@@ -12,6 +12,54 @@ const sesClient = IS_LOCAL_DEV
       },
     });
 
+export async function sendMagicLinkEmail(params: {
+  email: string;
+  url: string;
+}): Promise<void> {
+  const { email, url } = params;
+
+  if (IS_LOCAL_DEV) {
+    console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║  [LOCAL DEV] Magic link email (not actually sent)            ║
+╠══════════════════════════════════════════════════════════════╣
+║  To:   ${email}
+╠══════════════════════════════════════════════════════════════╣
+║  Sign-in link (click or paste into browser):
+║  ${url}
+╚══════════════════════════════════════════════════════════════╝
+`);
+    return;
+  }
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#e91e63">Sign in to RS Aero FKT</h2>
+      <p>Click the button below to sign in. This link expires in 24 hours and can only be used once.</p>
+      <p style="margin:32px 0">
+        <a href="${url}" style="background:#e91e63;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;font-weight:600;display:inline-block">
+          Sign in to RS Aero FKT
+        </a>
+      </p>
+      <p style="color:#666;font-size:13px">If you didn't request this email you can safely ignore it.</p>
+    </div>
+  `;
+
+  await sesClient!.send(
+    new SendEmailCommand({
+      Source: process.env.SES_FROM_EMAIL!,
+      Destination: { ToAddresses: [email] },
+      Message: {
+        Subject: { Data: "Sign in to RS Aero FKT" },
+        Body: {
+          Html: { Data: html },
+          Text: { Data: `Sign in to RS Aero FKT:\n\n${url}\n\nThis link expires in 24 hours.` },
+        },
+      },
+    })
+  );
+}
+
 export async function sendRouteApprovalEmail(params: {
   routeId: string;
   routeName: string;
