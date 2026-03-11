@@ -56,7 +56,7 @@ export default async function RouteDetailPage({ params }: Props) {
             )}
           </div>
         </div>
-        <Button asChild className="bg-sky-700 hover:bg-sky-800">
+        <Button asChild className="bg-primary hover:bg-primary">
           <Link href={`/routes/${route.id}/submit-fkt`}>Submit an FKT</Link>
         </Button>
       </div>
@@ -97,7 +97,7 @@ export default async function RouteDetailPage({ params }: Props) {
               <span className="text-muted-foreground">Submitted by: </span>
               <Link
                 href={`/athletes/${route.submittedBy.id}`}
-                className="font-medium text-sky-700 hover:underline"
+                className="font-medium text-primary hover:underline"
               >
                 {route.submittedBy.name}
               </Link>

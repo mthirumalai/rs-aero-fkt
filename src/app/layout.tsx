@@ -1,11 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Bebas_Neue, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { SessionProvider } from "@/components/SessionProvider";
 import { auth } from "@/lib/auth";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["300", "400", "600", "700"],
+});
+
+const bebasNeue = Bebas_Neue({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: "400",
+});
 
 export const metadata: Metadata = {
   title: "RS Aero FKT — Fastest Known Times for Sailing",
@@ -20,7 +30,7 @@ export default async function RootLayout({
 }) {
   const session = await auth();
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${sourceSans.variable} ${bebasNeue.variable}`}>
       <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
         <SessionProvider session={session}>
           <Nav />

@@ -118,7 +118,7 @@ export function FktAttemptsTable({ attempts }: { attempts: Attempt[] }) {
               <TableCell>
                 <Link
                   href={`/athletes/${attempt.athlete.id}`}
-                  className="text-sky-700 hover:underline"
+                  className="text-primary hover:underline"
                 >
                   {attempt.athlete.name ?? "Unknown"}
                 </Link>
@@ -136,7 +136,7 @@ export function FktAttemptsTable({ attempts }: { attempts: Attempt[] }) {
               <TableCell>
                 <Link
                   href={`/attempts/${attempt.id}`}
-                  className="text-sky-700 hover:underline text-sm"
+                  className="text-primary hover:underline text-sm"
                 >
                   View →
                 </Link>

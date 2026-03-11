@@ -31,7 +31,7 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         No FKTs recorded yet.{" "}
-        <Link href="/routes/submit" className="text-sky-600 hover:underline">
+        <Link href="/routes/submit" className="text-primary hover:underline">
           Submit the first route!
         </Link>
       </div>
@@ -57,7 +57,7 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
               <TableCell className="font-medium">
                 <Link
                   href={`/routes/${route.id}`}
-                  className="text-sky-700 hover:underline"
+                  className="text-primary hover:underline"
                 >
                   {route.name}
                 </Link>
@@ -75,7 +75,7 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
                       <div>
                         <Link
                           href={`/attempts/${fkt.attemptId}`}
-                          className="font-mono text-sm font-semibold text-sky-700 hover:underline block"
+                          className="font-mono text-sm font-semibold text-primary hover:underline block"
                         >
                           {formatDuration(fkt.durationSec)}
                         </Link>

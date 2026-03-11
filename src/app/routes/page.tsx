@@ -45,7 +45,7 @@ export default async function RoutesPage({ searchParams }: Props) {
             {region ? ` in ${REGION_LABELS[region]}` : ""}
           </p>
         </div>
-        <Button asChild className="bg-sky-700 hover:bg-sky-800">
+        <Button asChild className="bg-primary hover:bg-primary">
           <Link href="/routes/submit">Submit a Route</Link>
         </Button>
       </div>
@@ -55,7 +55,7 @@ export default async function RoutesPage({ searchParams }: Props) {
       {routes.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           No routes found.{" "}
-          <Link href="/routes/submit" className="text-sky-600 hover:underline">
+          <Link href="/routes/submit" className="text-primary hover:underline">
             Be the first to submit one!
           </Link>
         </div>
@@ -78,7 +78,7 @@ export default async function RoutesPage({ searchParams }: Props) {
                   <TableCell className="font-medium">
                     <Link
                       href={`/routes/${route.id}`}
-                      className="text-sky-700 hover:underline"
+                      className="text-primary hover:underline"
                     >
                       {route.name}
                     </Link>

@@ -162,7 +162,7 @@ export function TrackPlayback({ attemptId }: Props) {
         <div className="flex items-center gap-3">
           <button
             onClick={handlePlayPause}
-            className="bg-sky-700 hover:bg-sky-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
           >
             {isPlaying ? "⏸ Pause" : currentTimeMs >= endTimeMs ? "↺ Restart" : "▶ Play"}
           </button>
@@ -174,7 +174,7 @@ export function TrackPlayback({ attemptId }: Props) {
                 onClick={() => setSpeed(s)}
                 className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                   speed === s
-                    ? "bg-sky-700 text-white"
+                    ? "bg-primary text-white"
                     : "bg-muted hover:bg-muted/80 text-foreground"
                 }`}
               >
@@ -195,7 +195,7 @@ export function TrackPlayback({ attemptId }: Props) {
           step={0.01}
           value={progressPct}
           onChange={handleScrub}
-          className="w-full accent-sky-700"
+          className="w-full accent-primary"
         />
       </div>
     </div>

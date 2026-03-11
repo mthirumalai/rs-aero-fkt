@@ -66,7 +66,7 @@ export default async function AttemptDetailPage({ params }: Props) {
           <span className="text-muted-foreground">by</span>
           <Link
             href={`/athletes/${attempt.athlete.id}`}
-            className="text-sky-700 font-medium hover:underline"
+            className="text-primary font-medium hover:underline"
           >
             {attempt.athlete.name}
           </Link>

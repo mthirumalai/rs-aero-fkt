@@ -47,7 +47,7 @@ export default function GuidelinesPage() {
               </li>
             </ul>
             <div className="mt-4">
-              <Button asChild className="bg-sky-700 hover:bg-sky-800">
+              <Button asChild className="bg-primary hover:bg-primary">
                 <Link href="/routes/submit">Submit a Route</Link>
               </Button>
             </div>

@@ -155,7 +155,7 @@ export function FktSubmitForm({ routeId }: Props) {
           value={form.rigSize}
           onChange={(e) => update("rigSize", e.target.value)}
           required
-          className="w-full border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="w-full border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">Select rig size...</option>
           {RIG_SIZES.map((r) => (
@@ -246,7 +246,7 @@ export function FktSubmitForm({ routeId }: Props) {
       <Button
         type="submit"
         disabled={loading}
-        className="w-full bg-sky-700 hover:bg-sky-800"
+        className="w-full bg-primary hover:bg-primary"
         size="lg"
       >
         {loading ? "Submitting..." : "Submit FKT Attempt"}

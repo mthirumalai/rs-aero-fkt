@@ -50,22 +50,24 @@ export default async function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-sky-700 to-sky-900 text-white py-20 px-4">
+      <section className="bg-primary text-white py-20 px-4">
         <div className="container mx-auto max-w-3xl text-center">
-          <h1 className="text-5xl font-bold mb-4">RS Aero Fastest Known Times</h1>
-          <p className="text-xl text-sky-100 mb-8">
+          <h1 className="font-display text-7xl mb-4 tracking-widest uppercase">
+            RS Aero Fastest Known Times
+          </h1>
+          <p className="text-lg text-white/80 mb-8 font-sans">
             The definitive record of the fastest known times for RS Aero sailing routes worldwide.
             Submit your routes and GPX-verified FKT attempts across all four rig sizes.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Button asChild size="lg" className="bg-white text-sky-800 hover:bg-sky-50">
+            <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">
               <Link href="/routes/submit">Submit a Route</Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="outline"
-              className="border-white text-white hover:bg-sky-800"
+              className="border-white text-white hover:bg-white/10"
             >
               <Link href="/routes">Browse Routes</Link>
             </Button>
@@ -76,7 +78,7 @@ export default async function HomePage() {
       {/* FKT Table */}
       <section className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">All Known FKTs</h2>
+          <h2 className="font-display text-4xl tracking-wide uppercase">All Known FKTs</h2>
           <Button asChild variant="outline" size="sm">
             <Link href="/routes">All Routes →</Link>
           </Button>

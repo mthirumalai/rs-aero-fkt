@@ -27,7 +27,7 @@ export default async function SubmitFktPage({ params }: Props) {
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="mb-6">
         <p className="text-sm text-muted-foreground mb-1">
-          <a href={`/routes/${route.id}`} className="hover:underline text-sky-600">
+          <a href={`/routes/${route.id}`} className="hover:underline text-primary">
             {route.name}
           </a>{" "}
           / Submit FKT

@@ -18,7 +18,7 @@ export default async function SubmitRoutePage() {
       <p className="text-muted-foreground mb-8">
         Submit a new RS Aero sailing route. An admin will review and approve it
         before it goes live. Please read the{" "}
-        <a href="/guidelines" className="text-sky-600 hover:underline">
+        <a href="/guidelines" className="text-primary hover:underline">
           guidelines
         </a>{" "}
         before submitting.

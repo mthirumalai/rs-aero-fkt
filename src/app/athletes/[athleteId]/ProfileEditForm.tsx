@@ -74,7 +74,7 @@ export function ProfileEditForm({ userId, initialBio, initialLocation }: Props) 
         <Button
           onClick={handleSave}
           disabled={loading}
-          className="bg-sky-700 hover:bg-sky-800"
+          className="bg-primary hover:bg-primary"
           size="sm"
         >
           {loading ? "Saving..." : "Save"}

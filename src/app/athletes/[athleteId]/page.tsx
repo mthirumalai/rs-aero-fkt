@@ -113,7 +113,7 @@ export default async function AthleteProfilePage({ params }: Props) {
                 <div>
                   <Link
                     href={`/routes/${attempt.route.id}`}
-                    className="font-medium text-sky-700 hover:underline"
+                    className="font-medium text-primary hover:underline"
                   >
                     {attempt.route.name}
                   </Link>
@@ -132,7 +132,7 @@ export default async function AthleteProfilePage({ params }: Props) {
                   </p>
                   <Link
                     href={`/attempts/${attempt.id}`}
-                    className="text-xs text-sky-600 hover:underline"
+                    className="text-xs text-primary hover:underline"
                   >
                     View attempt →
                   </Link>

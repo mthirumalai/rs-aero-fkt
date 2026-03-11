@@ -125,7 +125,7 @@ export function RouteSubmitForm() {
             value={form.country}
             onChange={(e) => update("country", e.target.value)}
             required
-            className="flex-1 border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="flex-1 border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Select a country...</option>
             {sortedCountries.map(([code, name]) => (
@@ -229,7 +229,7 @@ export function RouteSubmitForm() {
       <Button
         type="submit"
         disabled={loading}
-        className="w-full bg-sky-700 hover:bg-sky-800"
+        className="w-full bg-primary hover:bg-primary"
         size="lg"
       >
         {loading ? "Submitting..." : "Submit Route for Approval"}

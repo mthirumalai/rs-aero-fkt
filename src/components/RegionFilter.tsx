@@ -33,7 +33,7 @@ export function RegionFilter({ currentRegion }: Props) {
         id="region-filter"
         value={currentRegion ?? "all"}
         onChange={handleChange}
-        className="text-sm border rounded-md px-3 py-1.5 bg-background focus:outline-none focus:ring-2 focus:ring-sky-500"
+        className="text-sm border rounded-md px-3 py-1.5 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
       >
         {regions.map((r) => (
           <option key={r.value} value={r.value}>
