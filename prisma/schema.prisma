@@ -62,13 +62,14 @@ model VerificationToken {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  image     String?
-  bio       String?
-  location  String?
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  bio           String?
+  location      String?
+  createdAt     DateTime  @default(now())
 
   accounts Account[]
   sessions Session[]

@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sailboat } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export function Nav() {
@@ -21,9 +21,8 @@ export function Nav() {
   return (
     <header className="border-b bg-white sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-sky-700">
-          <Sailboat className="h-6 w-6" />
-          RS Aero FKT
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/logo.png" alt="RS Aero FKT" width={120} height={40} className="h-10 w-auto" priority />
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
