@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RigSize {
+  AERO_5
+  AERO_6
+  AERO_7
+  AERO_9
+}
+
+enum RouteStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AttemptStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  bio       String?
+  location  String?
+  createdAt DateTime @default(now())
+
+  accounts Account[]
+  sessions Session[]
+  routes   Route[]
+  attempts FktAttempt[]
+}
+
+model Route {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
+  country       String
+  startName     String
+  endName       String
+  startLat      Float
+  startLng      Float
+  endLat        Float
+  endLng        Float
+  distanceKm    Float?
+  status        RouteStatus @default(PENDING)
+  submittedById String
+  submittedAt   DateTime    @default(now())
+  approvedAt    DateTime?
+  approvalToken String?     @unique
+
+  submittedBy User         @relation(fields: [submittedById], references: [id])
+  photos      RoutePhoto[]
+  attempts    FktAttempt[]
+}
+
+model RoutePhoto {
+  id        String   @id @default(cuid())
+  routeId   String
+  s3Key     String
+  caption   String?
+  createdAt DateTime @default(now())
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+}
+
+model FktAttempt {
+  id             String        @id @default(cuid())
+  routeId        String
+  athleteId      String
+  rigSize        RigSize
+  date           DateTime
+  durationSec    Int
+  gpxS3Key       String
+  gpxValidated   Boolean       @default(false)
+  avgSogKnots    Float?
+  maxSogKnots    Float?
+  windSpeedKnots Float?
+  windDirection  String?
+  currentNotes   String?
+  writeUp        String?
+  status         AttemptStatus @default(PENDING)
+  submittedAt    DateTime      @default(now())
+
+  route   Route          @relation(fields: [routeId], references: [id])
+  athlete User           @relation(fields: [athleteId], references: [id])
+  photos  AttemptPhoto[]
+}
+
+model AttemptPhoto {
+  id        String   @id @default(cuid())
+  attemptId String
+  s3Key     String
+  caption   String?
+  createdAt DateTime @default(now())
+
+  attempt FktAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+}
