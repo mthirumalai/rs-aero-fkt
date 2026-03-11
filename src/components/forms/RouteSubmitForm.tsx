@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { COUNTRY_NAMES, REGION_LABELS, getRegion } from "@/lib/regions";
+import { parseCoordinate, formatCoord } from "@/lib/coords";
 
 export function RouteSubmitForm() {
   const router = useRouter();
@@ -26,28 +27,54 @@ export function RouteSubmitForm() {
     endLng: "",
   });
 
+  // Per-field parse errors shown inline
+  const [coordErrors, setCoordErrors] = useState<Partial<Record<string, string>>>({});
+
   const selectedRegion = form.country ? getRegion(form.country) : null;
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
+    // Clear the inline error as the user types
+    if (field in coordErrors) {
+      setCoordErrors((e) => { const next = { ...e }; delete next[field]; return next; });
+    }
+  }
+
+  function validateCoord(field: string, raw: string, type: "lat" | "lng"): number | null {
+    const val = parseCoordinate(raw);
+    if (val === null) {
+      setCoordErrors((e) => ({ ...e, [field]: `Could not parse "${raw}". Use decimal (e.g. 50.5155) or DMS (e.g. 50°30'55" N).` }));
+      return null;
+    }
+    if (type === "lat" && (val < -90 || val > 90)) {
+      setCoordErrors((e) => ({ ...e, [field]: "Latitude must be between -90 and 90." }));
+      return null;
+    }
+    if (type === "lng" && (val < -180 || val > 180)) {
+      setCoordErrors((e) => ({ ...e, [field]: "Longitude must be between -180 and 180." }));
+      return null;
+    }
+    return val;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setCoordErrors({});
 
+    const startLat = validateCoord("startLat", form.startLat, "lat");
+    const startLng = validateCoord("startLng", form.startLng, "lng");
+    const endLat   = validateCoord("endLat",   form.endLat,   "lat");
+    const endLng   = validateCoord("endLng",   form.endLng,   "lng");
+
+    if (startLat === null || startLng === null || endLat === null || endLng === null) return;
+
+    setLoading(true);
     try {
       const res = await fetch("/api/routes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          startLat: parseFloat(form.startLat),
-          startLng: parseFloat(form.startLng),
-          endLat: parseFloat(form.endLat),
-          endLng: parseFloat(form.endLng),
-        }),
+        body: JSON.stringify({ ...form, startLat, startLng, endLat, endLng }),
       });
 
       if (!res.ok) {
@@ -55,7 +82,6 @@ export function RouteSubmitForm() {
         setError(data.error ?? "Submission failed");
         return;
       }
-
       setSuccess(true);
     } catch {
       setError("Network error. Please try again.");
@@ -72,11 +98,7 @@ export function RouteSubmitForm() {
           Your route has been submitted for admin review. You&apos;ll see it appear on the
           routes page once approved.
         </p>
-        <Button
-          className="mt-6"
-          variant="outline"
-          onClick={() => router.push("/routes")}
-        >
+        <Button className="mt-6" variant="outline" onClick={() => router.push("/routes")}>
           Back to Routes
         </Button>
       </div>
@@ -86,6 +108,39 @@ export function RouteSubmitForm() {
   const sortedCountries = Object.entries(COUNTRY_NAMES).sort(([, a], [, b]) =>
     a.localeCompare(b)
   );
+
+  const coordHint = (
+    <span className="text-xs text-muted-foreground">
+      Decimal (e.g. <code>50.5155</code>) or DMS (e.g. <code>50°30&apos;55&quot; N</code>)
+    </span>
+  );
+
+  function CoordField({ id, label, value, type }: {
+    id: keyof typeof form; label: string; value: string; type: "lat" | "lng";
+  }) {
+    const placeholder = type === "lat" ? "50.515488  or  50°30′56″ N" : "-2.457893  or  2°27′28″ W";
+    return (
+      <div className="space-y-1">
+        <Label htmlFor={id}>{label} *</Label>
+        <Input
+          id={id}
+          value={value}
+          onChange={(e) => update(id, e.target.value)}
+          placeholder={placeholder}
+          required
+        />
+        {coordErrors[id] ? (
+          <p className="text-xs text-destructive">{coordErrors[id]}</p>
+        ) : (
+          value && parseCoordinate(value) !== null && (
+            <p className="text-xs text-muted-foreground">
+              → {formatCoord(parseCoordinate(value)!)}°
+            </p>
+          )
+        )}
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -129,9 +184,7 @@ export function RouteSubmitForm() {
           >
             <option value="">Select a country...</option>
             {sortedCountries.map(([code, name]) => (
-              <option key={code} value={code}>
-                {name} ({code})
-              </option>
+              <option key={code} value={code}>{name} ({code})</option>
             ))}
           </select>
           {selectedRegion && (
@@ -143,9 +196,12 @@ export function RouteSubmitForm() {
       </div>
 
       <div className="border rounded-lg p-4 space-y-4">
-        <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-          Start Point
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+            Start Point
+          </h3>
+          {coordHint}
+        </div>
         <div className="space-y-2">
           <Label htmlFor="startName">Name *</Label>
           <Input
@@ -157,37 +213,18 @@ export function RouteSubmitForm() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="startLat">Latitude *</Label>
-            <Input
-              id="startLat"
-              type="number"
-              step="any"
-              value={form.startLat}
-              onChange={(e) => update("startLat", e.target.value)}
-              placeholder="50.515488"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="startLng">Longitude *</Label>
-            <Input
-              id="startLng"
-              type="number"
-              step="any"
-              value={form.startLng}
-              onChange={(e) => update("startLng", e.target.value)}
-              placeholder="-2.457893"
-              required
-            />
-          </div>
+          <CoordField id="startLat" label="Latitude"  value={form.startLat} type="lat" />
+          <CoordField id="startLng" label="Longitude" value={form.startLng} type="lng" />
         </div>
       </div>
 
       <div className="border rounded-lg p-4 space-y-4">
-        <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-          End Point
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+            End Point
+          </h3>
+          {coordHint}
+        </div>
         <div className="space-y-2">
           <Label htmlFor="endName">Name *</Label>
           <Input
@@ -199,39 +236,12 @@ export function RouteSubmitForm() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="endLat">Latitude *</Label>
-            <Input
-              id="endLat"
-              type="number"
-              step="any"
-              value={form.endLat}
-              onChange={(e) => update("endLat", e.target.value)}
-              placeholder="50.611234"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endLng">Longitude *</Label>
-            <Input
-              id="endLng"
-              type="number"
-              step="any"
-              value={form.endLng}
-              onChange={(e) => update("endLng", e.target.value)}
-              placeholder="-2.453210"
-              required
-            />
-          </div>
+          <CoordField id="endLat" label="Latitude"  value={form.endLat} type="lat" />
+          <CoordField id="endLng" label="Longitude" value={form.endLng} type="lng" />
         </div>
       </div>
 
-      <Button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-primary hover:bg-primary"
-        size="lg"
-      >
+      <Button type="submit" disabled={loading} className="w-full" size="lg">
         {loading ? "Submitting..." : "Submit Route for Approval"}
       </Button>
     </form>

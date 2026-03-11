@@ -56,8 +56,8 @@ export default async function HomePage() {
             RS Aero Fastest Known Times
           </h1>
           <p className="text-lg text-white/80 mb-8 font-sans">
-            The definitive record of the fastest known times for RS Aero sailing routes worldwide.
-            Submit your routes and GPX-verified FKT attempts across all four rig sizes.
+            The definitive record of the fastest known times for classic sailing routes worldwide made in an RS Aero.
+            Got a route? Got a GPX-verified FKT attempt? Let&apos;s put it in the books!
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">
