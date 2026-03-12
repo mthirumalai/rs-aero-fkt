@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
     windDirection,
     currentNotes,
     writeUp,
+    trackSourceUrl,
   } = body;
 
   if (!routeId || !rigSize || !date || !gpxS3Key) {
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
       windDirection: windDirection || null,
       currentNotes: currentNotes || null,
       writeUp: writeUp || null,
+      trackSourceUrl: trackSourceUrl || null,
       status: "APPROVED",
     },
   });

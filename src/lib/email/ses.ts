@@ -60,6 +60,56 @@ export async function sendMagicLinkEmail(params: {
   );
 }
 
+export async function sendRouteRejectionEmail(params: {
+  routeName: string;
+  submitterEmail: string;
+  submitterName: string;
+  rejectionReason: string;
+}): Promise<void> {
+  const { routeName, submitterEmail, submitterName, rejectionReason } = params;
+
+  if (IS_LOCAL_DEV) {
+    console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║  [LOCAL DEV] Route rejection email (not actually sent)       ║
+╠══════════════════════════════════════════════════════════════╣
+║  To:     ${submitterEmail}
+║  Route:  ${routeName}
+╠══════════════════════════════════════════════════════════════╣
+║  Reason: ${rejectionReason}
+╚══════════════════════════════════════════════════════════════╝
+`);
+    return;
+  }
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+      <h2 style="color:#ec008c">RS Aero FKT — Route Submission Update</h2>
+      <p>Hi ${submitterName},</p>
+      <p>Thank you for submitting the route <strong>${routeName}</strong>. Unfortunately, it has not been approved at this time.</p>
+      <h3 style="color:#333">Reason</h3>
+      <div style="background:#f9f9f9;border-left:4px solid #ec008c;padding:12px 16px;margin:16px 0">
+        ${rejectionReason.replace(/\n/g, "<br/>")}
+      </div>
+      <p>Please make the necessary corrections and resubmit. If you have any questions, reply to this email.</p>
+      <p style="color:#666;font-size:13px;margin-top:32px">— RS Aero FKT Admin</p>
+    </div>
+  `;
+
+  const text = `RS Aero FKT — Route Submission Update\n\nHi ${submitterName},\n\nYour route "${routeName}" was not approved.\n\nReason:\n${rejectionReason}\n\nPlease make the necessary corrections and resubmit.\n\n— RS Aero FKT Admin`;
+
+  await sesClient!.send(
+    new SendEmailCommand({
+      Source: process.env.SES_FROM_EMAIL!,
+      Destination: { ToAddresses: [submitterEmail] },
+      Message: {
+        Subject: { Data: `[RS Aero FKT] Route submission not approved: ${routeName}` },
+        Body: { Html: { Data: html }, Text: { Data: text } },
+      },
+    })
+  );
+}
+
 export async function sendRouteApprovalEmail(params: {
   routeId: string;
   routeName: string;

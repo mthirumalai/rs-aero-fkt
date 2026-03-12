@@ -32,6 +32,7 @@ export function FktSubmitForm({ routeId }: Props) {
     windDirection: "",
     currentNotes: "",
     writeUp: "",
+    trackSourceUrl: "",
   });
   const [gpxFile, setGpxFile] = useState<File | null>(null);
 
@@ -241,6 +242,20 @@ export function FktSubmitForm({ routeId }: Props) {
           placeholder="Describe your attempt, conditions, tactics..."
           rows={6}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="trackSourceUrl">Track Source URL</Label>
+        <Input
+          id="trackSourceUrl"
+          type="url"
+          value={form.trackSourceUrl}
+          onChange={(e) => update("trackSourceUrl", e.target.value)}
+          placeholder="e.g. https://www.chartedsails.com/session/..."
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional. Link to your track on Charted Sails, Strava, or similar. A GPX file upload above is still required for validation.
+        </p>
       </div>
 
       <Button

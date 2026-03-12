@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { COUNTRY_NAMES } from "@/lib/regions";
+import { distanceNm } from "@/lib/gpx/validator";
 import { RouteMap } from "@/components/map/RouteMap";
 import { FktAttemptsTable } from "@/components/tables/FktAttemptsTable";
 import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
@@ -87,12 +88,12 @@ export default async function RouteDetailPage({ params }: Props) {
                 </p>
               </div>
             </div>
-            {route.distanceKm && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">Distance: </span>
-                <span className="font-medium">{route.distanceKm.toFixed(1)} km</span>
-              </div>
-            )}
+            <div className="text-sm">
+              <span className="text-muted-foreground">Great-circle distance: </span>
+              <span className="font-medium">
+                {distanceNm(route.startLat, route.startLng, route.endLat, route.endLng)} nm
+              </span>
+            </div>
             <div className="text-sm">
               <span className="text-muted-foreground">Submitted by: </span>
               <Link

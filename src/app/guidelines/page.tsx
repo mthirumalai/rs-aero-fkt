@@ -19,22 +19,28 @@ export default function GuidelinesPage() {
           <h2 className="text-2xl font-semibold mb-4 pb-2 border-b">Submitting a Route</h2>
           <div className="prose prose-sm max-w-none space-y-4">
             <p>
-              A route defines a start point and an end point between which sailors
-              compete for the fastest known time. Routes should be meaningful sailing
-              challenges — typically between two well-known landmarks, buoys, headlands,
-              or harbour entrances.
+              A route consists of a start point and an end point between which sailors
+              compete for the fastest known time. Please make the two points easy to find 
+              so others can attempt it as well. So pick two buoys whose latitude, longitude coordinates
+              are well known. 
+              Ideally, a route should be meaningful sailing challenge.
+              The minimum sailing time for a route should be 20 minutes as a rough guideline. 
+              We welcome classic routes - e.g., the delta ditch run in the Bay Area. 
             </p>
             <h3 className="font-semibold text-base">Requirements</h3>
             <ul className="list-disc pl-5 space-y-2">
               <li>
                 <strong>Clear endpoints:</strong> Both the start and end point must have
-                accurate GPS coordinates (latitude/longitude) to within a few metres.
-                Use a chart or GPS device at the location.
+                accurate GPS coordinates (latitude/longitude) to within a few metres. 
+		This is important because when others submit FKT attempts, we are going to check 
+		their GPX tracks against the start and end points you submitted so please be diligent.
               </li>
               <li>
                 <strong>One-way:</strong> Routes are point-to-point only. There are no
-                intermediate waypoints. Round-trip or circular routes should be submitted
+                intermediate waypoints for now. 
+		Round-trip or circular routes should be submitted
                 as two separate routes.
+		Please reach out to us if you need us to enhance the app to allow routes that include one or more waypoints.
               </li>
               <li>
                 <strong>Country:</strong> Select the country where the route is located
@@ -58,15 +64,17 @@ export default function GuidelinesPage() {
           <h2 className="text-2xl font-semibold mb-4 pb-2 border-b">Submitting an FKT Attempt</h2>
           <div className="prose prose-sm max-w-none space-y-4">
             <p>
-              An FKT attempt is a verified record of sailing a route as fast as possible.
+              An FKT attempt is a verified record of sailing an approved route. 
               Records are maintained separately for each of the four RS Aero rig sizes:
               <strong> Aero 5, Aero 6, Aero 7, and Aero 9</strong>.
+	      The FKT for a route and rig is awarded to the attempt with the fastest time.
             </p>
             <h3 className="font-semibold text-base">GPX Track Requirements</h3>
             <ul className="list-disc pl-5 space-y-2">
               <li>
                 <strong>File format:</strong> GPX only (v1.0 or v1.1). Export from your
-                GPS device, chartplotter, or sailing app (e.g. Garmin, Navionics, iSailor).
+                GPS device or iPhone and upload into the app. You can also provide a link to 
+		a record from RideWithGPS or Strava.
               </li>
               <li>
                 <strong>Timestamps required:</strong> The GPX track must include
@@ -91,7 +99,7 @@ export default function GuidelinesPage() {
             </ul>
             <h3 className="font-semibold text-base">Conditions</h3>
             <p>
-              While optional, recording wind speed and direction (mean, not gusting)
+              While optional, recording wind speed and direction (mean and gusts)
               and any significant tidal/current information helps contextualise the
               record for future challengers.
             </p>
@@ -115,7 +123,7 @@ export default function GuidelinesPage() {
             {[
               {
                 q: "Can I submit an FKT for a route I didn't submit?",
-                a: "Yes! You can submit FKT attempts for any approved route.",
+                a: "Yes! You can submit FKT attempts for any approved route. You will have to provide the name of the sailor.",
               },
               {
                 q: "Does the direction matter?",
@@ -128,10 +136,6 @@ export default function GuidelinesPage() {
               {
                 q: "Can I submit an attempt I did in the past?",
                 a: "Yes, as long as you have a GPX file with timestamps from that day.",
-              },
-              {
-                q: "What rig size should I choose for a non-standard configuration?",
-                a: "Choose the rig closest to the sail area you were using. If unsure, contact an admin.",
               },
             ].map((faq) => (
               <div key={faq.q} className="border rounded-lg p-4">

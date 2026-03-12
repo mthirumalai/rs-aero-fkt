@@ -153,6 +153,21 @@ export default async function AttemptDetailPage({ params }: Props) {
         </div>
       )}
 
+      {/* Track source link */}
+      {attempt.trackSourceUrl && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-3">Track Source</h2>
+          <a
+            href={attempt.trackSourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline break-all"
+          >
+            {attempt.trackSourceUrl}
+          </a>
+        </div>
+      )}
+
       {/* Photos */}
       {attempt.photos.length > 0 && (
         <div className="mb-8">

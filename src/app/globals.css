@@ -4,30 +4,26 @@
 
 @layer base {
   :root {
-    /* RS Aero colour palette */
-    /* Primary: #e91e63 (W3 pink — matches rsaerosailing.org accent) */
-    /* Text: #333333 */
-    /* Background: white */
-
+    /* Exact values from rsaerosailing.org CSS */
     --background: 0 0% 100%;
-    --foreground: 0 0% 20%;           /* #333333 */
+    --foreground: 0 0% 40%;           /* #666666 — body text */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 20%;
+    --card-foreground: 0 0% 40%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%;
+    --popover-foreground: 0 0% 40%;
 
-    --primary: 340 82% 52%;           /* #e91e63 — RS Aero pink */
+    --primary: 323 100% 46%;          /* #ec008c — exact w3-pink from site */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 20%;
+    --secondary-foreground: 0 0% 40%;
 
     --muted: 0 0% 95%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 47%;     /* #888888 — nav link colour */
 
-    --accent: 340 82% 52%;
+    --accent: 323 100% 46%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -35,9 +31,9 @@
 
     --border: 0 0% 88%;
     --input: 0 0% 88%;
-    --ring: 340 82% 52%;
+    --ring: 323 100% 46%;
 
-    --radius: 0.25rem;                /* RS Aero site uses sharper corners */
+    --radius: 0.25rem;
   }
 
   * {
@@ -46,9 +42,10 @@
 
   body {
     @apply bg-background text-foreground;
+    font-size: 16pt;
+    line-height: 1.5;
   }
 
-  /* Bebas Neue for all headings */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display), "Bebas Neue", sans-serif;
     letter-spacing: 0.04em;

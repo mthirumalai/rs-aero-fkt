@@ -111,3 +111,12 @@ export function validateGpxTrack(
 }
 
 export { haversineMeters };
+
+/** Great-circle distance in nautical miles between two lat/lng points */
+export function distanceNm(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number
+): number {
+  const metres = haversineMeters(lat1, lon1, lat2, lon2);
+  return Math.round((metres / 1852) * 10) / 10; // 1 nm = 1852 m, 1 dp
+}

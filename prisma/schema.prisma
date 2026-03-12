@@ -92,8 +92,9 @@ model Route {
   status        RouteStatus @default(PENDING)
   submittedById String
   submittedAt   DateTime    @default(now())
-  approvedAt    DateTime?
-  approvalToken String?     @unique
+  approvedAt       DateTime?
+  approvalToken    String?     @unique
+  rejectionReason  String?
 
   submittedBy User         @relation(fields: [submittedById], references: [id])
   photos      RoutePhoto[]
@@ -124,8 +125,9 @@ model FktAttempt {
   windSpeedKnots Float?
   windDirection  String?
   currentNotes   String?
-  writeUp        String?
-  status         AttemptStatus @default(PENDING)
+  writeUp          String?
+  trackSourceUrl   String?
+  status           AttemptStatus @default(PENDING)
   submittedAt    DateTime      @default(now())
 
   route   Route          @relation(fields: [routeId], references: [id])
