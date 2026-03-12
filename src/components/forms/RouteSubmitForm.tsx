@@ -123,12 +123,6 @@ export function RouteSubmitForm() {
     a.localeCompare(b)
   );
 
-  const coordHint = (
-    <span className="text-xs text-muted-foreground">
-      Decimal, DDM (e.g. <code>41° 07.8&apos; N</code>), or DMS (e.g. <code>50°30&apos;55&quot; N</code>)
-    </span>
-  );
-
   function CoordField({ id, label, value, type }: {
     id: keyof typeof form; label: string; value: string; type: "lat" | "lng";
   }) {
@@ -203,12 +197,9 @@ export function RouteSubmitForm() {
       </div>
 
       <div className="border rounded-lg p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            Start Point
-          </h3>
-          {coordHint}
-        </div>
+        <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+          Start Point
+        </h3>
         <div className="space-y-2">
           <Label htmlFor="startName">Name *</Label>
           <Input
@@ -226,12 +217,9 @@ export function RouteSubmitForm() {
       </div>
 
       <div className="border rounded-lg p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            End Point
-          </h3>
-          {coordHint}
-        </div>
+        <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+          End Point
+        </h3>
         <div className="space-y-2">
           <Label htmlFor="endName">Name *</Label>
           <Input

@@ -42,9 +42,6 @@ export function Nav() {
                 <DropdownMenuItem onClick={() => router.push(`/athletes/${session.user?.id}`)}>
                   My Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/routes/submit")}>
-                  Submit a Route
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive cursor-pointer"
@@ -87,6 +84,13 @@ export function Nav() {
               className="hover:text-[#444444] transition-colors"
             >
               Routes
+            </Link>
+            <Link
+              href="/admin/pending-routes"
+              style={{ fontSize: "19px", color: "#888888", padding: "14px 16px" }}
+              className="hover:text-[#444444] transition-colors"
+            >
+              Pending Routes
             </Link>
             <Link
               href="/guidelines"

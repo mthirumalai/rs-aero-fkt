@@ -27,9 +27,9 @@ export function parseCoordinate(raw: string): number | null {
   }
 
   // ── DMS: degrees° minutes' seconds" [NSEW] ─────────────────────────────────
-  // Requires all three components (seconds can be decimal).
+  // Very permissive pattern that handles all spacing and symbol variations
   const dmsPattern =
-    /^([NSEW])?\s*(-?\d+(?:\.\d+)?)[°\s\-]+(\d+(?:\.\d+)?)['\s\-]+(\d+(?:\.\d+)?)["″\s]*([NSEW])?$/i;
+    /^([NSEW])?\s*(-?\d+(?:\.\d+)?)\s*°?\s*(\d+(?:\.\d+)?)\s*['′]?\s*(\d+(?:\.\d+)?)\s*["″]?\s*([NSEW])?\s*$/i;
 
   const dmsMatch = s.match(dmsPattern);
   if (dmsMatch) {
