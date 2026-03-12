@@ -5,6 +5,8 @@ export interface ValidationResult {
   durationSec?: number;
   startPoint?: GpxPoint;
   endPoint?: GpxPoint;
+  /** Only the track points between (inclusive) the matched start and end entries */
+  racePoints?: GpxPoint[];
   nearestStartDistanceM?: number;
   nearestEndDistanceM?: number;
   error?: string;
@@ -105,6 +107,7 @@ export function validateGpxTrack(
     durationSec,
     startPoint,
     endPoint,
+    racePoints: points.slice(matchedStartIdx, matchedEndIdx + 1),
     nearestStartDistanceM: Math.round(nearestStartDist),
     nearestEndDistanceM: Math.round(nearestEndDist),
   };

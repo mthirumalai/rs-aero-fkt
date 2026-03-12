@@ -67,16 +67,9 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
             <p className="text-base">{route.description}</p>
           </div>
         )}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Country</p>
-            <p className="text-base font-medium">{COUNTRY_NAMES[route.country] ?? route.country}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Submitted by</p>
-            <p className="text-base font-medium">{route.submittedBy.name}</p>
-            <p className="text-sm text-muted-foreground">{route.submittedBy.email}</p>
-          </div>
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Country</p>
+          <p className="text-base font-medium">{COUNTRY_NAMES[route.country] ?? route.country}</p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -94,15 +87,20 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Great-Circle Distance</p>
+          <p className="text-base font-medium">
+            {distanceNm(route.startLat, route.startLng, route.endLat, route.endLng)} nm
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
           <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Great-Circle Distance</p>
-            <p className="text-base font-medium">
-              {distanceNm(route.startLat, route.startLng, route.endLat, route.endLng)} nm
-            </p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Submitted by</p>
+            <p className="text-base font-medium">{route.submittedBy.name}</p>
+            <p className="text-sm text-muted-foreground">{route.submittedBy.email}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Submitted</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Submission Date</p>
             <p className="text-base">{new Date(route.submittedAt).toLocaleString()}</p>
           </div>
         </div>

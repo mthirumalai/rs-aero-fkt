@@ -18,7 +18,7 @@ export function RouteSubmitForm() {
   const [form, setForm] = useState({
     name: "",
     description: "",
-    country: "",
+    country: "US",
     startName: "",
     startLat: "",
     startLng: "",
@@ -90,6 +90,20 @@ export function RouteSubmitForm() {
     }
   }
 
+  const heading = (
+    <>
+      <h1 className="text-3xl font-bold mb-2">Submit a Route</h1>
+      <p className="text-muted-foreground mb-8">
+        Submit a new RS Aero sailing route. An admin will review and approve it
+        before it goes live. Please read the{" "}
+        <a href="/guidelines" className="text-primary hover:underline">
+          guidelines
+        </a>{" "}
+        before submitting.
+      </p>
+    </>
+  );
+
   if (success) {
     return (
       <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
@@ -111,14 +125,16 @@ export function RouteSubmitForm() {
 
   const coordHint = (
     <span className="text-xs text-muted-foreground">
-      Decimal (e.g. <code>50.5155</code>) or DMS (e.g. <code>50°30&apos;55&quot; N</code>)
+      Decimal, DDM (e.g. <code>41° 07.8&apos; N</code>), or DMS (e.g. <code>50°30&apos;55&quot; N</code>)
     </span>
   );
 
   function CoordField({ id, label, value, type }: {
     id: keyof typeof form; label: string; value: string; type: "lat" | "lng";
   }) {
-    const placeholder = type === "lat" ? "50.515488  or  50°30′56″ N" : "-2.457893  or  2°27′28″ W";
+    const placeholder = type === "lat"
+      ? "50.5155  or  50° 30.93' N  or  50°30′56″ N"
+      : "-2.4579  or  2° 27.5' W  or  2°27′28″ W";
     return (
       <div className="space-y-1">
         <Label htmlFor={id}>{label} *</Label>
@@ -143,6 +159,8 @@ export function RouteSubmitForm() {
   }
 
   return (
+    <>
+      {heading}
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
@@ -158,17 +176,6 @@ export function RouteSubmitForm() {
           onChange={(e) => update("name", e.target.value)}
           placeholder="e.g., Portland Bill to Weymouth"
           required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={form.description}
-          onChange={(e) => update("description", e.target.value)}
-          placeholder="Brief description of the route..."
-          rows={3}
         />
       </div>
 
@@ -241,9 +248,21 @@ export function RouteSubmitForm() {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="description">Description <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Textarea
+          id="description"
+          value={form.description}
+          onChange={(e) => update("description", e.target.value)}
+          placeholder="Brief description of the route..."
+          rows={3}
+        />
+      </div>
+
       <Button type="submit" disabled={loading} className="w-full" size="lg">
         {loading ? "Submitting..." : "Submit Route for Approval"}
       </Button>
     </form>
+    </>
   );
 }

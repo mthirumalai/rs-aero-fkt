@@ -74,8 +74,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Compute SOG stats
-  const sogPoints = computeSog(parsed.points);
+  // Compute SOG only over the race segment (start entry → end entry),
+  // excluding pre-race sailing to the start and post-race sailing after the end.
+  const sogPoints = computeSog(validation.racePoints!);
   const { avgSogKnots, maxSogKnots } = computeAvgMaxSog(sogPoints);
 
   // Save attempt
