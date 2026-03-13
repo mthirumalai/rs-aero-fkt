@@ -20,20 +20,36 @@ export default function GuidelinesPage() {
           <div className="prose prose-sm max-w-none space-y-4">
             <p>
               A route consists of a start point and an end point between which sailors
-              compete for the fastest known time. Please make the two points easy to find 
+              compete for the fastest known time. Please make the two points easy to find
               so others can attempt it as well. So pick two buoys whose latitude, longitude coordinates
-              are well known. 
+              are well known.
               Ideally, a route should be meaningful sailing challenge.
-              The minimum sailing time for a route should be 20 minutes as a rough guideline. 
-              We welcome classic routes - e.g., the delta ditch run in the Bay Area. 
+              The minimum sailing time for a route should be 20 minutes as a rough guideline.
+              We welcome classic routes - e.g., the delta ditch run in the Bay Area.
             </p>
+            <h3 className="font-semibold text-base">Two Ways to Submit</h3>
+            <p>
+              You can submit a route in two ways:
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                <strong>📍 Manual Entry:</strong> Enter the start and end point coordinates
+                directly if you know them.
+              </li>
+              <li>
+                <strong>📂 GPX Upload:</strong> Upload a GPX track of the route and click
+                on the map to select the exact start and end points from your track. This is
+                ideal when you have a GPS recording but don&apos;t know the precise coordinates.
+              </li>
+            </ul>
             <h3 className="font-semibold text-base">Requirements</h3>
             <ul className="list-disc pl-5 space-y-2">
               <li>
                 <strong>Clear endpoints:</strong> Both the start and end point must have
-                accurate GPS coordinates (latitude/longitude) to within a few metres. 
-		This is important because when others submit FKT attempts, we are going to check 
-		their GPX tracks against the start and end points you submitted so please be diligent.
+                accurate GPS coordinates (latitude/longitude) to within a few metres.
+                This is important because when others submit FKT attempts, we are going to check
+                their GPX tracks against the start and end points you submitted so please be diligent.
+                When using GPX upload, click precisely on the intended start/end waypoints.
               </li>
               <li>
                 <strong>One-way:</strong> Routes are point-to-point only. There are no
@@ -53,7 +69,7 @@ export default function GuidelinesPage() {
               </li>
             </ul>
             <div className="mt-4">
-              <Button asChild className="bg-primary hover:bg-primary">
+              <Button asChild>
                 <Link href="/routes/submit">Submit a Route</Link>
               </Button>
             </div>

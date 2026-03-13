@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- This looks like GPX but has wrong structure -->
+<kml>
+  <Document>
+    <Placemark>
+      <Point>
+        <coordinates>-2.458,50.515,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>

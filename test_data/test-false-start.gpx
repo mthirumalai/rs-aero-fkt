@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="FKT Test Generator" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Test 4: False Start</name>
+    <desc>Track that enters start circle, leaves it, then re-enters (false start)</desc>
+  </metadata>
+  <trk>
+    <name>False Start Test</name>
+    <trkseg>
+      <!-- First entry to start circle -->
+      <trkpt lat="33.948900" lon="-78.011650">
+        <time>2024-03-15T12:00:00Z</time>
+        <name>Enter start circle first time</name>
+      </trkpt>
+      <!-- Exit start circle (false start) -->
+      <trkpt lat="33.949000" lon="-78.011500">
+        <time>2024-03-15T12:02:00Z</time>
+        <name>Exit start circle (false start)</name>
+      </trkpt>
+      <!-- Move away from start -->
+      <trkpt lat="33.949500" lon="-78.011000">
+        <time>2024-03-15T12:04:00Z</time>
+        <name>Away from start</name>
+      </trkpt>
+      <!-- Re-enter start circle -->
+      <trkpt lat="33.948880" lon="-78.011660">
+        <time>2024-03-15T12:06:00Z</time>
+        <name>Re-enter start circle</name>
+      </trkpt>
+      <!-- Exit start circle for real start -->
+      <trkpt lat="33.949200" lon="-78.011200">
+        <time>2024-03-15T12:08:00Z</time>
+        <name>Real start - exit start circle</name>
+      </trkpt>
+      <!-- Race track -->
+      <trkpt lat="34.100000" lon="-77.800000">
+        <time>2024-03-15T12:30:00Z</time>
+      </trkpt>
+      <!-- Finish -->
+      <trkpt lat="34.518056" lon="-77.448056">
+        <time>2024-03-15T13:00:00Z</time>
+        <name>Finish</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

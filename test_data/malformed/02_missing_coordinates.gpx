@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<gpx version="1.1">
+  <trk>
+    <trkseg>
+      <trkpt lat="50.515" lon="-2.458">
+        <time>2024-01-01T10:00:00Z</time>
+      </trkpt>
+      <!-- Missing lat attribute -->
+      <trkpt lon="-2.457">
+        <time>2024-01-01T10:01:00Z</time>
+      </trkpt>
+      <!-- Missing lon attribute -->
+      <trkpt lat="50.517">
+        <time>2024-01-01T10:02:00Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

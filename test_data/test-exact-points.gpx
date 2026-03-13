@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="FKT Test Generator" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Test 0: Exact Start and End Points</name>
+    <desc>Track starting exactly at start point and ending exactly at end point</desc>
+  </metadata>
+  <trk>
+    <name>Exact Points Test</name>
+    <trkseg>
+      <trkpt lat="33.948889" lon="-78.011667">
+        <time>2024-03-15T12:00:00Z</time>
+        <name>Exact Start</name>
+      </trkpt>
+      <trkpt lat="34.100000" lon="-77.800000">
+        <time>2024-03-15T12:30:00Z</time>
+      </trkpt>
+      <trkpt lat="34.518056" lon="-77.448056">
+        <time>2024-03-15T13:00:00Z</time>
+        <name>Exact End</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

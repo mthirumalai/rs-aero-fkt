@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="FKT Test Generator" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Test 5: Re-finish</name>
+    <desc>Track that enters end circle, leaves it, then re-enters</desc>
+  </metadata>
+  <trk>
+    <name>Re-finish Test</name>
+    <trkseg>
+      <!-- Start -->
+      <trkpt lat="33.948889" lon="-78.011667">
+        <time>2024-03-15T12:00:00Z</time>
+        <name>Start</name>
+      </trkpt>
+      <!-- Race track -->
+      <trkpt lat="34.100000" lon="-77.800000">
+        <time>2024-03-15T12:30:00Z</time>
+      </trkpt>
+      <!-- First entry to end circle -->
+      <trkpt lat="34.518050" lon="-77.448050">
+        <time>2024-03-15T12:50:00Z</time>
+        <name>First finish - enter end circle</name>
+      </trkpt>
+      <!-- Exit end circle -->
+      <trkpt lat="34.518200" lon="-77.447800">
+        <time>2024-03-15T12:52:00Z</time>
+        <name>Exit end circle</name>
+      </trkpt>
+      <!-- Move away -->
+      <trkpt lat="34.518500" lon="-77.447500">
+        <time>2024-03-15T12:54:00Z</time>
+        <name>Away from end</name>
+      </trkpt>
+      <!-- Re-enter end circle -->
+      <trkpt lat="34.518060" lon="-77.448060">
+        <time>2024-03-15T12:56:00Z</time>
+        <name>Re-enter end circle</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="FKT Test Generator" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Test 2: No Start Circle Entry</name>
+    <desc>Track that never enters the start point 10m circle</desc>
+  </metadata>
+  <trk>
+    <name>No Start Circle Test</name>
+    <trkseg>
+      <!-- Start 15m away from start point (outside tolerance) -->
+      <trkpt lat="33.949020" lon="-78.011667">
+        <time>2024-03-15T12:00:00Z</time>
+        <name>Start outside circle</name>
+      </trkpt>
+      <!-- Race track -->
+      <trkpt lat="34.100000" lon="-77.800000">
+        <time>2024-03-15T12:30:00Z</time>
+      </trkpt>
+      <!-- Finish -->
+      <trkpt lat="34.518056" lon="-77.448056">
+        <time>2024-03-15T13:00:00Z</time>
+        <name>Finish</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
