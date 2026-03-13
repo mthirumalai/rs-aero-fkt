@@ -35,19 +35,32 @@ git config --global user.email "your.email@example.com"
 ```
 
 ### 4. Install PostgreSQL
+
+**Why PostgreSQL 16 via Homebrew?**
+- Consistent with AWS deployment (Ubuntu PostgreSQL 16 packages)
+- Native performance (no Docker overhead)
+- Simpler backup/restore procedures
+- Direct access for development tools
 ```bash
-# Install PostgreSQL 15
-brew install postgresql@15
+# Install PostgreSQL 16
+brew install postgresql@16
 
 # Add to PATH (add to ~/.zshrc for persistence)
-echo 'export PATH="/opt/homebrew/opt/postgresql@15/bin:$PATH"' >> ~/.zshrc
+echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 
 # Start PostgreSQL service
-brew services start postgresql@15
+brew services start postgresql@16
 
 # Create database
 createdb rsaerofkt
+```
+
+**Important**: If you have multiple PostgreSQL versions installed, ensure only PostgreSQL 16 is running:
+```bash
+# Stop other PostgreSQL versions to avoid port conflicts
+brew services stop postgresql@15  # if installed
+brew services list | grep postgresql  # verify only @16 is started
 ```
 
 ### 5. Install GitHub CLI (recommended)
@@ -171,10 +184,14 @@ nvm alias default 20
 brew services list | grep postgresql
 
 # Restart if needed
-brew services restart postgresql@15
+brew services restart postgresql@16
 
 # Check database exists
 psql postgres -c "\l" | grep rsaerofkt
+
+# If you have multiple PostgreSQL versions, ensure only v16 is running:
+brew services stop postgresql@15  # stop conflicting version
+brew services start postgresql@16
 ```
 
 ### Permission Issues

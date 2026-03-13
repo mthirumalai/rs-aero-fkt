@@ -7,13 +7,16 @@ This guide covers running the RS Aero FKT application and supporting services on
 ### 1. Start Database
 ```bash
 # Check if PostgreSQL is running
-brew services list | grep postgresql@15
+brew services list | grep postgresql@16
 
 # Start if not running
-brew services start postgresql@15
+brew services start postgresql@16
 
 # Verify connection
 psql rsaerofkt -c "SELECT 1;"
+
+# If you have multiple PostgreSQL versions, ensure only v16 is running:
+brew services stop postgresql@15  # stop conflicting version if present
 ```
 
 ### 2. Ensure Correct Node Version

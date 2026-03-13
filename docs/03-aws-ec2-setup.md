@@ -71,8 +71,8 @@ npm --version
 
 ### 3. Install PostgreSQL
 ```bash
-# Install PostgreSQL 15
-sudo apt install -y postgresql-15 postgresql-contrib-15
+# Install PostgreSQL 16
+sudo apt install -y postgresql-16 postgresql-contrib-16
 
 # Start and enable service
 sudo systemctl start postgresql
@@ -100,13 +100,13 @@ GRANT ALL PRIVILEGES ON DATABASE rsaerofkt TO rsaero;
 ### 4. Configure PostgreSQL Security
 ```bash
 # Edit PostgreSQL config
-sudo nano /etc/postgresql/15/main/postgresql.conf
+sudo nano /etc/postgresql/16/main/postgresql.conf
 
 # Set listen_addresses (uncomment and modify):
 listen_addresses = 'localhost'
 
 # Edit authentication config
-sudo nano /etc/postgresql/15/main/pg_hba.conf
+sudo nano /etc/postgresql/16/main/pg_hba.conf
 
 # Ensure these lines exist:
 local   all             rsaero                                  md5
@@ -381,7 +381,7 @@ pm2 status
 
 # Check logs
 sudo journalctl -f -u nginx
-sudo tail -f /var/log/postgresql/postgresql-15-main.log
+sudo tail -f /var/log/postgresql/postgresql-16-main.log
 pm2 logs
 ```
 
