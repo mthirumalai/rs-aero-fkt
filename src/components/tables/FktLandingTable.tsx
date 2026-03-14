@@ -16,9 +16,10 @@ import type { Route, RigSize } from "@prisma/client";
 
 type FktEntry = {
   durationSec: number;
-  athleteId: string;
-  athleteName: string;
+  sailorName: string;
+  sailorAthleteId: string | null;
   attemptId: string;
+  isRegisteredSailor: boolean;
 };
 
 type RowData = {
@@ -80,12 +81,18 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
                           {formatDuration(fkt.durationSec)}
                         </Link>
                         {" by "}
-                        <Link
-                          href={`/athletes/${fkt.athleteId}`}
-                          className="text-xs text-muted-foreground underline hover:no-underline"
-                        >
-                          {fkt.athleteName}
-                        </Link>
+                        {fkt.isRegisteredSailor && fkt.sailorAthleteId ? (
+                          <Link
+                            href={`/athletes/${fkt.sailorAthleteId}`}
+                            className="text-xs text-muted-foreground underline hover:no-underline"
+                          >
+                            {fkt.sailorName}
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {fkt.sailorName}
+                          </span>
+                        )}
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>

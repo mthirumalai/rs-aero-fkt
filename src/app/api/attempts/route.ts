@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
     currentNotes,
     writeUp,
     trackSourceUrl,
+    sailorName,
+    sailorEmail,
   } = body;
 
   if (!routeId || !rigSize || !date || !gpxS3Key) {
@@ -96,6 +98,8 @@ export async function POST(req: NextRequest) {
       currentNotes: currentNotes || null,
       writeUp: writeUp || null,
       trackSourceUrl: trackSourceUrl || null,
+      sailorName: sailorName || null,
+      sailorEmail: sailorEmail || null,
       status: "APPROVED",
     },
   });

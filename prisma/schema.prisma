@@ -75,6 +75,7 @@ model User {
   sessions Session[]
   routes   Route[]
   attempts FktAttempt[]
+  routeStatusChanges RouteStatusHistory[]
 }
 
 model Route {
@@ -99,6 +100,7 @@ model Route {
   submittedBy User         @relation(fields: [submittedById], references: [id])
   photos      RoutePhoto[]
   attempts    FktAttempt[]
+  statusHistory RouteStatusHistory[]
 }
 
 model RoutePhoto {
@@ -127,6 +129,8 @@ model FktAttempt {
   currentNotes   String?
   writeUp          String?
   trackSourceUrl   String?
+  sailorName       String?
+  sailorEmail      String?
   status           AttemptStatus @default(PENDING)
   submittedAt    DateTime      @default(now())
 
@@ -143,4 +147,21 @@ model AttemptPhoto {
   createdAt DateTime @default(now())
 
   attempt FktAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+}
+
+model RouteStatusHistory {
+  id            String      @id @default(cuid())
+  routeId       String
+  fromStatus    RouteStatus?
+  toStatus      RouteStatus
+  reason        String?     // Rejection reason or approval notes
+  changedById   String?
+  changedAt     DateTime    @default(now())
+  approvalToken String?     // Token used for this status change
+
+  route     Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  changedBy User? @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([routeId])
+  @@index([changedAt])
 }

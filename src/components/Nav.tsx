@@ -93,6 +93,13 @@ export function Nav() {
               Routes
             </Link>
             <Link
+              href="/stats"
+              style={{ fontSize: "19px", color: "#888888", padding: "14px 16px" }}
+              className="hover:text-[#444444] transition-colors"
+            >
+              Stats
+            </Link>
+            <Link
               href="/admin/pending-routes"
               style={{ fontSize: "19px", color: "#888888", padding: "14px 16px" }}
               className="hover:text-[#444444] transition-colors"

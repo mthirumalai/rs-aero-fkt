@@ -15,27 +15,58 @@ async function getFktTableData() {
       attempts: {
         where: { status: "APPROVED" },
         orderBy: { durationSec: "asc" },
-        include: { athlete: { select: { id: true, name: true } } },
+        select: {
+          id: true,
+          durationSec: true,
+          rigSize: true,
+          sailorName: true,
+          sailorEmail: true,
+          athlete: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+        },
       },
     },
   });
+
+  // Get all registered athletes to check if sailors are registered
+  const allAthletes = await prisma.user.findMany({
+    select: { id: true, email: true }
+  });
+  const athleteEmailMap = new Map(allAthletes.map(a => [a.email, a.id]));
 
   return routes.map((route) => {
     const fktsByRig: Partial<
       Record<
         RigSize,
-        { durationSec: number; athleteId: string; athleteName: string; attemptId: string }
+        {
+          durationSec: number;
+          sailorName: string;
+          sailorAthleteId: string | null;
+          attemptId: string;
+          isRegisteredSailor: boolean;
+        }
       >
     > = {};
 
     for (const rigSize of RIG_SIZES) {
       const best = route.attempts.find((a) => a.rigSize === rigSize);
       if (best) {
+        // Use sailor name if available, otherwise fall back to athlete name
+        const sailorName = best.sailorName || best.athlete.name || "Unknown";
+        const sailorEmail = best.sailorEmail || best.athlete.email;
+        const sailorAthleteId = sailorEmail ? athleteEmailMap.get(sailorEmail) || null : null;
+
         fktsByRig[rigSize] = {
           durationSec: best.durationSec,
-          athleteId: best.athlete.id,
-          athleteName: best.athlete.name ?? "Unknown",
+          sailorName,
+          sailorAthleteId,
           attemptId: best.id,
+          isRegisteredSailor: !!sailorAthleteId,
         };
       }
     }

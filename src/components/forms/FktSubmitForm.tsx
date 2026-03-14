@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
   routeId: string;
+  submitterName: string;
+  submitterEmail: string;
 }
 
 const RIG_SIZES = [
@@ -18,7 +20,7 @@ const RIG_SIZES = [
   { value: "AERO_9", label: "Aero 9" },
 ];
 
-export function FktSubmitForm({ routeId }: Props) {
+export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +35,8 @@ export function FktSubmitForm({ routeId }: Props) {
     currentNotes: "",
     writeUp: "",
     trackSourceUrl: "",
+    sailorName: submitterName,
+    sailorEmail: submitterEmail,
   });
   const [gpxFile, setGpxFile] = useState<File | null>(null);
 
@@ -149,6 +153,39 @@ export function FktSubmitForm({ routeId }: Props) {
         </div>
       )}
 
+      {/* Sailor Details */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+          Sailor Details
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Who sailed this attempt? This may be different from the person submitting.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="sailorName">Sailor Name *</Label>
+            <Input
+              id="sailorName"
+              value={form.sailorName}
+              onChange={(e) => update("sailorName", e.target.value)}
+              placeholder="Full name of the sailor"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="sailorEmail">Sailor Email *</Label>
+            <Input
+              id="sailorEmail"
+              type="email"
+              value={form.sailorEmail}
+              onChange={(e) => update("sailorEmail", e.target.value)}
+              placeholder="Email address"
+              required
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="rigSize">Rig Size *</Label>
         <select
@@ -234,7 +271,7 @@ export function FktSubmitForm({ routeId }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="writeUp">Write-up</Label>
+        <Label htmlFor="writeUp">Write-up <span className="text-muted-foreground font-normal">(optional)</span></Label>
         <Textarea
           id="writeUp"
           value={form.writeUp}
@@ -245,7 +282,7 @@ export function FktSubmitForm({ routeId }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="trackSourceUrl">Track Source URL</Label>
+        <Label htmlFor="trackSourceUrl">Track Source URL <span className="text-muted-foreground font-normal">(optional)</span></Label>
         <Input
           id="trackSourceUrl"
           type="url"
