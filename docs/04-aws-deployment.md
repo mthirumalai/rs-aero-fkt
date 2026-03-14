@@ -1,5 +1,11 @@
 # AWS Production Deployment Guide
 
+> **⚠️ DEPRECATED - NOT CURRENTLY USED**
+>
+> This guide was created when the hypothesis was to deploy using AWS EC2 with self-hosted PostgreSQL.
+> The project has since moved to Railway for deployment (see `05-railway-deployment.md`).
+> This documentation is preserved for reference but has not been tested in production.
+
 This guide covers deploying and running the RS Aero FKT application on AWS EC2 with supporting services.
 
 ## Pre-Deployment Checklist
