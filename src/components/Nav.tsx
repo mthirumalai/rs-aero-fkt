@@ -79,6 +79,13 @@ export function Nav() {
           {/* Nav links — right aligned */}
           <nav className="hidden md:flex items-center">
             <Link
+              href="/fkts"
+              style={{ fontSize: "19px", color: "#888888", padding: "14px 16px" }}
+              className="hover:text-[#444444] transition-colors"
+            >
+              FKTs
+            </Link>
+            <Link
               href="/routes"
               style={{ fontSize: "19px", color: "#888888", padding: "14px 16px" }}
               className="hover:text-[#444444] transition-colors"

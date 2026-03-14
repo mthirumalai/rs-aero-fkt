@@ -43,7 +43,7 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-[200px]">Route</TableHead>
+            <TableHead className="min-w-[140px] max-w-[200px]">Route</TableHead>
             <TableHead>Country</TableHead>
             <TableHead className="text-center">Aero 5</TableHead>
             <TableHead className="text-center">Aero 6</TableHead>
@@ -57,7 +57,7 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
               <TableCell className="font-medium">
                 <Link
                   href={`/routes/${route.id}`}
-                  className="text-primary hover:underline"
+                  className="text-primary underline hover:no-underline"
                 >
                   {route.name}
                 </Link>
@@ -72,16 +72,17 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
                 return (
                   <TableCell key={rig} className="text-center">
                     {fkt ? (
-                      <div>
+                      <div className="whitespace-nowrap">
                         <Link
                           href={`/attempts/${fkt.attemptId}`}
-                          className="font-mono text-sm font-semibold text-primary hover:underline block"
+                          className="font-mono text-sm font-semibold text-primary underline hover:no-underline"
                         >
                           {formatDuration(fkt.durationSec)}
                         </Link>
+                        {" by "}
                         <Link
                           href={`/athletes/${fkt.athleteId}`}
-                          className="text-xs text-muted-foreground hover:underline"
+                          className="text-xs text-muted-foreground underline hover:no-underline"
                         >
                           {fkt.athleteName}
                         </Link>

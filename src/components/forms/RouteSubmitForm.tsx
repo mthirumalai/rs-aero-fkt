@@ -34,8 +34,8 @@ export function RouteSubmitForm() {
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
-    // Clear the inline error as the user types
-    if (field in coordErrors) {
+    // Clear the inline error as the user types, but only if it exists
+    if (coordErrors[field]) {
       setCoordErrors((e) => { const next = { ...e }; delete next[field]; return next; });
     }
   }
@@ -91,17 +91,7 @@ export function RouteSubmitForm() {
   }
 
   const heading = (
-    <>
-      <h1 className="text-3xl font-bold mb-2">Submit a Route</h1>
-      <p className="text-muted-foreground mb-8">
-        Submit a new RS Aero sailing route. An admin will review and approve it
-        before it goes live. Please read the{" "}
-        <a href="/guidelines" className="text-primary hover:underline">
-          guidelines
-        </a>{" "}
-        before submitting.
-      </p>
-    </>
+    <h1 className="text-3xl font-bold mb-8">Submit a Route</h1>
   );
 
   if (success) {
@@ -134,19 +124,25 @@ export function RouteSubmitForm() {
         <Label htmlFor={id}>{label} *</Label>
         <Input
           id={id}
+          key={id}
           value={value}
           onChange={(e) => update(id, e.target.value)}
           placeholder={placeholder}
           required
+          autoComplete="off"
         />
         {coordErrors[id] ? (
           <p className="text-xs text-destructive">{coordErrors[id]}</p>
         ) : (
-          value && parseCoordinate(value) !== null && (
-            <p className="text-xs text-muted-foreground">
-              → {formatCoord(parseCoordinate(value)!)}°
-            </p>
-          )
+          (() => {
+            if (!value) return null;
+            const parsed = parseCoordinate(value);
+            return parsed !== null ? (
+              <p className="text-xs text-muted-foreground">
+                → {formatCoord(parsed)}°
+              </p>
+            ) : null;
+          })()
         )}
       </div>
     );
@@ -237,7 +233,7 @@ export function RouteSubmitForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Label htmlFor="description">Notes to sailors <span className="text-muted-foreground font-normal">(optional)</span></Label>
         <Textarea
           id="description"
           value={form.description}

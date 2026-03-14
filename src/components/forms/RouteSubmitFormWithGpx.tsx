@@ -565,7 +565,7 @@ export function RouteSubmitFormWithGpx() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description <span className="text-muted-foreground font-normal">(optional)</span></Label>
+          <Label htmlFor="description">Notes to sailors <span className="text-muted-foreground font-normal">(optional)</span></Label>
           <Textarea
             id="description"
             value={form.description}
