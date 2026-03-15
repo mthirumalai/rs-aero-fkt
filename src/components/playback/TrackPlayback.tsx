@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { parseGpxXml, type GpxPoint } from "@/lib/gpx/parser";
 import { computeSog, type SogPoint } from "@/lib/gpx/sog";
-import { distanceNm } from "@/lib/gpx/validator";
 import { Button } from "@/components/ui/button";
 
 const TrackMapDynamic = dynamic(() => import("../map/TrackMapInner"), {
@@ -20,16 +19,12 @@ const SogChart = dynamic(() => import("../charts/SogChart"), { ssr: false });
 
 interface Props {
   attemptId: string;
-  routeStartLat: number;
-  routeStartLng: number;
-  routeEndLat: number;
-  routeEndLng: number;
 }
 
 const SPEED_OPTIONS = [1, 10, 100, 1000] as const;
 type SpeedMultiplier = (typeof SPEED_OPTIONS)[number];
 
-export function TrackPlayback({ attemptId, routeStartLat, routeStartLng, routeEndLat, routeEndLng }: Props) {
+export function TrackPlayback({ attemptId }: Props) {
   const [points, setPoints] = useState<GpxPoint[]>([]);
   const [sogPoints, setSogPoints] = useState<SogPoint[]>([]);
   const [loading, setLoading] = useState(true);

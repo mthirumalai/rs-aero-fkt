@@ -5,10 +5,6 @@ import { TrackPlayback } from "./TrackPlayback";
 
 interface Props {
   attemptId: string;
-  routeStartLat: number;
-  routeStartLng: number;
-  routeEndLat: number;
-  routeEndLng: number;
 }
 
 interface PlaybackData {
@@ -18,7 +14,7 @@ interface PlaybackData {
   isLoaded: boolean;
 }
 
-export function TrackPlaybackSection({ attemptId, routeStartLat, routeStartLng, routeEndLat, routeEndLng }: Props) {
+export function TrackPlaybackSection({ attemptId }: Props) {
   const [playbackData, setPlaybackData] = useState<PlaybackData>({
     elapsedSec: 0,
     currentTimeMs: 0,
@@ -62,11 +58,6 @@ export function TrackPlaybackSection({ attemptId, routeStartLat, routeStartLng, 
       {/* Track Playback Component */}
       <TrackPlayback
         attemptId={attemptId}
-        routeStartLat={routeStartLat}
-        routeStartLng={routeStartLng}
-        routeEndLat={routeEndLat}
-        routeEndLng={routeEndLng}
-        onPlaybackUpdate={setPlaybackData}
       />
     </div>
   );

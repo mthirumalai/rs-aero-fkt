@@ -158,10 +158,6 @@ export default async function AttemptDetailPage({ params }: Props) {
         <h2 className="text-xl font-semibold mb-4">Track Playback</h2>
         <TrackPlayback
           attemptId={attempt.id}
-          routeStartLat={attempt.route.startLat}
-          routeStartLng={attempt.route.startLng}
-          routeEndLat={attempt.route.endLat}
-          routeEndLng={attempt.route.endLng}
         />
       </div>
 
