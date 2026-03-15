@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -24,25 +24,15 @@ const endIcon = new L.Icon({
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
 });
 
-function FitBounds({ startLat, startLng, endLat, endLng }: {
-  startLat: number; startLng: number; endLat: number; endLng: number;
-}) {
-  const map = useMap();
-  useEffect(() => {
-    map.fitBounds(L.latLngBounds([startLat, startLng], [endLat, endLng]), { padding: [60, 60] });
-  }, [map, startLat, startLng, endLat, endLng]);
-  return null;
-}
-
 interface Props {
-  startLat: number; startLng: number; endLat: number; endLng: number;
-  startName: string; endName: string;
+  lat: number;
+  lng: number;
+  name: string;
+  type: "start" | "end";
 }
 
-export default function ApprovalMapInner({ startLat, startLng, endLat, endLng, startName, endName }: Props) {
+export default function PointMapInner({ lat, lng, name, type }: Props) {
   const [marine, setMarine] = useState(true); // Default to Marine
-  const center: [number, number] = [(startLat + endLat) / 2, (startLng + endLng) / 2];
-  const line: [number, number][] = [[startLat, startLng], [endLat, endLng]];
 
   return (
     <div className="relative w-full h-full">
@@ -62,7 +52,7 @@ export default function ApprovalMapInner({ startLat, startLng, endLat, endLng, s
         </button>
       </div>
 
-      <MapContainer center={center} zoom={10} style={{ height: "100%", width: "100%" }}>
+      <MapContainer center={[lat, lng]} zoom={16} style={{ height: "100%", width: "100%" }}>
         {/* Base tile layer */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -76,16 +66,11 @@ export default function ApprovalMapInner({ startLat, startLng, endLat, endLng, s
           opacity={marine ? 1 : 0}
         />
 
-        <FitBounds startLat={startLat} startLng={startLng} endLat={endLat} endLng={endLng} />
-
-        {/* Straight line between endpoints */}
-        <Polyline positions={line} color="#ec008c" weight={2} dashArray="6 4" opacity={0.8} />
-
-        <Marker position={[startLat, startLng]} icon={startIcon}>
-          <Popup><strong>Start:</strong> {startName}<br />{startLat.toFixed(6)}, {startLng.toFixed(6)}</Popup>
-        </Marker>
-        <Marker position={[endLat, endLng]} icon={endIcon}>
-          <Popup><strong>End:</strong> {endName}<br />{endLat.toFixed(6)}, {endLng.toFixed(6)}</Popup>
+        <Marker position={[lat, lng]} icon={type === "start" ? startIcon : endIcon}>
+          <Popup>
+            <strong>{type === "start" ? "Start" : "End"}:</strong> {name}<br />
+            {lat.toFixed(6)}, {lng.toFixed(6)}
+          </Popup>
         </Marker>
       </MapContainer>
     </div>

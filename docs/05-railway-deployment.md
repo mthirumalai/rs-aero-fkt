@@ -1,21 +1,19 @@
 # Railway Production Deployment Guide
 
-This guide covers deploying the RS Aero FKT application on Railway with supporting AWS services.
+This guide covers deploying the RS Aero FKT application on Railway with SendGrid for email.
 
 ## Overview
 
-Railway provides a Platform-as-a-Service that handles:
-- Automatic deployments from Git
-- Managed PostgreSQL database
-- HTTPS/SSL certificates
-- Environment variable management
-- Built-in monitoring and logs
-- Automatic scaling
+**Recommended Architecture:**
+- **Railway**: App hosting, PostgreSQL database, file storage (network volumes)
+- **SendGrid**: Email service (free tier: 100 emails/day)
+- **Railway**: HTTPS/SSL certificates, monitoring, logs
 
-We'll still use AWS for:
-- S3 file storage (GPX tracks and photos)
-- SES email service
-- Route 53 DNS (if using custom domain)
+**Benefits:**
+- ✅ Single platform deployment
+- ✅ No AWS configuration needed
+- ✅ Simpler billing and management
+- ✅ Free email tier covers typical usage
 
 ## Pre-Deployment Setup
 
@@ -32,64 +30,24 @@ We'll still use AWS for:
    railway login
    ```
 
-### 2. AWS Services Setup
+### 2. SendGrid Email Setup
 
-You'll still need AWS for file storage and email:
+1. **Create SendGrid Account**:
+   - Visit [sendgrid.com](https://sendgrid.com)
+   - Sign up for free account (100 emails/day)
+   - Verify your email address
 
-#### S3 Buckets
-```bash
-# Create S3 buckets
-aws s3 mb s3://rs-aero-fkt-gpx-prod
-aws s3 mb s3://rs-aero-fkt-photos-prod
-```
+2. **Create API Key**:
+   - Go to Settings → API Keys
+   - Click "Create API Key"
+   - Choose "Restricted Access"
+   - Enable only "Mail Send" permission
+   - Copy the API key (you'll need it for Railway)
 
-**GPX Bucket (Private)** - Apply this bucket policy:
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "DenyPublicRead",
-      "Effect": "Deny",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::rs-aero-fkt-gpx-prod/*"
-    }
-  ]
-}
-```
-
-**Photos Bucket (Public Read)** - Apply this bucket policy:
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::rs-aero-fkt-photos-prod/*"
-    }
-  ]
-}
-```
-
-#### SES Email Service
-```bash
-# Verify your domain in SES
-aws ses verify-domain-identity --domain yourdomain.com
-
-# Request production access (exit sandbox)
-# Submit request in AWS SES console to increase sending limits
-```
-
-#### IAM User for Railway
-Create an IAM user with programmatic access and these policies:
-- `AmazonS3FullAccess` (or custom policy for your buckets only)
-- `AmazonSESFullAccess` (or custom policy for sending only)
-
-Save the Access Key ID and Secret Access Key for Railway environment variables.
+3. **Verify Sender Email**:
+   - Go to Marketing → Sender Authentication → Single Sender Verification
+   - Add the email address you'll send from (e.g., `noreply@yourdomain.com`)
+   - Verify the email address
 
 ## Railway Deployment
 
@@ -106,6 +64,14 @@ Save the Access Key ID and Secret Access Key for Railway environment variables.
    - Click "New Service"
    - Select "Database" → "PostgreSQL"
    - Railway will automatically provision a PostgreSQL instance
+
+3. **Add Network Volume for File Storage**:
+   - In your Railway project dashboard
+   - Click "New Service"
+   - Select "Volume"
+   - Name it "file-storage"
+   - Set size to 5GB (can be increased later)
+   - Mount path: `/app/uploads`
 
 ### 2. Configure Environment Variables
 
@@ -125,7 +91,7 @@ NEXTAUTH_SECRET=your_secure_nextauth_secret_here
 
 #### OAuth Providers
 ```env
-# Google OAuth
+# Google OAuth (required)
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
@@ -134,20 +100,22 @@ APPLE_CLIENT_ID=your_apple_client_id
 APPLE_CLIENT_SECRET=your_apple_client_secret
 ```
 
-#### AWS Services
+#### File Storage (Railway Network Volume)
 ```env
-# AWS Credentials (from IAM user created above)
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-AWS_REGION=us-east-1
+# Use local storage with Railway network volume
+USE_LOCAL_DEV=true
+LOCAL_UPLOAD_DIR=/app/uploads
+```
 
-# S3 Buckets
-S3_BUCKET_GPX=rs-aero-fkt-gpx-prod
-S3_BUCKET_PHOTOS=rs-aero-fkt-photos-prod
-
-# SES Email
+#### Email Service (SendGrid)
+```env
+# SendGrid API key from setup step
+SENDGRID_API_KEY=your_sendgrid_api_key
 SES_FROM_EMAIL=noreply@yourdomain.com
 ADMIN_EMAIL=admin@yourdomain.com
+
+# Use SendGrid instead of AWS SES
+EMAIL_PROVIDER=sendgrid
 ```
 
 #### Production Settings
@@ -173,7 +141,72 @@ Update your OAuth applications with Railway URLs:
 2. Update your Services ID configuration
 3. Add Railway domain to allowed domains
 
-### 4. Database Migration
+### 4. Update Application Code for SendGrid
+
+Create a SendGrid email service file:
+
+```typescript
+// src/lib/email/sendgrid.ts
+import sgMail from '@sendgrid/mail';
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+
+export async function sendRouteApprovalEmail({
+  routeId,
+  routeName,
+  submitterName,
+  submitterEmail,
+  approvalToken,
+  baseUrl,
+}: {
+  routeId: string;
+  routeName: string;
+  submitterName: string;
+  submitterEmail: string;
+  approvalToken: string;
+  baseUrl: string;
+}) {
+  const approvalUrl = `${baseUrl}/admin/approve-route?token=${approvalToken}`;
+
+  const msg = {
+    to: process.env.ADMIN_EMAIL!,
+    from: process.env.SES_FROM_EMAIL!,
+    subject: `New Route Submission: ${routeName}`,
+    html: `
+      <h2>New Route Submission</h2>
+      <p><strong>Route:</strong> ${routeName}</p>
+      <p><strong>Submitted by:</strong> ${submitterName} (${submitterEmail})</p>
+      <p><strong>Route ID:</strong> ${routeId}</p>
+
+      <p>Please review and approve/reject this route:</p>
+      <a href="${approvalUrl}" style="background: #0066cc; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+        Review Route
+      </a>
+
+      <p><small>Direct link: ${approvalUrl}</small></p>
+    `
+  };
+
+  await sgMail.send(msg);
+}
+```
+
+Install SendGrid dependency:
+```bash
+npm install @sendgrid/mail
+```
+
+Update your existing email service to use SendGrid:
+```typescript
+// src/lib/email/ses.ts
+import { sendRouteApprovalEmail as sendGridEmail } from './sendgrid';
+
+export const sendRouteApprovalEmail = process.env.EMAIL_PROVIDER === 'sendgrid'
+  ? sendGridEmail
+  : /* existing SES implementation */;
+```
+
+### 5. Database Migration
 
 Railway will automatically build and deploy your app. After the first deployment:
 
@@ -195,14 +228,14 @@ Railway will automatically build and deploy your app. After the first deployment
    npx prisma db execute --stdin < /dev/null
    ```
 
-### 5. Deploy Application
+### 6. Deploy Application
 
 Railway automatically deploys when you push to your connected Git branch:
 
 ```bash
 # Deploy latest changes
 git add .
-git commit -m "Configure production environment"
+git commit -m "Configure Railway production environment"
 git push origin main
 
 # Railway will automatically build and deploy
@@ -225,23 +258,12 @@ git push origin main
 
 ### 2. Configure DNS
 
-If using Route 53:
+If using Cloudflare, Route 53, or other DNS provider:
 ```bash
-# Create hosted zone (if not exists)
-aws route53 create-hosted-zone --name yourdomain.com --caller-reference $(date +%s)
-
 # Add CNAME record (replace with Railway's instructions)
-aws route53 change-resource-record-sets --hosted-zone-id YOUR_ZONE_ID --change-batch '{
-  "Changes": [{
-    "Action": "CREATE",
-    "ResourceRecordSet": {
-      "Name": "rsaerofkt.com",
-      "Type": "CNAME",
-      "TTL": 300,
-      "ResourceRecords": [{"Value": "your-app-name.railway.app"}]
-    }
-  }]
-}'
+# Name: @ (or your subdomain)
+# Value: your-app-name.railway.app
+# TTL: Auto or 300
 ```
 
 ### 3. Update Environment Variables
@@ -262,6 +284,7 @@ Railway provides:
 - **Metrics**: CPU, memory, and network usage
 - **Uptime monitoring**: Automatic health checks
 - **Database metrics**: Connection count, query performance
+- **Volume usage**: Storage space monitoring
 
 Access via Railway dashboard → your service → "Observability"
 
@@ -276,7 +299,34 @@ railway logs
 railway logs --tail
 ```
 
-### 3. Database Management
+### 3. File Storage Management
+
+#### Accessing Files
+```bash
+# Connect to your app to manage files
+railway shell
+ls -la /app/uploads
+```
+
+#### Storage Usage
+Monitor volume usage in Railway dashboard:
+- Go to your Volume service
+- Check "Usage" tab for storage statistics
+- Increase volume size if needed
+
+#### Backup Strategy
+```bash
+# Create backup script (run locally)
+#!/bin/bash
+
+# Download all files from Railway volume
+railway shell 'tar -czf backup.tar.gz /app/uploads'
+railway shell 'cat backup.tar.gz' > "backup_$(date +%Y%m%d).tar.gz"
+
+echo "Backup completed: backup_$(date +%Y%m%d).tar.gz"
+```
+
+### 4. Database Management
 
 #### Accessing Database
 ```bash
@@ -292,7 +342,7 @@ railway connect postgres
 Railway automatically backs up your PostgreSQL database, but you can also create manual backups:
 
 ```bash
-# Create manual backup script for additional safety
+# Create manual backup script
 #!/bin/bash
 
 # Get Railway database URL from environment
@@ -301,21 +351,8 @@ DATABASE_URL=$(railway variables get DATABASE_URL)
 # Create backup
 pg_dump "$DATABASE_URL" | gzip > "backup_$(date +%Y%m%d_%H%M%S).sql.gz"
 
-# Upload to S3 for additional safety
-aws s3 cp "backup_$(date +%Y%m%d_%H%M%S).sql.gz" s3://rs-aero-fkt-backups/database/
+echo "Manual database backup completed"
 ```
-
-### 4. Environment Management
-
-Railway supports multiple environments:
-- **Production**: Connected to `main` branch
-- **Staging**: Connected to `staging` branch (optional)
-- **Development**: Local development
-
-Create staging environment:
-1. Create `staging` branch in Git
-2. Create new Railway service connected to `staging` branch
-3. Use separate database for staging
 
 ## Scaling and Performance
 
@@ -331,14 +368,14 @@ Railway automatically scales based on:
 Adjust resources in Railway dashboard:
 - **Memory**: 512MB to 8GB per service
 - **CPU**: Shared to dedicated vCPUs
-- **Storage**: Up to 100GB per database
+- **Storage**: Increase volume size as needed
 
 ### 3. Performance Optimization
 
 Monitor and optimize:
 ```bash
 # Check app performance
-railway logs | grep "slow query"
+railway logs | grep -i "slow\|error"
 
 # Monitor database performance
 railway connect postgres
@@ -359,24 +396,22 @@ SELECT * FROM pg_stat_activity;
 - Production features (custom domains, etc.)
 
 **Estimated Monthly Costs**:
-- Small app: $20-30/month
+- Small app: $20-30/month (app + database + 5GB storage)
 - Medium traffic: $40-60/month
 - High traffic: $80+ /month
 
-### 2. AWS Services Cost
+### 2. SendGrid Cost
 
-Additional AWS services:
-- **S3 Storage**: ~$1-5/month (depends on usage)
-- **SES Email**: ~$1-10/month (depends on volume)
-- **Route 53**: $0.50/month per hosted zone
+**Free tier**: 100 emails/day (3,000/month)
+- Perfect for RS Aero FKT usage
+- **Cost: $0**
 
 ### 3. Cost Optimization Tips
 
-- **Use Railway's free tier** for development
 - **Monitor usage** in Railway dashboard
 - **Optimize database queries** to reduce CPU usage
-- **Use S3 lifecycle policies** for old files
-- **Monitor S3 usage** to avoid unexpected charges
+- **Use appropriate volume sizes** (start small, grow as needed)
+- **Review monthly bills** and adjust resources accordingly
 
 ## Deployment Automation
 
@@ -400,15 +435,19 @@ git push origin feature/new-feature
 
 Railway automatically monitors your app, but you can add custom health checks:
 
-```javascript
-// pages/api/health.js
+```typescript
+// pages/api/health.ts
 export default function handler(req, res) {
   // Check database connection
-  // Check external services
+  // Check file storage access
+  // Check SendGrid API
 
   res.status(200).json({
     status: 'healthy',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    database: 'connected',
+    storage: 'accessible',
+    email: 'configured'
   });
 }
 ```
@@ -441,10 +480,17 @@ Railway PostgreSQL includes:
 - **Backup encryption**: All backups encrypted
 - **SSL connections**: Enforced by default
 
-### 3. Application Security
+### 3. File Storage Security
+
+Network volumes are:
+- **Private by default**: Only accessible by your application
+- **Encrypted**: Files encrypted at rest
+- **Access controlled**: Through your application only
+
+### 4. Application Security
 
 Implement standard security practices:
-```javascript
+```typescript
 // next.config.js
 module.exports = {
   async headers() {
@@ -497,25 +543,38 @@ npx prisma db execute --stdin < /dev/null
 # Restart database service if needed
 ```
 
-### 3. File Upload Issues
+### 3. File Storage Issues
 
 ```bash
-# Check AWS credentials
+# Check volume mount and permissions
 railway shell
-aws sts get-caller-identity
+ls -la /app/uploads
+df -h /app/uploads
 
-# Test S3 access
-aws s3 ls s3://rs-aero-fkt-photos-prod
+# Test file write/read
+echo "test" > /app/uploads/test.txt
+cat /app/uploads/test.txt
 ```
 
-### 4. OAuth Issues
+### 4. Email Issues
+
+```bash
+# Test SendGrid API key
+railway shell
+curl -X "POST" "https://api.sendgrid.com/v3/mail/send" \
+     -H "Authorization: Bearer $SENDGRID_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{"personalizations":[{"to":[{"email":"test@example.com"}]}],"from":{"email":"noreply@yourdomain.com"},"subject":"Test","content":[{"type":"text/plain","value":"Test email"}]}'
+```
+
+### 5. OAuth Issues
 
 Common fixes:
 - Verify redirect URIs match exactly (including https://)
 - Check environment variables are set correctly
 - Ensure OAuth apps are in production mode
 
-### 5. Performance Issues
+### 6. Performance Issues
 
 ```bash
 # Check resource usage
@@ -527,25 +586,120 @@ railway status
 
 ## Migration from Other Platforms
 
-### From Vercel/Netlify
-- Export environment variables
-- Update OAuth redirect URIs
-- Point domain DNS to Railway
+### From AWS/EC2
+```bash
+# Export environment variables
+# Migrate database data if needed:
+# Export from old database
+pg_dump old_database_url > backup.sql
 
-### From Heroku
-- Export Heroku config vars: `heroku config -a your-app`
-- Import to Railway environment variables
-- Update any Heroku-specific configurations
+# Import to Railway
+railway connect postgres < backup.sql
 
-### From EC2/VPS
-- Ensure all environment variables are configured
-- Migrate database data if needed:
-  ```bash
-  # Export from old database
-  pg_dump old_database_url > backup.sql
+# Migrate files to Railway volume
+scp -r old_server:/path/to/files/* ./local_files/
+# Then upload to Railway volume through app
+```
 
-  # Import to Railway
-  railway connect postgres < backup.sql
-  ```
+---
 
-This completes the Railway deployment guide for RS Aero FKT. Railway significantly simplifies deployment while maintaining production-grade capabilities for security, scaling, and monitoring.
+## Alternative: AWS Storage + Email
+
+If you prefer using AWS services for storage and email (more complex but more scalable):
+
+### AWS S3 + SES Setup
+
+#### 1. S3 Buckets
+```bash
+# Create S3 buckets
+aws s3 mb s3://rs-aero-fkt-gpx-prod
+aws s3 mb s3://rs-aero-fkt-photos-prod
+```
+
+**GPX Bucket (Private)**:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyPublicRead",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::rs-aero-fkt-gpx-prod/*"
+    }
+  ]
+}
+```
+
+**Photos Bucket (Public Read)**:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::rs-aero-fkt-photos-prod/*"
+    }
+  ]
+}
+```
+
+#### 2. SES Email Service
+```bash
+# Verify your domain in SES
+aws ses verify-domain-identity --domain yourdomain.com
+
+# Request production access (exit sandbox)
+# Submit request in AWS SES console to increase sending limits
+```
+
+#### 3. IAM User for Railway
+Create an IAM user with programmatic access and these policies:
+- `AmazonS3FullAccess` (or custom policy for your buckets only)
+- `AmazonSESFullAccess` (or custom policy for sending only)
+
+#### 4. Railway Environment Variables (AWS Version)
+```env
+# Database (auto-configured by Railway)
+# OAuth providers (same as above)
+# Production settings (same as above)
+
+# AWS Services
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+AWS_REGION=us-east-1
+
+# S3 Buckets
+S3_BUCKET_GPX=rs-aero-fkt-gpx-prod
+S3_BUCKET_PHOTOS=rs-aero-fkt-photos-prod
+
+# SES Email
+SES_FROM_EMAIL=noreply@yourdomain.com
+ADMIN_EMAIL=admin@yourdomain.com
+
+# Use S3 instead of local storage
+USE_LOCAL_DEV=false
+```
+
+### AWS Cost Comparison
+- **S3**: ~$0.023/GB/month (much cheaper for large storage)
+- **SES**: Free for 62,000 emails/month from EC2, $1/10k emails otherwise
+- **Total for 5GB + 1000 emails/month**: ~$0.25/month
+
+**Use AWS if:**
+- You need unlimited storage
+- You plan to have thousands of users
+- You want the absolute lowest cost at scale
+- You don't mind the additional complexity
+
+**Use Railway-only if:**
+- You want maximum simplicity
+- You're okay paying ~$1/month extra for convenience
+- You prefer single-platform management
+- You want faster development iteration
+
+This completes the comprehensive Railway deployment guide with both approaches!

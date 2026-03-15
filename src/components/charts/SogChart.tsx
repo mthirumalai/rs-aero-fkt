@@ -7,8 +7,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ReferenceLine,
-  ReferenceArea,
   ResponsiveContainer,
 } from "recharts";
 import type { SogPoint } from "@/lib/gpx/sog";
@@ -100,7 +98,7 @@ export default function SogChart({ sogPoints, currentTimeMs }: Props) {
               if (name === "distance") return [`${v.toFixed(2)} nm`, "Distance"];
               return [v, name];
             }}
-            labelFormatter={(label: unknown, payload: any) => {
+            labelFormatter={(label: unknown, payload: unknown[]) => {
               const l = typeof label === "number" ? label : 0;
               const elapsedTime = formatTime(l);
               const wallClockLocal = payload?.[0]?.payload?.wallClockLocal || "";

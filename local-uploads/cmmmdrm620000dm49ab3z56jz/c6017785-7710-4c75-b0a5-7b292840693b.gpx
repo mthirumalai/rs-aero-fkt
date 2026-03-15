@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RS Aero FKT Test Generator" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>TEST Route FKT Attempt</name>
+    <desc>Test GPX track from Southport to Sneads Ferry - 1 hour sailing</desc>
+    <time>2024-03-15T12:00:00Z</time>
+  </metadata>
+  <trk>
+    <name>Southport to Sneads Ferry FKT</name>
+    <desc>RS Aero test sailing track</desc>
+    <trkseg>
+      <trkpt lat="33.948889" lon="-78.011667">
+        <time>2024-03-15T12:00:00Z</time>
+        <name>Start: Southport</name>
+      </trkpt>
+      <trkpt lat="33.952000" lon="-78.005000">
+        <time>2024-03-15T12:02:00Z</time>
+      </trkpt>
+      <trkpt lat="33.958000" lon="-77.995000">
+        <time>2024-03-15T12:04:00Z</time>
+      </trkpt>
+      <trkpt lat="33.965000" lon="-77.982000">
+        <time>2024-03-15T12:06:00Z</time>
+      </trkpt>
+      <trkpt lat="33.975000" lon="-77.968000">
+        <time>2024-03-15T12:08:00Z</time>
+      </trkpt>
+      <trkpt lat="33.988000" lon="-77.952000">
+        <time>2024-03-15T12:10:00Z</time>
+      </trkpt>
+      <trkpt lat="34.005000" lon="-77.935000">
+        <time>2024-03-15T12:12:00Z</time>
+      </trkpt>
+      <trkpt lat="34.025000" lon="-77.915000">
+        <time>2024-03-15T12:14:00Z</time>
+      </trkpt>
+      <trkpt lat="34.048000" lon="-77.893000">
+        <time>2024-03-15T12:16:00Z</time>
+      </trkpt>
+      <trkpt lat="34.072000" lon="-77.870000">
+        <time>2024-03-15T12:18:00Z</time>
+      </trkpt>
+      <trkpt lat="34.098000" lon="-77.845000">
+        <time>2024-03-15T12:20:00Z</time>
+      </trkpt>
+      <trkpt lat="34.125000" lon="-77.818000">
+        <time>2024-03-15T12:22:00Z</time>
+      </trkpt>
+      <trkpt lat="34.152000" lon="-77.790000">
+        <time>2024-03-15T12:24:00Z</time>
+      </trkpt>
+      <trkpt lat="34.178000" lon="-77.760000">
+        <time>2024-03-15T12:26:00Z</time>
+      </trkpt>
+      <trkpt lat="34.205000" lon="-77.728000">
+        <time>2024-03-15T12:28:00Z</time>
+      </trkpt>
+      <trkpt lat="34.232000" lon="-77.695000">
+        <time>2024-03-15T12:30:00Z</time>
+      </trkpt>
+      <trkpt lat="34.258000" lon="-77.660000">
+        <time>2024-03-15T12:32:00Z</time>
+      </trkpt>
+      <trkpt lat="34.283000" lon="-77.624000">
+        <time>2024-03-15T12:34:00Z</time>
+      </trkpt>
+      <trkpt lat="34.307000" lon="-77.587000">
+        <time>2024-03-15T12:36:00Z</time>
+      </trkpt>
+      <trkpt lat="34.330000" lon="-77.549000">
+        <time>2024-03-15T12:38:00Z</time>
+      </trkpt>
+      <trkpt lat="34.352000" lon="-77.510000">
+        <time>2024-03-15T12:40:00Z</time>
+      </trkpt>
+      <trkpt lat="34.373000" lon="-77.470000">
+        <time>2024-03-15T12:42:00Z</time>
+      </trkpt>
+      <trkpt lat="34.393000" lon="-77.429000">
+        <time>2024-03-15T12:44:00Z</time>
+      </trkpt>
+      <trkpt lat="34.412000" lon="-77.387000">
+        <time>2024-03-15T12:46:00Z</time>
+      </trkpt>
+      <trkpt lat="34.430000" lon="-77.344000">
+        <time>2024-03-15T12:48:00Z</time>
+      </trkpt>
+      <trkpt lat="34.447000" lon="-77.300000">
+        <time>2024-03-15T12:50:00Z</time>
+      </trkpt>
+      <trkpt lat="34.463000" lon="-77.255000">
+        <time>2024-03-15T12:52:00Z</time>
+      </trkpt>
+      <trkpt lat="34.478000" lon="-77.209000">
+        <time>2024-03-15T12:54:00Z</time>
+      </trkpt>
+      <trkpt lat="34.492000" lon="-77.162000">
+        <time>2024-03-15T12:56:00Z</time>
+      </trkpt>
+      <trkpt lat="34.505000" lon="-77.114000">
+        <time>2024-03-15T12:58:00Z</time>
+      </trkpt>
+      <trkpt lat="34.518056" lon="-77.448056">
+        <time>2024-03-15T13:00:00Z</time>
+        <name>End: Sneads Ferry</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

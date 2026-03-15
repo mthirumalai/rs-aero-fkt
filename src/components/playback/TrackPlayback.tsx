@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { parseGpxXml, type GpxPoint } from "@/lib/gpx/parser";
 import { computeSog, type SogPoint } from "@/lib/gpx/sog";
+import { distanceNm } from "@/lib/gpx/validator";
+import { Button } from "@/components/ui/button";
 
 const TrackMapDynamic = dynamic(() => import("../map/TrackMapInner"), {
   ssr: false,
@@ -18,12 +20,16 @@ const SogChart = dynamic(() => import("../charts/SogChart"), { ssr: false });
 
 interface Props {
   attemptId: string;
+  routeStartLat: number;
+  routeStartLng: number;
+  routeEndLat: number;
+  routeEndLng: number;
 }
 
-const SPEED_OPTIONS = [1, 2, 5, 10] as const;
+const SPEED_OPTIONS = [1, 10, 100, 1000] as const;
 type SpeedMultiplier = (typeof SPEED_OPTIONS)[number];
 
-export function TrackPlayback({ attemptId }: Props) {
+export function TrackPlayback({ attemptId, routeStartLat, routeStartLng, routeEndLat, routeEndLng }: Props) {
   const [points, setPoints] = useState<GpxPoint[]>([]);
   const [sogPoints, setSogPoints] = useState<SogPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,8 +96,8 @@ export function TrackPlayback({ attemptId }: Props) {
       setCurrentTimeMs((prev) => {
         const next = prev + realElapsed * speed;
         if (next >= endTimeMs) {
-          setIsPlaying(false);
-          return endTimeMs;
+          // Auto-loop: jump back to start and continue playing
+          return startTimeMs;
         }
         return next;
       });
@@ -140,8 +146,53 @@ export function TrackPlayback({ attemptId }: Props) {
     );
   }
 
+  const actualDistanceNm = sogPoints.length > 0 ? sogPoints[sogPoints.length - 1].distanceNm : 0;
+  const greatCircleDistanceNm = distanceNm(routeStartLat, routeStartLng, routeEndLat, routeEndLng);
+
+  // Find current distance by interpolating between SOG points
+  const getCurrentDistance = () => {
+    if (sogPoints.length === 0) return 0;
+
+    const currentPoint = sogPoints.find((p, i) => {
+      const nextPoint = sogPoints[i + 1];
+      return currentTimeMs >= p.timeMs && (!nextPoint || currentTimeMs <= nextPoint.timeMs);
+    });
+
+    return currentPoint?.distanceNm || 0;
+  };
+
+  const currentDistanceNm = getCurrentDistance();
+  const currentElapsedSec = Math.floor((currentTimeMs - startTimeMs) / 1000);
+
+  function formatElapsedTime(seconds: number) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="relative space-y-4">
+      {/* Info box positioned in header area */}
+      {sogPoints.length > 0 && (
+        <div className="absolute -top-16 right-0 bg-card border rounded-lg px-4 py-2 z-10">
+          <div className="flex gap-6 text-sm">
+            <div className="text-center">
+              <div className="text-muted-foreground">Elapsed</div>
+              <div className="font-mono font-medium" style={{ color: "#ec4899" }}>{formatElapsedTime(currentElapsedSec)}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-muted-foreground">Local Time</div>
+              <div className="font-medium" style={{ color: "#ec4899" }}>{new Date(currentTimeMs).toLocaleTimeString('en-US', { hour12: false })}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-muted-foreground">Distance</div>
+              <div className="font-medium" style={{ color: "#ec4899" }}>{currentDistanceNm.toFixed(2)} nm</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Map */}
       <div className="h-[400px] border rounded-lg overflow-hidden">
         <TrackMapDynamic
@@ -152,40 +203,48 @@ export function TrackPlayback({ attemptId }: Props) {
 
       {/* SOG Chart */}
       {sogPoints.length > 0 && (
-        <div className="border rounded-lg p-4 h-[200px]">
-          <SogChart sogPoints={sogPoints} currentTimeMs={currentTimeMs} />
+        <div className="border rounded-lg">
+          <div className="w-full h-[200px] p-4">
+            <SogChart sogPoints={sogPoints} currentTimeMs={currentTimeMs} />
+          </div>
         </div>
       )}
 
       {/* Controls */}
       <div className="border rounded-lg p-4 space-y-3">
         <div className="flex items-center gap-3">
-          <button
+          <Button
             onClick={handlePlayPause}
-            className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            className="text-sm font-medium"
           >
             {isPlaying ? "⏸ Pause" : currentTimeMs >= endTimeMs ? "↺ Restart" : "▶ Play"}
-          </button>
+          </Button>
 
           <div className="flex items-center gap-1">
             {SPEED_OPTIONS.map((s) => (
-              <button
+              <Button
                 key={s}
                 onClick={() => setSpeed(s)}
-                className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                  speed === s
-                    ? "bg-primary text-white"
-                    : "bg-muted hover:bg-muted/80 text-foreground"
-                }`}
+                variant={speed === s ? "default" : "secondary"}
+                size="sm"
+                className="text-sm font-medium"
               >
                 {s}x
-              </button>
+              </Button>
             ))}
           </div>
 
-          <span className="text-sm text-muted-foreground ml-auto">
-            {new Date(currentTimeMs).toISOString().substr(11, 8)} UTC
-          </span>
+          <div className="text-sm text-muted-foreground ml-auto text-right">
+            <div>Elapsed: {(() => {
+              const totalSec = Math.floor((currentTimeMs - startTimeMs) / 1000);
+              const h = Math.floor(totalSec / 3600);
+              const m = Math.floor((totalSec % 3600) / 60);
+              const s = totalSec % 60;
+              return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+            })()}</div>
+            <div>Local: {new Date(currentTimeMs).toLocaleTimeString('en-US', { hour12: false })}</div>
+            <div>UTC: {new Date(currentTimeMs).toISOString().substr(11, 8)}</div>
+          </div>
         </div>
 
         <input
@@ -196,6 +255,11 @@ export function TrackPlayback({ attemptId }: Props) {
           value={progressPct}
           onChange={handleScrub}
           className="w-full accent-primary"
+          style={{
+            width: 'calc(100% - 125px)', // Match chart: 75px left + 50px right = 125px total
+            marginLeft: '75px', // Match chart left margin
+            marginRight: '50px' // Match chart right margin
+          }}
         />
       </div>
     </div>

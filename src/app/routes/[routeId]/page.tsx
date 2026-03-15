@@ -57,7 +57,7 @@ export default async function RouteDetailPage({ params }: Props) {
             )}
           </div>
         </div>
-        <Button asChild className="bg-primary hover:bg-primary">
+        <Button asChild>
           <Link href={`/routes/${route.id}/submit-fkt`}>Submit an FKT</Link>
         </Button>
       </div>

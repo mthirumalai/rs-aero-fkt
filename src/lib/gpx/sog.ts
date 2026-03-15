@@ -6,6 +6,7 @@ export interface SogPoint {
   sogKnots: number;
   lat: number;
   lon: number;
+  distanceNm: number; // Cumulative distance from start in nautical miles
 }
 
 export function computeSog(points: GpxPoint[], smoothingWindow = 5): SogPoint[] {
@@ -13,6 +14,7 @@ export function computeSog(points: GpxPoint[], smoothingWindow = 5): SogPoint[] 
   if (timedPoints.length < 2) return [];
 
   const rawSog: SogPoint[] = [];
+  let cumulativeDistanceM = 0;
 
   for (let i = 1; i < timedPoints.length; i++) {
     const prev = timedPoints[i - 1];
@@ -22,6 +24,7 @@ export function computeSog(points: GpxPoint[], smoothingWindow = 5): SogPoint[] 
 
     if (timeDiffSec <= 0) continue;
 
+    cumulativeDistanceM += distM;
     const speedMs = distM / timeDiffSec;
     const sogKnots = speedMs * 1.94384;
 
@@ -30,10 +33,11 @@ export function computeSog(points: GpxPoint[], smoothingWindow = 5): SogPoint[] 
       sogKnots,
       lat: curr.lat,
       lon: curr.lon,
+      distanceNm: Math.round((cumulativeDistanceM / 1852) * 100) / 100, // Convert to nautical miles with 2 decimal places
     });
   }
 
-  // Apply rolling average smoothing
+  // Apply rolling average smoothing (only to SOG, preserve distance)
   const smoothed: SogPoint[] = rawSog.map((point, i) => {
     const half = Math.floor(smoothingWindow / 2);
     const start = Math.max(0, i - half);

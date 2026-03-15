@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { sendRouteApprovalEmail } from "@/lib/email/ses";
 import { getCountriesForRegion, type Region } from "@/lib/regions";
 import { randomUUID } from "crypto";
+import { recordRouteStatusChange } from "@/lib/route-status-history";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -59,6 +60,16 @@ export async function POST(req: NextRequest) {
       status: "PENDING",
     },
   });
+
+  // Record the initial submission in status history
+  await recordRouteStatusChange(
+    route.id,
+    null, // fromStatus (new route)
+    "PENDING", // toStatus
+    "Initial route submission",
+    session.user.id, // changedById
+    approvalToken
+  );
 
   // Send approval email
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";

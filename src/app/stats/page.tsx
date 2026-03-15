@@ -1,15 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { COUNTRY_NAMES, getRegion, REGION_LABELS } from "@/lib/regions";
-import { formatDuration } from "@/lib/gpx/parser";
-import type { RigSize } from "@prisma/client";
-
-const RIG_SIZES: RigSize[] = ["AERO_5", "AERO_6", "AERO_7", "AERO_9"];
-const RIG_LABELS = {
-  AERO_5: "Aero 5",
-  AERO_6: "Aero 6",
-  AERO_7: "Aero 7",
-  AERO_9: "Aero 9"
-};
 
 async function getStats() {
   // First get all unique sailors (both registered and unregistered)

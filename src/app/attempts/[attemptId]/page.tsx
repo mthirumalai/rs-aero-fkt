@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/gpx/parser";
 import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
+import { distanceNm } from "@/lib/gpx/validator";
+import { DistanceTraveledStat } from "@/components/stats/DistanceTraveledStat";
 import { TrackPlayback } from "@/components/playback/TrackPlayback";
 
 interface Props {
@@ -40,63 +42,88 @@ export default async function AttemptDetailPage({ params }: Props) {
 
   if (!attempt) notFound();
 
+  // Get all approved attempts for this route and rig to determine ranking
+  const allAttemptsForRouteRig = await prisma.fktAttempt.findMany({
+    where: {
+      routeId: attempt.routeId,
+      rigSize: attempt.rigSize,
+      status: "APPROVED",
+    },
+    orderBy: { durationSec: "asc" },
+    select: { id: true, durationSec: true },
+  });
+
+  // Find the ranking of this attempt
+  const attemptRanking = allAttemptsForRouteRig.findIndex(a => a.id === attempt.id) + 1;
+
+  // Format ranking text
+  const getRankingText = (rank: number) => {
+    if (rank === 1) return "Fastest time";
+    if (rank === 2) return "2nd fastest time";
+    if (rank === 3) return "3rd fastest time";
+    return `${rank}th fastest time`;
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <Link href="/routes" className="hover:underline">Routes</Link>
-        <span>/</span>
-        <Link href={`/routes/${attempt.route.id}`} className="hover:underline">
-          {attempt.route.name}
-        </Link>
-        <span>/</span>
-        <span>FKT Attempt</span>
-      </div>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{attempt.route.name}</h1>
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="outline">{RIG_LABELS[attempt.rigSize]}</Badge>
-          <span className="text-muted-foreground">
-            {new Date(attempt.date).toLocaleDateString("en-GB", {
-              day: "numeric", month: "long", year: "numeric",
-            })}
-          </span>
-          <span className="text-muted-foreground">by</span>
-          <Link
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-4">FKT Attempt</h1>
+        <p className="text-xl text-muted-foreground">
+          Route: <span className="text-foreground">{attempt.route.name}</span>, {new Date(attempt.date).toLocaleDateString("en-GB", {
+            day: "numeric", month: "long", year: "numeric",
+          })} by <Link
             href={`/athletes/${attempt.athlete.id}`}
-            className="text-primary font-medium hover:underline"
+            className="text-primary hover:underline"
           >
             {attempt.athlete.name}
-          </Link>
-        </div>
+          </Link>. Rig: <span className="text-foreground">{attempt.rigSize.replace('AERO_', '')}</span>
+        </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8">
         <div className="bg-card border rounded-lg p-4 text-center">
-          <p className="text-sm text-muted-foreground">Time</p>
-          <p className="text-2xl font-bold font-mono">
+          <p className="text-sm text-muted-foreground">Elapsed Time</p>
+          <p className="text-2xl font-mono">
             {formatDuration(attempt.durationSec)}
+          </p>
+        </div>
+        <div className="bg-card border rounded-lg p-4 text-center">
+          <p className="text-sm text-muted-foreground">Ranking</p>
+          <p className="text-2xl">
+            {getRankingText(attemptRanking)}
+          </p>
+        </div>
+        <div className="bg-card border rounded-lg p-4 text-center">
+          <p className="text-sm text-muted-foreground">Great Circle Distance</p>
+          <p className="text-2xl">
+            {distanceNm(attempt.route.startLat, attempt.route.startLng, attempt.route.endLat, attempt.route.endLng)} nm
+          </p>
+        </div>
+        <div className="bg-card border rounded-lg p-4 text-center">
+          <p className="text-sm text-muted-foreground">Distance Traveled</p>
+          <p className="text-2xl">
+            <DistanceTraveledStat attemptId={attempt.id} />
           </p>
         </div>
         {attempt.avgSogKnots != null && (
           <div className="bg-card border rounded-lg p-4 text-center">
             <p className="text-sm text-muted-foreground">Avg SOG</p>
-            <p className="text-2xl font-bold">{attempt.avgSogKnots.toFixed(1)} kts</p>
+            <p className="text-2xl">{attempt.avgSogKnots.toFixed(1)} kts</p>
           </div>
         )}
         {attempt.maxSogKnots != null && (
           <div className="bg-card border rounded-lg p-4 text-center">
             <p className="text-sm text-muted-foreground">Max SOG</p>
-            <p className="text-2xl font-bold">{attempt.maxSogKnots.toFixed(1)} kts</p>
+            <p className="text-2xl">{attempt.maxSogKnots.toFixed(1)} kts</p>
           </div>
         )}
         {attempt.windSpeedKnots != null && (
           <div className="bg-card border rounded-lg p-4 text-center">
             <p className="text-sm text-muted-foreground">Wind</p>
-            <p className="text-2xl font-bold">
+            <p className="text-2xl">
               {attempt.windSpeedKnots.toFixed(0)} kts
               {attempt.windDirection && (
                 <span className="text-lg ml-1">{attempt.windDirection}</span>
@@ -136,7 +163,13 @@ export default async function AttemptDetailPage({ params }: Props) {
       {/* Track Playback */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Track Playback</h2>
-        <TrackPlayback attemptId={attempt.id} />
+        <TrackPlayback
+          attemptId={attempt.id}
+          routeStartLat={attempt.route.startLat}
+          routeStartLng={attempt.route.startLng}
+          routeEndLat={attempt.route.endLat}
+          routeEndLng={attempt.route.endLng}
+        />
       </div>
 
       {/* Write-up */}

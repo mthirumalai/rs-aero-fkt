@@ -39,15 +39,33 @@ interface Props {
 
 export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: Props) {
   const [selectedRejected, setSelectedRejected] = useState<RouteRow | null>(null);
+  const [reopeningRoute, setReopeningRoute] = useState<string | null>(null);
+
+  const handleReOpen = async (routeId: string) => {
+    setReopeningRoute(routeId);
+    try {
+      const response = await fetch(`/api/routes/${routeId}/reopen`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Failed to re-open route: ${error.message || 'Unknown error'}`);
+        return;
+      }
+
+      // Refresh the page to show updated status
+      window.location.reload();
+    } catch (error) {
+      alert('Network error while re-opening route');
+    } finally {
+      setReopeningRoute(null);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <h1 className="font-display text-5xl uppercase tracking-wide mb-1">Route Submissions</h1>
-      <p className="text-muted-foreground mb-10">
-        Routes submitted for inclusion in the RS Aero FKT records.
-        {isAdmin && " Click a pending route to review and approve or reject it."}
-        {!isAdmin && " (Admin access required to approve routes)"}
-      </p>
+      <h1 className="font-display text-5xl uppercase tracking-wide mb-10">Route Submissions</h1>
 
       {/* PENDING TABLE */}
       <section className="mb-12">
@@ -141,6 +159,7 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                   <TableHead>Submitted By</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Rejection Reason</TableHead>
+                  {isAdmin && <TableHead />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -169,6 +188,18 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                         {route.rejectionReason ?? "—"}
                       </p>
                     </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          className="bg-orange-600 hover:bg-orange-700 text-white whitespace-nowrap"
+                          onClick={() => handleReOpen(route.id)}
+                          disabled={reopeningRoute === route.id}
+                        >
+                          {reopeningRoute === route.id ? "Re-Opening..." : "Re-Open"}
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

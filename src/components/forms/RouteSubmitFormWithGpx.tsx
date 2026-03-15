@@ -14,12 +14,6 @@ import RouteCreationMap from "@/components/map/RouteCreationMap";
 
 type SubmissionMode = "manual" | "gpx";
 
-const RIG_SIZES = [
-  { value: "AERO_5", label: "Aero 5" },
-  { value: "AERO_6", label: "Aero 6" },
-  { value: "AERO_7", label: "Aero 7" },
-  { value: "AERO_9", label: "Aero 9" },
-];
 
 export function RouteSubmitFormWithGpx() {
   const router = useRouter();
@@ -49,17 +43,6 @@ export function RouteSubmitFormWithGpx() {
   const [selectionMode, setSelectionMode] = useState<"start" | "end" | null>(null);
   const [gpxFile, setGpxFile] = useState<File | null>(null);
 
-  // FKT submission state
-  const [submitAsFkt, setSubmitAsFkt] = useState(false);
-  const [fktForm, setFktForm] = useState({
-    rigSize: "",
-    date: new Date().toISOString().split('T')[0], // Today's date
-    windSpeedKnots: "",
-    windDirection: "",
-    currentNotes: "",
-    writeUp: "",
-    trackSourceUrl: "",
-  });
 
   // Per-field parse errors shown inline
   const [coordErrors, setCoordErrors] = useState<Partial<Record<string, string>>>({});
@@ -74,9 +57,6 @@ export function RouteSubmitFormWithGpx() {
     }
   }
 
-  function updateFkt(field: keyof typeof fktForm, value: string) {
-    setFktForm((f) => ({ ...f, [field]: value }));
-  }
 
   async function uploadGpx(file: File): Promise<string> {
     const res = await fetch("/api/upload", {
@@ -109,36 +89,6 @@ export function RouteSubmitFormWithGpx() {
     return key;
   }
 
-  async function submitFktAttempt(routeId: string): Promise<void> {
-    if (!gpxFile) throw new Error("No GPX file available for FKT submission");
-
-    // Upload GPX file
-    const gpxS3Key = await uploadGpx(gpxFile);
-
-    // Submit FKT attempt
-    const res = await fetch("/api/attempts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        routeId,
-        ...fktForm,
-        gpxS3Key,
-        windSpeedKnots: fktForm.windSpeedKnots || null,
-      }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      let errMsg = data.error ?? "FKT submission failed";
-      if (data.nearestStartDistanceM) {
-        errMsg += ` (nearest start: ${data.nearestStartDistanceM}m)`;
-      }
-      if (data.nearestEndDistanceM) {
-        errMsg += ` (nearest end: ${data.nearestEndDistanceM}m)`;
-      }
-      throw new Error(errMsg);
-    }
-  }
 
   function validateCoord(field: string, raw: string, type: "lat" | "lng"): number | null {
     const val = parseCoordinate(raw);
@@ -272,7 +222,7 @@ export function RouteSubmitFormWithGpx() {
         return;
       }
 
-      const newRoute = await res.json();
+      await res.json();
       setSuccess(true);
     } catch {
       setError("Network error. Please try again.");

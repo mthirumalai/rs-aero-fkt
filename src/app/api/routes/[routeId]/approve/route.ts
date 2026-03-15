@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendRouteRejectionEmail } from "@/lib/email/ses";
+import { recordRouteStatusChange } from "@/lib/route-status-history";
 
 export async function POST(
   req: NextRequest,
@@ -30,16 +31,27 @@ export async function POST(
   }
 
   const isApprove = action !== "reject";
+  const newStatus = isApprove ? "APPROVED" : "REJECTED";
 
   const updated = await prisma.route.update({
     where: { id: params.routeId },
     data: {
-      status: isApprove ? "APPROVED" : "REJECTED",
+      status: newStatus,
       approvedAt: isApprove ? new Date() : null,
       approvalToken: null,
       rejectionReason: isApprove ? null : rejectionReason.trim(),
     },
   });
+
+  // Record the status change in history
+  await recordRouteStatusChange(
+    params.routeId,
+    route.status, // fromStatus
+    newStatus, // toStatus
+    isApprove ? "Route approved" : rejectionReason.trim(),
+    undefined, // changedById - we don't have admin user ID from token-based approval
+    token
+  );
 
   if (!isApprove) {
     try {
