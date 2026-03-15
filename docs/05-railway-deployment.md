@@ -5,15 +5,16 @@ This guide covers deploying the RS Aero FKT application on Railway with SendGrid
 ## Overview
 
 **Recommended Architecture:**
-- **Railway**: App hosting, PostgreSQL database, file storage (network volumes)
+- **Railway**: App hosting, PostgreSQL database, deployment
+- **AWS S3**: File storage (GPX files and photos)
 - **SendGrid**: Email service (free tier: 100 emails/day)
 - **Railway**: HTTPS/SSL certificates, monitoring, logs
 
 **Benefits:**
-- ✅ Single platform deployment
-- ✅ No AWS configuration needed
-- ✅ Simpler billing and management
+- ✅ Simple deployment on Railway
+- ✅ Reliable S3 storage (pennies per month cost)
 - ✅ Free email tier covers typical usage
+- ✅ No code changes needed (app already designed for S3)
 
 ## Pre-Deployment Setup
 
@@ -30,7 +31,71 @@ This guide covers deploying the RS Aero FKT application on Railway with SendGrid
    railway login
    ```
 
-### 2. SendGrid Email Setup
+### 2. AWS S3 Storage Setup
+
+1. **Create S3 Buckets**:
+   - Go to AWS Console → S3 → Create bucket
+
+   **GPX Bucket (Private):**
+   - Bucket name: `rs-aero-fkt-gpx-production` (must be globally unique)
+   - Region: Choose same region as your users (e.g., `us-east-1`)
+   - **Block all public access** ✅ (keep enabled - GPX files should be private)
+   - Create bucket
+
+   **Photos Bucket (Public):**
+   - Bucket name: `rs-aero-fkt-photos-production` (must be globally unique)
+   - Same region as GPX bucket
+   - **Unblock public access** ❌ (photos need to be publicly readable)
+   - Create bucket
+
+2. **Configure Photos Bucket for Public Read**:
+   - Go to photos bucket → Permissions → Bucket Policy
+   - Add this policy (replace `rs-aero-fkt-photos-production` with your bucket name):
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "PublicReadGetObject",
+         "Effect": "Allow",
+         "Principal": "*",
+         "Action": "s3:GetObject",
+         "Resource": "arn:aws:s3:::rs-aero-fkt-photos-production/*"
+       }
+     ]
+   }
+   ```
+
+3. **Create IAM User for Railway**:
+   - Go to IAM → Users → Create user
+   - Name: `rs-aero-fkt-railway`
+   - Attach policy directly → Create policy:
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "s3:GetObject",
+           "s3:PutObject",
+           "s3:DeleteObject"
+         ],
+         "Resource": [
+           "arn:aws:s3:::rs-aero-fkt-gpx-production/*",
+           "arn:aws:s3:::rs-aero-fkt-photos-production/*"
+         ]
+       }
+     ]
+   }
+   ```
+
+4. **Get Access Keys**:
+   - Go to the created user → Security credentials → Create access key
+   - Choose "Application running outside AWS"
+   - Copy the Access Key ID and Secret Access Key (you'll need these for Railway)
+
+### 3. SendGrid Email Setup
 
 1. **Create SendGrid Account**:
    - Visit [sendgrid.com](https://sendgrid.com)
@@ -65,13 +130,11 @@ This guide covers deploying the RS Aero FKT application on Railway with SendGrid
    - Select "Database" → "PostgreSQL"
    - Railway will automatically provision a PostgreSQL instance
 
-3. **Add Network Volume for File Storage**:
-   - In your Railway project dashboard
-   - Click "New Service"
-   - Select "Volume"
-   - Name it "file-storage"
-   - Set size to 5GB (can be increased later)
-   - Mount path: `/app/uploads`
+3. **Generate Public Domain**:
+   - Go to your app service → Settings → Networking/Domains
+   - Click "Generate Domain" or "Add Public Domain"
+   - Railway will create a URL like `https://rs-aero-fkt-production-xxxx.up.railway.app`
+   - Copy this URL for your environment variables
 
 ### 2. Configure Environment Variables
 
@@ -85,7 +148,9 @@ In your Railway project dashboard, go to your app service and add these variable
 
 #### NextAuth Configuration
 ```env
-NEXTAUTH_URL=https://your-app-name.railway.app
+# Use the Railway URL you generated above
+NEXTAUTH_URL=https://rs-aero-fkt-production-xxxx.up.railway.app
+# Generate new secret with: openssl rand -base64 32
 NEXTAUTH_SECRET=your_secure_nextauth_secret_here
 ```
 
@@ -100,11 +165,19 @@ APPLE_CLIENT_ID=your_apple_client_id
 APPLE_CLIENT_SECRET=your_apple_client_secret
 ```
 
-#### File Storage (Railway Network Volume)
+#### AWS S3 Storage
 ```env
-# Use local storage with Railway network volume
-USE_LOCAL_DEV=true
-LOCAL_UPLOAD_DIR=/app/uploads
+# AWS credentials from S3 setup
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+AWS_REGION=us-east-1
+
+# S3 bucket names from setup
+S3_BUCKET_GPX=rs-aero-fkt-gpx-production
+S3_BUCKET_PHOTOS=rs-aero-fkt-photos-production
+
+# Disable local dev mode for production
+USE_LOCAL_DEV=false
 ```
 
 #### Email Service (SendGrid)
@@ -133,8 +206,9 @@ Update your OAuth applications with Railway URLs:
 3. Edit your OAuth 2.0 Client ID
 4. Add to "Authorized redirect URIs":
    ```
-   https://your-app-name.railway.app/api/auth/callback/google
+   https://rs-aero-fkt-production-xxxx.up.railway.app/api/auth/callback/google
    ```
+   (Replace with your actual Railway URL)
 
 #### Apple Developer (if using)
 1. Go to [Apple Developer](https://developer.apple.com/account/)
