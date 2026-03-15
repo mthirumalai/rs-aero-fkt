@@ -63,13 +63,26 @@ export function validateGpxTrack(
     return {
       valid: false,
       nearestStartDistanceM: Math.round(nearestStartDist),
-      error: `Track does not pass within ${toleranceM}m of route start (nearest: ${Math.round(nearestStartDist)}m)`,
+      error: `Track does not pass within ${toleranceM}m of route start point. Verify your track covers the route start location. Nearest approach to start: ${Math.round(nearestStartDist)}m.`,
     };
   }
 
   // Find first point AFTER start that's within tolerance of end
   let matchedEndIdx = -1;
   let nearestEndDist = Infinity;
+  let nearestEndDistBeforeStart = Infinity;
+  let endMatchIdxBeforeStart = -1;
+
+  // Check if there's an end point match BEFORE the start (sequence issue)
+  for (let i = 0; i < matchedStartIdx; i++) {
+    const dist = haversineMeters(points[i].lat, points[i].lon, routeEndLat, routeEndLng);
+    if (dist < nearestEndDistBeforeStart) {
+      nearestEndDistBeforeStart = dist;
+      if (dist <= toleranceM) {
+        endMatchIdxBeforeStart = i;
+      }
+    }
+  }
 
   for (let i = matchedStartIdx + 1; i < points.length; i++) {
     const dist = haversineMeters(points[i].lat, points[i].lon, routeEndLat, routeEndLng);
@@ -80,10 +93,19 @@ export function validateGpxTrack(
   }
 
   if (matchedEndIdx === -1) {
+    let errorMsg;
+    if (endMatchIdxBeforeStart !== -1) {
+      const startPoint = points[matchedStartIdx];
+      const endPoint = points[endMatchIdxBeforeStart];
+      errorMsg = `Found a point in the FKT gpx track that matches start point in the route, Point ${matchedStartIdx + 1} (${startPoint.lat.toFixed(6)}, ${startPoint.lon.toFixed(6)}). Found a point in the FKT gpx track that matches end point, point ${endMatchIdxBeforeStart + 1} (${endPoint.lat.toFixed(6)}, ${endPoint.lon.toFixed(6)}). The FKT attempt runs in the opposite direction from this route definition. Please select or load a different route.`;
+    } else {
+      const startPoint = points[matchedStartIdx];
+      errorMsg = `Found a point in the FKT gpx track that matches start point in the route, Point ${matchedStartIdx + 1} (${startPoint.lat.toFixed(6)}, ${startPoint.lon.toFixed(6)}). Could not find route end point within ${toleranceM}m chronologically after the start point. Nearest end point after start: ${Math.round(nearestEndDist)}m.`;
+    }
     return {
       valid: false,
       nearestEndDistanceM: Math.round(nearestEndDist),
-      error: `Track does not pass within ${toleranceM}m of route end (nearest: ${Math.round(nearestEndDist)}m)`,
+      error: errorMsg,
     };
   }
 
