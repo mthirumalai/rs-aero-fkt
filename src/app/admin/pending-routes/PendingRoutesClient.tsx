@@ -56,7 +56,7 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
 
       // Refresh the page to show updated status
       window.location.reload();
-    } catch (error) {
+    } catch {
       alert('Network error while re-opening route');
     } finally {
       setReopeningRoute(null);

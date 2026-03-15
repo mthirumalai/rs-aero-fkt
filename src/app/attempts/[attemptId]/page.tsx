@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/gpx/parser";
 import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
 import { distanceNm } from "@/lib/gpx/validator";
@@ -12,12 +11,6 @@ interface Props {
   params: { attemptId: string };
 }
 
-const RIG_LABELS: Record<string, string> = {
-  AERO_5: "Aero 5",
-  AERO_6: "Aero 6",
-  AERO_7: "Aero 7",
-  AERO_9: "Aero 9",
-};
 
 export async function generateMetadata({ params }: Props) {
   const attempt = await prisma.fktAttempt.findUnique({

@@ -58,36 +58,6 @@ export function RouteSubmitFormWithGpx() {
   }
 
 
-  async function uploadGpx(file: File): Promise<string> {
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "gpx",
-        filename: file.name,
-        contentType: "application/gpx+xml",
-      }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error ?? "Failed to get upload URL");
-    }
-
-    const { uploadUrl, key } = await res.json();
-
-    const uploadRes = await fetch(uploadUrl, {
-      method: "PUT",
-      body: file,
-      headers: { "Content-Type": "application/gpx+xml" },
-    });
-
-    if (!uploadRes.ok) {
-      throw new Error("Failed to upload GPX file to S3");
-    }
-
-    return key;
-  }
 
 
   function validateCoord(field: string, raw: string, type: "lat" | "lng"): number | null {

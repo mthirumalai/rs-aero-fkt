@@ -107,7 +107,7 @@ export function TrackPlayback({ attemptId, routeStartLat, routeStartLng, routeEn
 
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [isPlaying, speed, totalMs, endTimeMs]);
+  }, [isPlaying, speed, totalMs, endTimeMs, startTimeMs]);
 
   function handleScrub(e: React.ChangeEvent<HTMLInputElement>) {
     setCurrentTimeMs(startTimeMs + (parseFloat(e.target.value) / 100) * totalMs);
@@ -146,8 +146,6 @@ export function TrackPlayback({ attemptId, routeStartLat, routeStartLng, routeEn
     );
   }
 
-  const actualDistanceNm = sogPoints.length > 0 ? sogPoints[sogPoints.length - 1].distanceNm : 0;
-  const greatCircleDistanceNm = distanceNm(routeStartLat, routeStartLng, routeEndLat, routeEndLng);
 
   // Find current distance by interpolating between SOG points
   const getCurrentDistance = () => {
