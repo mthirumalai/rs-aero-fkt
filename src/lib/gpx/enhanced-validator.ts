@@ -98,7 +98,7 @@ export function validateGpxTrackEnhanced(
 
   const { startTimingPoint, endTimingPoint, racePoints } = timingResult;
 
-  if (!startTimingPoint.time || !endTimingPoint.time) {
+  if (!startTimingPoint || !endTimingPoint || !startTimingPoint.time || !endTimingPoint.time) {
     return { valid: false, error: "Timing points are missing timestamps" };
   }
 

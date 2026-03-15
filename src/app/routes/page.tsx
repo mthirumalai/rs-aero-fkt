@@ -25,7 +25,7 @@ function formatDuration(durationSec: number): string {
 }
 
 // Get the best FKT for a specific rig size
-function getBestFktForRig(attempts: unknown[], rigSize: string) {
+function getBestFktForRig(attempts: { rigSize: string; id: string; durationSec: number }[], rigSize: string) {
   return attempts.find(attempt => attempt.rigSize === rigSize);
 }
 

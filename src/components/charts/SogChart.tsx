@@ -92,13 +92,14 @@ export default function SogChart({ sogPoints, currentTimeMs }: Props) {
             tickLine={{ stroke: "#10b981", strokeWidth: 1.5 }}
           />
           <Tooltip
-            formatter={(value: unknown, name: unknown) => {
+            formatter={(value, name) => {
               const v = typeof value === "number" ? value : 0;
-              if (name === "sog") return [`${v.toFixed(1)} kts`, "SOG"];
-              if (name === "distance") return [`${v.toFixed(2)} nm`, "Distance"];
-              return [v, name];
+              const displayName = typeof name === "string" ? name : "";
+              if (displayName === "sog") return [`${v.toFixed(1)} kts`, "SOG"];
+              if (displayName === "distance") return [`${v.toFixed(2)} nm`, "Distance"];
+              return [`${v}`, displayName];
             }}
-            labelFormatter={(label: unknown, payload: unknown[]) => {
+            labelFormatter={(label, payload) => {
               const l = typeof label === "number" ? label : 0;
               const elapsedTime = formatTime(l);
               const wallClockLocal = payload?.[0]?.payload?.wallClockLocal || "";
