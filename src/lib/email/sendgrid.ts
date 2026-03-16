@@ -1,25 +1,13 @@
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import {
-  sendMagicLinkEmailViaSendGrid,
-  sendRouteRejectionEmailViaSendGrid,
-  sendRouteApprovalEmailViaSendGrid,
-} from "./sendgrid";
+import sgMail from '@sendgrid/mail';
 
 const IS_LOCAL_DEV = process.env.USE_LOCAL_DEV === "true";
-const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || "ses";
 
-const sesClient = IS_LOCAL_DEV
-  ? null
-  : new SESClient({
-      region: process.env.AWS_REGION!,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      },
-    });
+// Initialize SendGrid only in production
+if (!IS_LOCAL_DEV && process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
-// Original SES implementation for sendMagicLinkEmail
-async function sendMagicLinkEmailViaSES(params: {
+export async function sendMagicLinkEmailViaSendGrid(params: {
   email: string;
   url: string;
 }): Promise<void> {
@@ -28,7 +16,7 @@ async function sendMagicLinkEmailViaSES(params: {
   if (IS_LOCAL_DEV) {
     console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║  [LOCAL DEV] Magic link email (not actually sent)            ║
+║  [LOCAL DEV] Magic link email (SendGrid - not sent)         ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  To:   ${email}
 ╠══════════════════════════════════════════════════════════════╣
@@ -52,35 +40,18 @@ async function sendMagicLinkEmailViaSES(params: {
     </div>
   `;
 
-  await sesClient!.send(
-    new SendEmailCommand({
-      Source: process.env.SES_FROM_EMAIL!,
-      Destination: { ToAddresses: [email] },
-      Message: {
-        Subject: { Data: "Sign in to RS Aero FKT" },
-        Body: {
-          Html: { Data: html },
-          Text: { Data: `Sign in to RS Aero FKT:\n\n${url}\n\nThis link expires in 24 hours.` },
-        },
-      },
-    })
-  );
+  const msg = {
+    to: email,
+    from: process.env.SES_FROM_EMAIL!,
+    subject: "Sign in to RS Aero FKT",
+    html,
+    text: `Sign in to RS Aero FKT:\n\n${url}\n\nThis link expires in 24 hours.`,
+  };
+
+  await sgMail.send(msg);
 }
 
-// Public API - chooses between SES and SendGrid
-export async function sendMagicLinkEmail(params: {
-  email: string;
-  url: string;
-}): Promise<void> {
-  if (EMAIL_PROVIDER === "sendgrid") {
-    return sendMagicLinkEmailViaSendGrid(params);
-  } else {
-    return sendMagicLinkEmailViaSES(params);
-  }
-}
-
-// Original SES implementation for sendRouteRejectionEmail
-async function sendRouteRejectionEmailViaSES(params: {
+export async function sendRouteRejectionEmailViaSendGrid(params: {
   routeName: string;
   submitterEmail: string;
   submitterName: string;
@@ -91,7 +62,7 @@ async function sendRouteRejectionEmailViaSES(params: {
   if (IS_LOCAL_DEV) {
     console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║  [LOCAL DEV] Route rejection email (not actually sent)       ║
+║  [LOCAL DEV] Route rejection email (SendGrid - not sent)    ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  To:     ${submitterEmail}
 ║  Route:  ${routeName}
@@ -118,34 +89,18 @@ async function sendRouteRejectionEmailViaSES(params: {
 
   const text = `RS Aero FKT — Route Submission Update\n\nHi ${submitterName},\n\nYour route "${routeName}" was not approved.\n\nReason:\n${rejectionReason}\n\nPlease make the necessary corrections and resubmit.\n\n— RS Aero FKT Admin`;
 
-  await sesClient!.send(
-    new SendEmailCommand({
-      Source: process.env.SES_FROM_EMAIL!,
-      Destination: { ToAddresses: [submitterEmail] },
-      Message: {
-        Subject: { Data: `[RS Aero FKT] Route submission not approved: ${routeName}` },
-        Body: { Html: { Data: html }, Text: { Data: text } },
-      },
-    })
-  );
+  const msg = {
+    to: submitterEmail,
+    from: process.env.SES_FROM_EMAIL!,
+    subject: `[RS Aero FKT] Route submission not approved: ${routeName}`,
+    html,
+    text,
+  };
+
+  await sgMail.send(msg);
 }
 
-// Public API - chooses between SES and SendGrid
-export async function sendRouteRejectionEmail(params: {
-  routeName: string;
-  submitterEmail: string;
-  submitterName: string;
-  rejectionReason: string;
-}): Promise<void> {
-  if (EMAIL_PROVIDER === "sendgrid") {
-    return sendRouteRejectionEmailViaSendGrid(params);
-  } else {
-    return sendRouteRejectionEmailViaSES(params);
-  }
-}
-
-// Original SES implementation for sendRouteApprovalEmail
-async function sendRouteApprovalEmailViaSES(params: {
+export async function sendRouteApprovalEmailViaSendGrid(params: {
   routeId: string;
   routeName: string;
   submitterName: string;
@@ -160,7 +115,7 @@ async function sendRouteApprovalEmailViaSES(params: {
   if (IS_LOCAL_DEV) {
     console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║  [LOCAL DEV] Route approval email (not actually sent)        ║
+║  [LOCAL DEV] Route approval email (SendGrid - not sent)     ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Route:     ${routeName}
 ║  Submitted: ${submitterName} (${submitterEmail})
@@ -200,33 +155,13 @@ Reject: ${rejectUrl}
 This link can only be used once.
   `.trim();
 
-  await sesClient!.send(
-    new SendEmailCommand({
-      Source: process.env.SES_FROM_EMAIL!,
-      Destination: { ToAddresses: [process.env.ADMIN_EMAIL!] },
-      Message: {
-        Subject: { Data: `[RS Aero FKT] New route for approval: ${routeName}` },
-        Body: {
-          Html: { Data: html },
-          Text: { Data: text },
-        },
-      },
-    })
-  );
-}
+  const msg = {
+    to: process.env.ADMIN_EMAIL!,
+    from: process.env.SES_FROM_EMAIL!,
+    subject: `[RS Aero FKT] New route for approval: ${routeName}`,
+    html,
+    text,
+  };
 
-// Public API - chooses between SES and SendGrid
-export async function sendRouteApprovalEmail(params: {
-  routeId: string;
-  routeName: string;
-  submitterName: string;
-  submitterEmail: string;
-  approvalToken: string;
-  baseUrl: string;
-}): Promise<void> {
-  if (EMAIL_PROVIDER === "sendgrid") {
-    return sendRouteApprovalEmailViaSendGrid(params);
-  } else {
-    return sendRouteApprovalEmailViaSES(params);
-  }
+  await sgMail.send(msg);
 }
