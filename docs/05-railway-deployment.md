@@ -286,23 +286,38 @@ export const sendRouteApprovalEmail = process.env.EMAIL_PROVIDER === 'sendgrid'
 
 ### 5. Database Migration
 
-Railway will automatically build and deploy your app. After the first deployment:
+Railway will automatically build and deploy your app. After the first deployment, you need to apply database migrations:
 
-1. **Run Database Migrations**:
+1. **Get External Database URL**:
+   - Go to Railway dashboard → PostgreSQL service → "Connect" tab
+   - Copy the **"Public URL"** (should look like):
+     ```
+     postgresql://postgres:password@nozomi.proxy.rlwy.net:14092/railway
+     ```
+
+2. **Run Database Migrations** (one-time setup):
    ```bash
-   # Apply migrations to Railway database
-   railway run npx prisma migrate deploy
+   # From your project directory, run migrations using external URL
+   DATABASE_URL="postgresql://postgres:your_password@your_host:port/railway" npx prisma migrate deploy
+   ```
+   Replace the DATABASE_URL with your actual Public URL from step 1.
 
-   # Verify database connection (optional)
-   railway run npx prisma db execute --stdin < /dev/null
+3. **Verify Migration Success**:
+   ```bash
+   # Optional: Check migration status
+   DATABASE_URL="your_public_url_here" npx prisma migrate status
    ```
 
-2. **Optional: Seed Database** (if you have seed data):
+4. **Optional: Seed Database** (if you have seed data):
    ```bash
-   railway run npx prisma db seed
+   DATABASE_URL="your_public_url_here" npx prisma db seed
    ```
 
-**Note**: Use `railway run` prefix to ensure commands execute against your Railway database, not your local one.
+**Important Notes:**
+- Use the **Public URL** from Railway, not the internal `postgres.railway.internal` address
+- This is a **one-time setup** - don't run migrations on every app startup
+- Only run migrations again when you make schema changes
+- Keep your Railway start command as `npm start` (no auto-migrations)
 
 ### 6. Deploy Application
 
