@@ -20,7 +20,20 @@ export default function ProfileCompletePage() {
   // Redirect if user already has a name
   if (session?.user?.name) {
     router.push("/");
-    return null;
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl text-center">
+        <p>Redirecting to homepage...</p>
+      </div>
+    );
+  }
+
+  // Show loading while session is loading
+  if (!session) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl text-center">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {

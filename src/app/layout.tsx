@@ -3,6 +3,7 @@ import { Bebas_Neue, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { SessionProvider } from "@/components/SessionProvider";
+import { ProfileCompletionCheck } from "@/components/ProfileCompletionCheck";
 import { auth } from "@/lib/auth";
 
 const sourceSans = Source_Sans_3({
@@ -33,6 +34,7 @@ export default async function RootLayout({
     <html lang="en" className={`${sourceSans.variable} ${bebasNeue.variable}`}>
       <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
         <SessionProvider session={session}>
+          <ProfileCompletionCheck />
           <Nav />
           <main className="flex-1">{children}</main>
           <footer className="border-t py-6 text-center text-sm text-muted-foreground">
