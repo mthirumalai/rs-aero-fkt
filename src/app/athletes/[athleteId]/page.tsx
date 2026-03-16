@@ -28,7 +28,15 @@ export default async function AthleteProfilePage({ params }: Props) {
   const [user, session] = await Promise.all([
     prisma.user.findUnique({
       where: { id: params.athleteId },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        image: true,
+        bio: true,
+        location: true,
+        preferredRigSize: true,
+        createdAt: true,
         attempts: {
           where: { status: "APPROVED" },
           orderBy: { date: "desc" },
@@ -74,6 +82,7 @@ export default async function AthleteProfilePage({ params }: Props) {
             userId={user.id}
             initialBio={user.bio ?? ""}
             initialLocation={user.location ?? ""}
+            initialPreferredRigSize={user.preferredRigSize ?? undefined}
           />
         </div>
       )}

@@ -10,12 +10,14 @@ interface Props {
   userId: string;
   initialBio: string;
   initialLocation: string;
+  initialPreferredRigSize?: string;
 }
 
-export function ProfileEditForm({ userId, initialBio, initialLocation }: Props) {
+export function ProfileEditForm({ userId, initialBio, initialLocation, initialPreferredRigSize }: Props) {
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState(initialBio);
   const [location, setLocation] = useState(initialLocation);
+  const [preferredRigSize, setPreferredRigSize] = useState(initialPreferredRigSize || "");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -25,7 +27,7 @@ export function ProfileEditForm({ userId, initialBio, initialLocation }: Props) 
       await fetch(`/api/athletes/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bio, location }),
+        body: JSON.stringify({ bio, location, preferredRigSize: preferredRigSize || null }),
       });
       setSuccess(true);
       setEditing(false);
@@ -59,6 +61,21 @@ export function ProfileEditForm({ userId, initialBio, initialLocation }: Props) 
           onChange={(e) => setLocation(e.target.value)}
           placeholder="e.g., Weymouth, UK"
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="preferredRigSize">Preferred Rig Size</Label>
+        <select
+          id="preferredRigSize"
+          value={preferredRigSize}
+          onChange={(e) => setPreferredRigSize(e.target.value)}
+          className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+        >
+          <option value="">Select preferred rig size</option>
+          <option value="AERO_5">Aero 5</option>
+          <option value="AERO_6">Aero 6</option>
+          <option value="AERO_7">Aero 7</option>
+          <option value="AERO_9">Aero 9</option>
+        </select>
       </div>
       <div className="space-y-2">
         <Label htmlFor="bio">Bio</Label>
