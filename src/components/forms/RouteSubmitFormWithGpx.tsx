@@ -92,8 +92,24 @@ export function RouteSubmitFormWithGpx() {
 
       setGpxFile(file); // Store the file for potential FKT submission
       setGpxPoints(parsed.points);
-      setSelectedStartIndex(null);
-      setSelectedEndIndex(null);
+
+      // Auto-set initial start and end points (first and last points)
+      const startIndex = 0;
+      const endIndex = parsed.points.length - 1;
+      setSelectedStartIndex(startIndex);
+      setSelectedEndIndex(endIndex);
+
+      // Auto-populate form fields with initial points
+      const startPoint = parsed.points[startIndex];
+      const endPoint = parsed.points[endIndex];
+      setForm(f => ({
+        ...f,
+        startLat: startPoint.lat.toFixed(6),
+        startLng: startPoint.lon.toFixed(6),
+        endLat: endPoint.lat.toFixed(6),
+        endLng: endPoint.lon.toFixed(6),
+      }));
+
       setError(null);
     } catch {
       setError("Failed to parse GPX file. Please ensure it's a valid GPX file.");
@@ -162,9 +178,9 @@ export function RouteSubmitFormWithGpx() {
 
       if (startLat === null || startLng === null || endLat === null || endLng === null) return;
     } else {
-      // GPX mode
+      // GPX mode - points should be auto-selected, but validate just in case
       if (selectedStartIndex === null || selectedEndIndex === null) {
-        setError("Please select both start and end points on the track");
+        setError("Start and end points are required. Please reload your GPX file or select points manually.");
         return;
       }
 
@@ -289,7 +305,8 @@ export function RouteSubmitFormWithGpx() {
         {mode === "gpx" && (
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-700">
-              👆 Now upload your GPX file in the section below, then click on the map to select start and end points.
+              📁 Upload your GPX file below. Start and end points will be set automatically to the first and last track points.
+              Use the buttons on the map to adjust them if needed.
             </p>
           </div>
         )}
@@ -340,25 +357,6 @@ export function RouteSubmitFormWithGpx() {
 
             {gpxPoints.length > 0 && (
               <>
-                <div className="flex gap-2 mb-4">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={selectionMode === "start" ? "pressed" : "outline"}
-                    onClick={() => setSelectionMode(selectionMode === "start" ? null : "start")}
-                  >
-                    {selectionMode === "start" ? "Cancel Selection" : "Select Start Point"}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={selectionMode === "end" ? "pressed" : "outline"}
-                    onClick={() => setSelectionMode(selectionMode === "end" ? null : "end")}
-                  >
-                    {selectionMode === "end" ? "Cancel Selection" : "Select End Point"}
-                  </Button>
-                </div>
-
                 {selectionMode && (
                   <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                     <p className="text-sm text-yellow-700">
@@ -368,7 +366,7 @@ export function RouteSubmitFormWithGpx() {
                   </div>
                 )}
 
-                <div className="h-96 border rounded-lg overflow-hidden">
+                <div className="relative h-96 border rounded-lg overflow-hidden">
                   <RouteCreationMap
                     points={gpxPoints}
                     selectedStartIndex={selectedStartIndex}
@@ -376,15 +374,48 @@ export function RouteSubmitFormWithGpx() {
                     onPointSelect={handlePointSelect}
                     selectionMode={selectionMode}
                   />
+
+                  {/* Overlay buttons in center of map */}
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                    <div className="flex gap-3 pointer-events-auto">
+                      <button
+                        type="button"
+                        onClick={() => setSelectionMode(selectionMode === "start" ? null : "start")}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg border-2 border-white shadow-lg transition-all duration-200 ${
+                          selectionMode === "start"
+                            ? "bg-green-600 text-white scale-105"
+                            : "bg-green-500 text-white hover:bg-green-600 hover:scale-105"
+                        }`}
+                        style={{ backgroundColor: selectionMode === "start" ? "#059669" : "#10b981" }}
+                      >
+                        {selectionMode === "start" ? "Cancel" : "Select Start Point"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectionMode(selectionMode === "end" ? null : "end")}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg border-2 border-white shadow-lg transition-all duration-200 ${
+                          selectionMode === "end"
+                            ? "bg-red-600 text-white scale-105"
+                            : "bg-red-500 text-white hover:bg-red-600 hover:scale-105"
+                        }`}
+                        style={{ backgroundColor: selectionMode === "end" ? "#dc2626" : "#ef4444" }}
+                      >
+                        {selectionMode === "end" ? "Cancel" : "Select End Point"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="text-sm text-muted-foreground">
                   Track loaded: {gpxPoints.length} points
                   {selectedStartIndex !== null && (
-                    <span className="text-green-600 ml-2">• Start point selected</span>
+                    <span className="text-green-600 ml-2">• Start point: #{selectedStartIndex + 1}</span>
                   )}
                   {selectedEndIndex !== null && (
-                    <span className="text-red-600 ml-2">• End point selected</span>
+                    <span className="text-red-600 ml-2">• End point: #{selectedEndIndex + 1}</span>
+                  )}
+                  {selectedStartIndex !== null && selectedEndIndex !== null && (
+                    <span className="text-blue-600 ml-2">• Ready to submit!</span>
                   )}
                 </div>
 
