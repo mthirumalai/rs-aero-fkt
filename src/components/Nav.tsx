@@ -26,17 +26,21 @@ export function Nav() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 cursor-pointer focus:outline-none opacity-90 hover:opacity-100 transition-opacity">
-                  <span className="text-sm">{session.user?.name?.split(" ")[0]}</span>
+                  <span className="text-sm">
+                    {session.user?.name?.split(" ")[0] ?? session.user?.email?.split("@")[0] ?? "User"}
+                  </span>
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={session.user?.image ?? undefined} alt={session.user?.name ?? "User"} />
                     <AvatarFallback className="bg-primary text-white text-xs font-semibold">
-                      {session.user?.name?.charAt(0).toUpperCase() ?? "U"}
+                      {(session.user?.name?.charAt(0) ?? session.user?.email?.charAt(0))?.toUpperCase() ?? "U"}
                     </AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <div className="px-2 py-1.5 text-sm font-semibold">{session.user?.name}</div>
+                <div className="px-2 py-1.5 text-sm font-semibold">
+                  {session.user?.name ?? session.user?.email?.split("@")[0] ?? "User"}
+                </div>
                 <div className="px-2 py-1 text-xs text-muted-foreground truncate">{session.user?.email}</div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push(`/athletes/${session.user?.id}`)}>
