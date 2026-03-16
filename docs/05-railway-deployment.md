@@ -194,6 +194,10 @@ EMAIL_PROVIDER=sendgrid
 #### Production Settings
 ```env
 NODE_ENV=production
+
+# Port configuration for Railway
+PORT=8080
+HOSTNAME=0.0.0.0
 ```
 
 ### 3. Configure OAuth Providers
@@ -284,23 +288,21 @@ export const sendRouteApprovalEmail = process.env.EMAIL_PROVIDER === 'sendgrid'
 
 Railway will automatically build and deploy your app. After the first deployment:
 
-1. **Access Railway Console**:
+1. **Run Database Migrations**:
    ```bash
-   # Using Railway CLI
-   railway shell
+   # Apply migrations to Railway database
+   railway run npx prisma migrate deploy
 
-   # Or use the web console in Railway dashboard
+   # Verify database connection (optional)
+   railway run npx prisma db execute --stdin < /dev/null
    ```
 
-2. **Run Database Migrations**:
+2. **Optional: Seed Database** (if you have seed data):
    ```bash
-   # In Railway console
-   npx prisma generate
-   npx prisma migrate deploy
-
-   # Verify connection
-   npx prisma db execute --stdin < /dev/null
+   railway run npx prisma db seed
    ```
+
+**Note**: Use `railway run` prefix to ensure commands execute against your Railway database, not your local one.
 
 ### 6. Deploy Application
 
