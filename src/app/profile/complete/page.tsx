@@ -48,7 +48,7 @@ export default function ProfileCompletePage() {
       } else {
         alert("Failed to update profile. Please try again.");
       }
-    } catch (error) {
+    } catch {
       alert("An error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -60,7 +60,7 @@ export default function ProfileCompletePage() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-4">Welcome to RS Aero FKT!</h1>
         <p className="text-muted-foreground">
-          Let's complete your profile so other sailors can recognize your achievements.
+          Let&apos;s complete your profile so other sailors can recognize your achievements.
         </p>
       </div>
 
@@ -109,7 +109,7 @@ export default function ProfileCompletePage() {
             Location <span className="text-muted-foreground">(optional)</span>
           </Label>
           <p className="text-sm text-muted-foreground mb-2">
-            Help other sailors know where you're based.
+            Help other sailors know where you&apos;re based.
           </p>
           <Input
             id="location"

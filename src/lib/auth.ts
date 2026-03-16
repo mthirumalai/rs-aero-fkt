@@ -49,7 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-    async signIn({ user, account, profile }) {
+    async signIn() {
       // Allow sign-in to complete
       return true;
     },

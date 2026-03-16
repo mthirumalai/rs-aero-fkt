@@ -25,7 +25,12 @@ export async function PATCH(
   }
 
   // Build update object (only include defined fields)
-  const updateData: any = {};
+  const updateData: {
+    name?: string;
+    bio?: string | null;
+    location?: string | null;
+    preferredRigSize?: "AERO_5" | "AERO_6" | "AERO_7" | "AERO_9" | null;
+  } = {};
   if (name !== undefined) updateData.name = name.trim();
   if (bio !== undefined) updateData.bio = bio ?? null;
   if (location !== undefined) updateData.location = location ?? null;
