@@ -11,15 +11,30 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { bio, location } = await req.json();
+  const { name, bio, location, preferredRigSize } = await req.json();
+
+  // Validate name if provided
+  if (name !== undefined && (!name || typeof name !== "string" || name.trim().length === 0)) {
+    return NextResponse.json({ error: "Name is required and must be a non-empty string" }, { status: 400 });
+  }
+
+  // Validate preferredRigSize if provided
+  const validRigSizes = ["AERO_5", "AERO_6", "AERO_7", "AERO_9"];
+  if (preferredRigSize !== undefined && preferredRigSize !== null && !validRigSizes.includes(preferredRigSize)) {
+    return NextResponse.json({ error: "Invalid rig size" }, { status: 400 });
+  }
+
+  // Build update object (only include defined fields)
+  const updateData: any = {};
+  if (name !== undefined) updateData.name = name.trim();
+  if (bio !== undefined) updateData.bio = bio ?? null;
+  if (location !== undefined) updateData.location = location ?? null;
+  if (preferredRigSize !== undefined) updateData.preferredRigSize = preferredRigSize;
 
   const user = await prisma.user.update({
     where: { id: params.athleteId },
-    data: {
-      bio: bio ?? null,
-      location: location ?? null,
-    },
-    select: { id: true, bio: true, location: true },
+    data: updateData,
+    select: { id: true, name: true, bio: true, location: true, preferredRigSize: true },
   });
 
   return NextResponse.json(user);

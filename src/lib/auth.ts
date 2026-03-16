@@ -49,6 +49,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
+    async signIn({ user, account, profile }) {
+      // Allow sign-in to complete
+      return true;
+    },
+    async redirect({ url, baseUrl }) {
+      // If user is signing in and doesn't have a name, redirect to profile completion
+      if (url.includes("/api/auth/callback") || url === baseUrl) {
+        // Get user from database to check if name exists
+        const userId = url.includes("id=") ? url.split("id=")[1]?.split("&")[0] : null;
+        if (userId) {
+          try {
+            const user = await prisma.user.findUnique({
+              where: { id: userId },
+              select: { name: true },
+            });
+            if (!user?.name) {
+              return `${baseUrl}/profile/complete`;
+            }
+          } catch (error) {
+            // If there's an error, continue with normal flow
+            console.error("Error checking user name:", error);
+          }
+        }
+        return baseUrl;
+      }
+
+      // For all other redirects, use the URL if it's internal, otherwise go to base
+      return url.startsWith(baseUrl) ? url : baseUrl;
+    },
   },
   pages: {
     verifyRequest: "/auth/verify",
