@@ -163,7 +163,7 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                   <TableHead className="w-24">Country</TableHead>
                   <TableHead className="w-32">Submitted By</TableHead>
                   <TableHead className="w-24">Date</TableHead>
-                  <TableHead className="w-40">Rejection Reason</TableHead>
+                  <TableHead className="w-32">Rejection Reason</TableHead>
                   {isAdmin && <TableHead className="w-28">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
@@ -190,8 +190,11 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                     <TableCell className="w-24 text-sm text-muted-foreground whitespace-nowrap">
                       {new Date(route.submittedAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="w-40">
-                      <p className="text-sm text-muted-foreground truncate" title={route.rejectionReason ?? "—"}>
+                    <TableCell className="w-32">
+                      <p
+                        className="text-sm text-muted-foreground truncate cursor-help"
+                        title={route.rejectionReason ?? "No reason provided"}
+                      >
                         {route.rejectionReason ?? "—"}
                       </p>
                     </TableCell>
