@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { parseGpxXml } from "@/lib/gpx/parser";
+import { parseVccXml } from "@/lib/velocitek/vcc-parser";
+import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 
 interface Props {
   routeId: string;
@@ -30,7 +33,6 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
 
   const [form, setForm] = useState({
     rigSize: "",
-    date: "",
     windSpeedKnots: "",
     windDirection: "",
     currentNotes: "",
@@ -39,7 +41,8 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
     sailorName: submitterName,
     sailorEmail: submitterEmail,
   });
-  const [gpxFile, setGpxFile] = useState<File | null>(null);
+  const [trackFile, setTrackFile] = useState<File | null>(null);
+  const [extractedDate, setExtractedDate] = useState<Date | null>(null);
 
   // Scroll to error message when error appears
   useEffect(() => {
@@ -55,35 +58,88 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-  async function uploadGpx(file: File): Promise<string> {
+  async function extractDateFromFile(file: File): Promise<Date | null> {
+    try {
+      const text = await file.text();
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+      let startTime: Date | null = null;
+
+      if (fileExtension === 'gpx') {
+        const parsed = parseGpxXml(text);
+        startTime = parsed.startTime;
+      } else if (fileExtension === 'vcc') {
+        const parsed = parseVccXml(text);
+        // Get the first point with a timestamp
+        const firstTimedPoint = parsed.points.find(p => p.time !== null);
+        startTime = firstTimedPoint?.time || null;
+      } else if (fileExtension === 'csv') {
+        const parsed = parseVelocitkCsv(text);
+        // Get the first point with a timestamp
+        const firstTimedPoint = parsed.points.find(p => p.time !== null);
+        startTime = firstTimedPoint?.time || null;
+      }
+
+      return startTime;
+    } catch (error) {
+      console.warn('Failed to extract date from track file:', error);
+      return null;
+    }
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    setTrackFile(file);
+
+    if (file) {
+      // Extract date from the track file
+      const date = await extractDateFromFile(file);
+      setExtractedDate(date);
+    } else {
+      setExtractedDate(null);
+    }
+  }
+
+  async function uploadTrackFile(file: File): Promise<string> {
     setUploadProgress("Getting upload URL...");
+
+    // Determine content type based on file extension
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    let contentType = "application/octet-stream";
+    if (fileExtension === 'gpx') {
+      contentType = "application/gpx+xml";
+    } else if (fileExtension === 'csv') {
+      contentType = "text/csv";
+    } else if (fileExtension === 'vcc') {
+      contentType = "application/xml";
+    }
 
     const res = await fetch("/api/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        type: "gpx",
+        type: "gpx", // Keep as "gpx" for S3 bucket compatibility
         filename: file.name,
-        contentType: "application/gpx+xml",
+        contentType: contentType,
       }),
     });
 
     if (!res.ok) {
       const data = await res.json();
-      throw new Error(data.error ?? "Failed to prepare GPX upload. Please check your file and try again.");
+      throw new Error(data.error ?? "Failed to prepare track file upload. Please check your file and try again.");
     }
 
     const { uploadUrl, key } = await res.json();
 
-    setUploadProgress("Uploading GPX file...");
+    setUploadProgress("Uploading track file...");
     const uploadRes = await fetch(uploadUrl, {
       method: "PUT",
       body: file,
-      headers: { "Content-Type": "application/gpx+xml" },
+      headers: { "Content-Type": contentType },
     });
 
     if (!uploadRes.ok) {
-      throw new Error("Failed to upload GPX file. Please check your internet connection and try again.");
+      throw new Error("Failed to upload track file. Please check your internet connection and try again.");
     }
 
     return key;
@@ -91,8 +147,13 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!gpxFile) {
-      setError("Please select a GPX file");
+    if (!trackFile) {
+      setError("Please select a track file (GPX, CSV, or VCC)");
+      return;
+    }
+
+    if (!extractedDate) {
+      setError("Could not extract date from track file. Please ensure your track file contains timestamps.");
       return;
     }
 
@@ -100,17 +161,18 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
     setError(null);
 
     try {
-      // Step 1: Upload GPX to S3
-      const gpxS3Key = await uploadGpx(gpxFile);
+      // Step 1: Upload track file to S3
+      const gpxS3Key = await uploadTrackFile(trackFile);
 
       // Step 2: Submit attempt metadata
-      setUploadProgress("Validating GPX track...");
+      setUploadProgress("Validating track...");
       const res = await fetch("/api/attempts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           routeId,
           ...form,
+          date: extractedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
           gpxS3Key,
           windSpeedKnots: form.windSpeedKnots || null,
         }),
@@ -221,31 +283,32 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
         </select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="date">Date of Attempt *</Label>
-        <Input
-          id="date"
-          type="date"
-          value={form.date}
-          onChange={(e) => update("date", e.target.value)}
-          required
-        />
-      </div>
+      {extractedDate && (
+        <div className="space-y-2">
+          <Label>Date of Attempt</Label>
+          <div className="px-3 py-2 border rounded-md bg-muted text-sm">
+            <span className="text-muted-foreground">Extracted from track: </span>
+            <span className="font-medium">
+              {extractedDate.toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="gpx">
-          GPX Track File *{" "}
-          <span className="text-xs text-muted-foreground">(max 10MB)</span>
+          Track File *{" "}
+          <span className="text-xs text-muted-foreground">(GPX, CSV, or VCC, max 10MB)</span>
         </Label>
         <Input
           id="gpx"
           type="file"
-          accept=".gpx,application/gpx+xml"
-          onChange={(e) => setGpxFile(e.target.files?.[0] ?? null)}
+          accept=".gpx,.csv,.vcc,application/gpx+xml"
+          onChange={handleFileChange}
           required
         />
         <p className="text-xs text-muted-foreground">
-          Your track must pass within 10m of both the route start and end points.
+          Your track must pass within 10m of both the route start and end points. Date will be automatically extracted from the file.
         </p>
       </div>
 
