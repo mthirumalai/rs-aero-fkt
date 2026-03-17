@@ -49,8 +49,46 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-    async signIn() {
-      // Allow sign-in to complete
+    async signIn({ user, account, profile }) {
+      // Always allow email provider sign-ins (magic links)
+      if (account?.provider === "email") {
+        return true;
+      }
+
+      // For OAuth providers (Google, Apple), handle account linking
+      if (account?.provider && user?.email) {
+        try {
+          // Check if a user with this email already exists
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            include: { accounts: true }
+          });
+
+          if (existingUser) {
+            // Check if this OAuth provider is already linked
+            const existingAccount = existingUser.accounts.find(
+              acc => acc.provider === account.provider
+            );
+
+            if (existingAccount) {
+              // Account already linked, allow sign-in
+              return true;
+            }
+
+            // User exists but this OAuth provider isn't linked yet
+            // NextAuth will automatically link the account after this callback returns true
+            console.log(`Linking ${account.provider} account to existing user ${existingUser.id}`);
+            return true;
+          }
+
+          // No existing user, create new one (NextAuth handles this automatically)
+          return true;
+        } catch (error) {
+          console.error('Error in signIn callback:', error);
+          return false;
+        }
+      }
+
       return true;
     },
     async redirect({ url, baseUrl }) {
