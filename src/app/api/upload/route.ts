@@ -25,8 +25,16 @@ export async function POST(req: NextRequest) {
   if (type === "gpx") {
     bucket = GPX_BUCKET;
     maxSize = 10 * 1024 * 1024;
-    if (!["application/gpx+xml", "application/xml", "text/xml", "application/octet-stream"].includes(contentType)) {
-      return NextResponse.json({ error: "Invalid GPX content type" }, { status: 400 });
+    // Accept GPX, CSV, and VCC track file formats
+    const validContentTypes = [
+      "application/gpx+xml",
+      "application/xml",
+      "text/xml",
+      "text/csv",           // CSV files
+      "application/octet-stream"
+    ];
+    if (!validContentTypes.includes(contentType)) {
+      return NextResponse.json({ error: "Invalid track file content type" }, { status: 400 });
     }
   } else if (type === "photo") {
     bucket = PHOTOS_BUCKET;
