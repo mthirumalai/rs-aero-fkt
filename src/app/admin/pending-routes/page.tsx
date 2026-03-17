@@ -7,14 +7,17 @@ export const metadata = { title: "Route Submissions — RS Aero FKT" };
 export default async function PendingRoutesPage() {
   const session = await auth();
 
+  const isAdmin = !!session?.user?.email && session.user.email === process.env.ADMIN_EMAIL;
+
   // Debug logging for admin email issue
   console.log('🔍 Admin Debug:', {
     userEmail: session?.user?.email,
     adminEmailEnvVar: process.env.ADMIN_EMAIL,
-    isMatch: session?.user?.email === process.env.ADMIN_EMAIL
+    isMatch: session?.user?.email === process.env.ADMIN_EMAIL,
+    sessionExists: !!session,
+    hasUser: !!session?.user,
+    finalIsAdmin: isAdmin
   });
-
-  const isAdmin = !!session?.user?.email && session.user.email === process.env.ADMIN_EMAIL;
 
   const [pendingRoutes, rejectedRoutes] = await Promise.all([
     prisma.route.findMany({
