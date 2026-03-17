@@ -49,7 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // Always allow email provider sign-ins (magic links)
       if (account?.provider === "email") {
         return true;
