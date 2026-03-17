@@ -42,6 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "database",
   },
+  // Allow linking OAuth accounts to existing email-based users
+  allowDangerousEmailAccountLinking: true,
   callbacks: {
     session({ session, user }) {
       if (session.user) {
