@@ -69,14 +69,31 @@ Create two buckets:
 1. `rs-aero-fkt-gpx` — Private (no public access)
 2. `rs-aero-fkt-photos` — Public-read (for displaying photos)
 
-Add CORS policy to both buckets allowing PUT from your domain:
+**IMPORTANT**: Add CORS policy to both buckets to allow direct browser uploads:
+
+### Via AWS Console:
+1. Go to S3 Console → Bucket → Permissions → Cross-origin resource sharing (CORS)
+2. Add this policy:
+
 ```json
-[{
-  "AllowedOrigins": ["https://yourdomain.com"],
-  "AllowedMethods": ["PUT", "GET"],
-  "AllowedHeaders": ["*"]
-}]
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+    "AllowedOrigins": ["*"],
+    "ExposeHeaders": [],
+    "MaxAgeSeconds": 3000
+  }
+]
 ```
+
+### Via AWS CLI:
+```bash
+# Save the JSON above as cors-policy.json with {"CORSRules": [...]} wrapper
+aws s3api put-bucket-cors --bucket your-bucket-name --cors-configuration file://cors-policy.json
+```
+
+**Note**: Using `"*"` for origins/headers is permissive but works across all browsers including Safari. For production, consider restricting origins to your specific domains.
 
 ## Key Features
 
