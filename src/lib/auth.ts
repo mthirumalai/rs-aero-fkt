@@ -62,11 +62,58 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       }
 
-      // For OAuth providers (Google, Apple), always allow and let NextAuth handle it
-      // NextAuth v5 should handle account linking automatically if user emails match
-      if (account?.provider && user?.email) {
-        console.log(`✅ OAuth sign-in with ${account.provider} for ${user.email} - allowing`);
-        return true;
+      // For OAuth providers, manually handle account linking
+      if (account?.provider && user?.email && account?.provider !== "email") {
+        console.log(`🔍 Handling OAuth account linking for ${account.provider}`);
+
+        try {
+          // Check if user with this email already exists
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            include: { accounts: true }
+          });
+
+          if (existingUser) {
+            console.log(`👤 Found existing user: ${existingUser.id}`);
+
+            // Check if this provider is already linked
+            const existingAccount = existingUser.accounts.find(
+              acc => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
+            );
+
+            if (existingAccount) {
+              console.log(`✅ Account already linked`);
+              return true;
+            }
+
+            // Link the OAuth account to the existing user
+            console.log(`🔗 Creating account link for existing user`);
+            await prisma.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type || "oauth",
+                provider: account.provider,
+                providerAccountId: account.providerAccountId!,
+                access_token: account.access_token,
+                refresh_token: account.refresh_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: account.session_state as string,
+              },
+            });
+            console.log(`✅ Successfully linked ${account.provider} to user ${existingUser.id}`);
+            return true;
+          }
+
+          // No existing user, allow NextAuth to create a new one
+          console.log(`👤 No existing user, creating new one`);
+          return true;
+        } catch (error) {
+          console.error('❌ Error in account linking:', error);
+          return false;
+        }
       }
 
       console.log('✅ Default: allowing sign-in');
