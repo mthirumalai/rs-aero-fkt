@@ -10,9 +10,11 @@ import { COUNTRY_NAMES, REGION_LABELS, getRegion } from "@/lib/regions";
 import { parseCoordinate, formatCoord } from "@/lib/coords";
 import { parseGpxXml } from "@/lib/gpx/parser";
 import type { GpxPoint } from "@/lib/gpx/parser";
+import { parseVelocitkCsv } from "@/lib/velocitek/parser";
+import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import RouteCreationMap from "@/components/map/RouteCreationMap";
 
-type SubmissionMode = "manual" | "gpx";
+type SubmissionMode = "manual" | "track_file";
 
 
 export function RouteSubmitFormWithGpx() {
@@ -36,12 +38,12 @@ export function RouteSubmitFormWithGpx() {
     endLng: "",
   });
 
-  // GPX-related state
-  const [gpxPoints, setGpxPoints] = useState<GpxPoint[]>([]);
+  // Track file-related state
+  const [trackPoints, setTrackPoints] = useState<GpxPoint[]>([]);
   const [selectedStartIndex, setSelectedStartIndex] = useState<number | null>(null);
   const [selectedEndIndex, setSelectedEndIndex] = useState<number | null>(null);
   const [selectionMode, setSelectionMode] = useState<"start" | "end" | null>(null);
-  const [gpxFile, setGpxFile] = useState<File | null>(null);
+  const [trackFile, setTrackFile] = useState<File | null>(null);
 
 
   // Per-field parse errors shown inline
@@ -83,25 +85,61 @@ export function RouteSubmitFormWithGpx() {
 
     try {
       const text = await file.text();
-      const parsed = parseGpxXml(text);
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
-      if (parsed.points.length === 0) {
-        setError("GPX file contains no track points");
+      let points: GpxPoint[] = [];
+
+      if (fileExtension === 'gpx') {
+        const parsed = parseGpxXml(text);
+        points = parsed.points;
+
+        if (points.length === 0) {
+          setError("GPX file contains no track points");
+          return;
+        }
+      } else if (fileExtension === 'csv') {
+        const parsed = parseVelocitkCsv(text);
+        points = parsed.points;
+
+        if (parsed.errors.length > 0) {
+          setError(`CSV parsing errors: ${parsed.errors.join(', ')}`);
+          return;
+        }
+
+        if (points.length === 0) {
+          setError("CSV file contains no valid track points");
+          return;
+        }
+      } else if (fileExtension === 'vcc') {
+        const parsed = parseVccXml(text);
+        points = parsed.points;
+
+        if (parsed.errors.length > 0) {
+          setError(`VCC parsing errors: ${parsed.errors.join(', ')}`);
+          return;
+        }
+
+        if (points.length === 0) {
+          setError("VCC file contains no valid track points");
+          return;
+        }
+      } else {
+        setError("Please upload a .gpx, .csv, or .vcc file");
         return;
       }
 
-      setGpxFile(file); // Store the file for potential FKT submission
-      setGpxPoints(parsed.points);
+      setTrackFile(file); // Store the file for potential FKT submission
+      setTrackPoints(points);
 
       // Auto-set initial start and end points (first and last points)
       const startIndex = 0;
-      const endIndex = parsed.points.length - 1;
+      const endIndex = points.length - 1;
       setSelectedStartIndex(startIndex);
       setSelectedEndIndex(endIndex);
 
       // Auto-populate form fields with initial points
-      const startPoint = parsed.points[startIndex];
-      const endPoint = parsed.points[endIndex];
+      const startPoint = points[startIndex];
+      const endPoint = points[endIndex];
       setForm(f => ({
         ...f,
         startLat: startPoint.lat.toFixed(6),
@@ -111,15 +149,15 @@ export function RouteSubmitFormWithGpx() {
       }));
 
       setError(null);
-    } catch {
-      setError("Failed to parse GPX file. Please ensure it's a valid GPX file.");
-      setGpxPoints([]);
-      setGpxFile(null);
+    } catch (err) {
+      setError(`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}. Please ensure it's a valid GPX or Velocitek file (.csv/.vcc).`);
+      setTrackPoints([]);
+      setTrackFile(null);
     }
   }
 
   function handlePointSelect(index: number, type: "start" | "end") {
-    const point = gpxPoints[index];
+    const point = trackPoints[index];
     if (!point) return;
 
     if (type === "start") {
@@ -144,7 +182,7 @@ export function RouteSubmitFormWithGpx() {
     setMode(newMode);
     setError(null);
     if (newMode === "manual") {
-      setGpxPoints([]);
+      setTrackPoints([]);
       setSelectedStartIndex(null);
       setSelectedEndIndex(null);
       setSelectionMode(null);
@@ -184,8 +222,8 @@ export function RouteSubmitFormWithGpx() {
         return;
       }
 
-      const startPoint = gpxPoints[selectedStartIndex];
-      const endPoint = gpxPoints[selectedEndIndex];
+      const startPoint = trackPoints[selectedStartIndex];
+      const endPoint = trackPoints[selectedEndIndex];
       startLat = startPoint.lat;
       startLng = startPoint.lon;
       endLat = endPoint.lat;
@@ -283,30 +321,37 @@ export function RouteSubmitFormWithGpx() {
     <>
       {heading}
 
-      {/* Mode Selection */}
-      <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-        <p className="font-semibold mb-3">Choose how to define your route:</p>
-        <div className="flex gap-4">
-          <Button
+      {/* Mode Selection - Tabs */}
+      <div className="mb-6">
+        <div className="flex border-b border-border">
+          <button
             type="button"
-            variant={mode === "manual" ? "pressed" : "outline"}
             onClick={() => switchMode("manual")}
+            className={`px-4 py-2 text-sm font-medium border-b-2 border-l border-t border-r-0 rounded-tl-md transition-colors ${
+              mode === "manual"
+                ? "border-primary border-t-border border-l-border text-primary bg-background"
+                : "border-transparent border-t-transparent border-l-transparent text-muted-foreground hover:text-foreground hover:border-border hover:border-t-border hover:border-l-border"
+            }`}
           >
             📍 Manual Entry
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            variant={mode === "gpx" ? "pressed" : "outline"}
-            onClick={() => switchMode("gpx")}
+            onClick={() => switchMode("track_file")}
+            className={`px-4 py-2 text-sm font-medium border-b-2 border-r border-t border-l-0 rounded-tr-md transition-colors ${
+              mode === "track_file"
+                ? "border-primary border-t-border border-r-border text-primary bg-background"
+                : "border-transparent border-t-transparent border-r-transparent text-muted-foreground hover:text-foreground hover:border-border hover:border-t-border hover:border-r-border"
+            }`}
           >
-            📂 Use GPX Track
-          </Button>
+            📂 Upload Track File
+          </button>
         </div>
-        {mode === "gpx" && (
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+        {mode === "track_file" && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-700">
-              📁 Upload your GPX file below. Start and end points will be set automatically to the first and last track points.
-              Use the buttons on the map to adjust them if needed.
+              📁 Upload your GPX or Velocitek file (.csv/.vcc) below. Start and end points will be set automatically to the first and last track points.
+              Use the buttons above the map to adjust them if needed.
             </p>
           </div>
         )}
@@ -320,17 +365,17 @@ export function RouteSubmitFormWithGpx() {
         )}
 
         {/* GPX Upload Section - moved to top */}
-        {mode === "gpx" && (
+        {mode === "track_file" && (
           <div className="border rounded-lg p-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="gpx-file">Upload GPX File *</Label>
+              <Label htmlFor="gpx-file">Upload GPX or Velocitek File (.csv/.vcc) *</Label>
               <div className="flex gap-2">
                 {/* Hidden file input */}
                 <input
                   ref={fileInputRef}
                   id="gpx-file"
                   type="file"
-                  accept=".gpx"
+                  accept=".gpx,.csv,.vcc"
                   onChange={handleFileUpload}
                   required
                   className="hidden"
@@ -342,12 +387,12 @@ export function RouteSubmitFormWithGpx() {
                   onClick={() => fileInputRef.current?.click()}
                   className="whitespace-nowrap"
                 >
-                  📁 Choose GPX File
+                  📁 Choose Track File
                 </Button>
                 {/* Visible filename display */}
                 <div className="flex-1 px-3 py-2 text-sm border border-input rounded-md bg-background">
-                  {gpxFile ? (
-                    <span className="text-foreground">{gpxFile.name}</span>
+                  {trackFile ? (
+                    <span className="text-foreground">{trackFile.name}</span>
                   ) : (
                     <span className="text-muted-foreground">No file selected</span>
                   )}
@@ -355,7 +400,7 @@ export function RouteSubmitFormWithGpx() {
               </div>
             </div>
 
-            {gpxPoints.length > 0 && (
+            {trackPoints.length > 0 && (
               <>
                 {selectionMode && (
                   <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -366,48 +411,46 @@ export function RouteSubmitFormWithGpx() {
                   </div>
                 )}
 
+                {/* Point selection buttons - above the map */}
+                <div className="flex justify-center gap-3 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setSelectionMode(selectionMode === "start" ? null : "start")}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg border-2 border-white shadow-lg transition-all duration-200 ${
+                      selectionMode === "start"
+                        ? "bg-green-600 text-white scale-105"
+                        : "bg-green-500 text-white hover:bg-green-600 hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: selectionMode === "start" ? "#059669" : "#10b981" }}
+                  >
+                    {selectionMode === "start" ? "Cancel" : "Select Start Point"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectionMode(selectionMode === "end" ? null : "end")}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg border-2 border-white shadow-lg transition-all duration-200 ${
+                      selectionMode === "end"
+                        ? "bg-red-600 text-white scale-105"
+                        : "bg-red-500 text-white hover:bg-red-600 hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: selectionMode === "end" ? "#dc2626" : "#ef4444" }}
+                  >
+                    {selectionMode === "end" ? "Cancel" : "Select End Point"}
+                  </button>
+                </div>
+
                 <div className="relative h-96 border rounded-lg overflow-hidden">
                   <RouteCreationMap
-                    points={gpxPoints}
+                    points={trackPoints}
                     selectedStartIndex={selectedStartIndex}
                     selectedEndIndex={selectedEndIndex}
                     onPointSelect={handlePointSelect}
                     selectionMode={selectionMode}
                   />
-
-                  {/* Overlay buttons in center of map */}
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="flex gap-3 pointer-events-auto">
-                      <button
-                        type="button"
-                        onClick={() => setSelectionMode(selectionMode === "start" ? null : "start")}
-                        className={`px-4 py-2 text-sm font-medium rounded-lg border-2 border-white shadow-lg transition-all duration-200 ${
-                          selectionMode === "start"
-                            ? "bg-green-600 text-white scale-105"
-                            : "bg-green-500 text-white hover:bg-green-600 hover:scale-105"
-                        }`}
-                        style={{ backgroundColor: selectionMode === "start" ? "#059669" : "#10b981" }}
-                      >
-                        {selectionMode === "start" ? "Cancel" : "Select Start Point"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectionMode(selectionMode === "end" ? null : "end")}
-                        className={`px-4 py-2 text-sm font-medium rounded-lg border-2 border-white shadow-lg transition-all duration-200 ${
-                          selectionMode === "end"
-                            ? "bg-red-600 text-white scale-105"
-                            : "bg-red-500 text-white hover:bg-red-600 hover:scale-105"
-                        }`}
-                        style={{ backgroundColor: selectionMode === "end" ? "#dc2626" : "#ef4444" }}
-                      >
-                        {selectionMode === "end" ? "Cancel" : "Select End Point"}
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="text-sm text-muted-foreground">
-                  Track loaded: {gpxPoints.length} points
+                  Track loaded: {trackPoints.length} points
                   {selectedStartIndex !== null && (
                     <span className="text-green-600 ml-2">• Start point: #{selectedStartIndex + 1}</span>
                   )}
@@ -489,8 +532,8 @@ export function RouteSubmitFormWithGpx() {
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <CoordField id="startLat" label="Latitude" value={form.startLat} type="lat" disabled={mode === "gpx"} />
-            <CoordField id="startLng" label="Longitude" value={form.startLng} type="lng" disabled={mode === "gpx"} />
+            <CoordField id="startLat" label="Latitude" value={form.startLat} type="lat" disabled={mode === "track_file"} />
+            <CoordField id="startLng" label="Longitude" value={form.startLng} type="lng" disabled={mode === "track_file"} />
           </div>
         </div>
 
@@ -510,8 +553,8 @@ export function RouteSubmitFormWithGpx() {
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <CoordField id="endLat" label="Latitude" value={form.endLat} type="lat" disabled={mode === "gpx"} />
-            <CoordField id="endLng" label="Longitude" value={form.endLng} type="lng" disabled={mode === "gpx"} />
+            <CoordField id="endLat" label="Latitude" value={form.endLat} type="lat" disabled={mode === "track_file"} />
+            <CoordField id="endLng" label="Longitude" value={form.endLng} type="lng" disabled={mode === "track_file"} />
           </div>
         </div>
 
