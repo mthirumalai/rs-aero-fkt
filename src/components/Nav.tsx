@@ -111,6 +111,13 @@ export function Nav() {
               Pending Routes
             </Link>
             <Link
+              href="/admin/fkt-failures"
+              style={{ fontSize: "19px", color: "#888888", padding: "14px 16px" }}
+              className="hover:text-[#444444] transition-colors"
+            >
+              FKT Failures
+            </Link>
+            <Link
               href="/guidelines"
               style={{ fontSize: "19px", color: "#888888", padding: "14px 16px" }}
               className="hover:text-[#444444] transition-colors"

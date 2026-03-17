@@ -70,7 +70,7 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
 
     if (!res.ok) {
       const data = await res.json();
-      throw new Error(data.error ?? "Failed to get upload URL");
+      throw new Error(data.error ?? "Failed to prepare GPX upload. Please check your file and try again.");
     }
 
     const { uploadUrl, key } = await res.json();
@@ -83,7 +83,7 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
     });
 
     if (!uploadRes.ok) {
-      throw new Error("Failed to upload GPX file to S3");
+      throw new Error("Failed to upload GPX file. Please check your internet connection and try again.");
     }
 
     return key;
@@ -119,12 +119,18 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
       if (!res.ok) {
         const data = await res.json();
         let errMsg = data.error ?? "Submission failed";
-        if (data.nearestStartDistanceM) {
-          errMsg += ` (nearest start: ${data.nearestStartDistanceM}m)`;
+
+        // Add helpful context for validation errors
+        if (res.status === 422 && (data.nearestStartDistanceM !== undefined || data.nearestEndDistanceM !== undefined)) {
+          // The error message should already contain distance info from the enhanced API
+          // But add extra context for users
+          errMsg += " Please check that your track starts and ends at the correct locations. Use a GPS device or app that records your complete track including starts and finishes.";
+        } else if (res.status === 500) {
+          errMsg = "Server error: " + errMsg;
+        } else if (res.status === 404) {
+          errMsg = "Route error: " + errMsg;
         }
-        if (data.nearestEndDistanceM) {
-          errMsg += ` (nearest end: ${data.nearestEndDistanceM}m)`;
-        }
+
         setError(errMsg);
         return;
       }
