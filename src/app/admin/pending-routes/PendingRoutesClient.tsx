@@ -79,15 +79,16 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
           </p>
         ) : (
           <div className="border rounded-lg overflow-hidden">
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Route</TableHead>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Distance</TableHead>
-                  <TableHead>Submitted By</TableHead>
-                  <TableHead>Date</TableHead>
-                  {isAdmin && <TableHead />}
+                  <TableHead className="max-w-[200px]">Route</TableHead>
+                  <TableHead className="w-24">Country</TableHead>
+                  <TableHead className="w-20">Distance</TableHead>
+                  <TableHead className="w-32">Submitted By</TableHead>
+                  <TableHead className="w-24">Date</TableHead>
+                  {isAdmin && <TableHead className="w-28">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -101,27 +102,29 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                       }
                     }}
                   >
-                    <TableCell>
-                      <div className="font-medium">{route.name}</div>
-                      <div className="text-xs text-muted-foreground">
+                    <TableCell className="max-w-[200px]">
+                      <div className="font-medium truncate" title={route.name}>{route.name}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={`${route.startName} → ${route.endName}`}>
                         {route.startName} → {route.endName}
                       </div>
                     </TableCell>
-                    <TableCell>{COUNTRY_NAMES[route.country] ?? route.country}</TableCell>
-                    <TableCell className="font-mono text-sm tabular-nums">
+                    <TableCell className="w-24 truncate" title={COUNTRY_NAMES[route.country] ?? route.country}>
+                      {COUNTRY_NAMES[route.country] ?? route.country}
+                    </TableCell>
+                    <TableCell className="w-20 font-mono text-sm tabular-nums">
                       {distanceNm(route.startLat, route.startLng, route.endLat, route.endLng)} nm
                     </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{route.submittedBy.name}</div>
-                      <div className="text-xs text-muted-foreground">{route.submittedBy.email}</div>
+                    <TableCell className="w-32">
+                      <div className="text-sm truncate" title={route.submittedBy.name ?? ''}>{route.submittedBy.name}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={route.submittedBy.email ?? ''}>{route.submittedBy.email}</div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="w-24 text-sm text-muted-foreground whitespace-nowrap">
                       {new Date(route.submittedAt).toLocaleDateString()}
                     </TableCell>
                     {isAdmin && (
-                      <TableCell onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="w-28" onClick={(e) => e.stopPropagation()}>
                         {route.approvalToken ? (
-                          <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white whitespace-nowrap">
+                          <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white whitespace-nowrap min-w-[80px]">
                             <Link href={`/admin/approve-route?token=${route.approvalToken}`}>
                               Review →
                             </Link>
@@ -134,7 +137,8 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           </div>
         )}
       </section>
@@ -151,15 +155,16 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
           </p>
         ) : (
           <div className="border rounded-lg overflow-hidden">
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Route</TableHead>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Submitted By</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Rejection Reason</TableHead>
-                  {isAdmin && <TableHead />}
+                  <TableHead className="max-w-[200px]">Route</TableHead>
+                  <TableHead className="w-24">Country</TableHead>
+                  <TableHead className="w-32">Submitted By</TableHead>
+                  <TableHead className="w-24">Date</TableHead>
+                  <TableHead className="w-40">Rejection Reason</TableHead>
+                  {isAdmin && <TableHead className="w-28">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -169,30 +174,32 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => setSelectedRejected(route)}
                   >
-                    <TableCell>
-                      <div className="font-medium">{route.name}</div>
-                      <div className="text-xs text-muted-foreground">
+                    <TableCell className="max-w-[200px]">
+                      <div className="font-medium truncate" title={route.name}>{route.name}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={`${route.startName} → ${route.endName}`}>
                         {route.startName} → {route.endName}
                       </div>
                     </TableCell>
-                    <TableCell>{COUNTRY_NAMES[route.country] ?? route.country}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">{route.submittedBy.name}</div>
-                      <div className="text-xs text-muted-foreground">{route.submittedBy.email}</div>
+                    <TableCell className="w-24 truncate" title={COUNTRY_NAMES[route.country] ?? route.country}>
+                      {COUNTRY_NAMES[route.country] ?? route.country}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="w-32">
+                      <div className="text-sm truncate" title={route.submittedBy.name ?? ''}>{route.submittedBy.name}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={route.submittedBy.email ?? ''}>{route.submittedBy.email}</div>
+                    </TableCell>
+                    <TableCell className="w-24 text-sm text-muted-foreground whitespace-nowrap">
                       {new Date(route.submittedAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="max-w-xs">
-                      <p className="text-sm text-muted-foreground truncate">
+                    <TableCell className="w-40">
+                      <p className="text-sm text-muted-foreground truncate" title={route.rejectionReason ?? "—"}>
                         {route.rejectionReason ?? "—"}
                       </p>
                     </TableCell>
                     {isAdmin && (
-                      <TableCell>
+                      <TableCell className="w-28">
                         <Button
                           size="sm"
-                          className="bg-orange-600 hover:bg-orange-700 text-white whitespace-nowrap"
+                          className="bg-orange-600 hover:bg-orange-700 text-white whitespace-nowrap min-w-[80px]"
                           onClick={() => handleReOpen(route.id)}
                           disabled={reopeningRoute === route.id}
                         >
@@ -203,7 +210,8 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           </div>
         )}
       </section>
