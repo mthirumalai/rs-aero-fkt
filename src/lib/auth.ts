@@ -42,8 +42,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "database",
   },
-  // Allow linking OAuth accounts to existing email-based users
-  allowDangerousEmailAccountLinking: true,
   callbacks: {
     session({ session, user }) {
       if (session.user) {
@@ -64,49 +62,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       }
 
-      // For OAuth providers (Google, Apple), handle account linking
+      // For OAuth providers (Google, Apple), always allow and let NextAuth handle it
+      // NextAuth v5 should handle account linking automatically if user emails match
       if (account?.provider && user?.email) {
-        console.log(`🔍 Checking for existing user with email: ${user.email}`);
-        try {
-          // Check if a user with this email already exists
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email },
-            include: { accounts: true }
-          });
-
-          if (existingUser) {
-            console.log(`👤 Found existing user:`, {
-              id: existingUser.id,
-              email: existingUser.email,
-              accountCount: existingUser.accounts.length
-            });
-
-            // Check if this OAuth provider is already linked
-            const existingAccount = existingUser.accounts.find(
-              acc => acc.provider === account.provider
-            );
-
-            if (existingAccount) {
-              // Account already linked, allow sign-in
-              console.log(`✅ ${account.provider} account already linked, allowing sign-in`);
-              return true;
-            }
-
-            // User exists but this OAuth provider isn't linked yet
-            // NextAuth will automatically link the account after this callback returns true
-            console.log(`🔗 Linking ${account.provider} account to existing user ${existingUser.id}`);
-            return true;
-          }
-
-          // No existing user, create new one (NextAuth handles this automatically)
-          console.log('👤 No existing user found, creating new user');
-          return true;
-        } catch (error) {
-          console.error('Error in signIn callback:', error);
-          return false;
-        }
+        console.log(`✅ OAuth sign-in with ${account.provider} for ${user.email} - allowing`);
+        return true;
       }
 
+      console.log('✅ Default: allowing sign-in');
       return true;
     },
     async redirect({ url, baseUrl }) {
