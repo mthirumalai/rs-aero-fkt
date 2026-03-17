@@ -59,30 +59,45 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
   }
 
   async function extractDateFromFile(file: File): Promise<Date | null> {
+    console.log('📅 Extracting date from file:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      isSafari: navigator.userAgent.includes('Safari')
+    });
+
     try {
       const text = await file.text();
+      console.log('📖 File read successful, text length:', text.length);
+
       const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
       let startTime: Date | null = null;
 
       if (fileExtension === 'gpx') {
+        console.log('🗂️ Parsing as GPX file...');
         const parsed = parseGpxXml(text);
         startTime = parsed.startTime;
+        console.log('📅 GPX start time:', startTime);
       } else if (fileExtension === 'vcc') {
+        console.log('🗂️ Parsing as VCC file...');
         const parsed = parseVccXml(text);
         // Get the first point with a timestamp
         const firstTimedPoint = parsed.points.find(p => p.time !== null);
         startTime = firstTimedPoint?.time || null;
+        console.log('📅 VCC start time:', startTime, 'from', parsed.points.length, 'points');
       } else if (fileExtension === 'csv') {
+        console.log('🗂️ Parsing as CSV file...');
         const parsed = parseVelocitkCsv(text);
         // Get the first point with a timestamp
         const firstTimedPoint = parsed.points.find(p => p.time !== null);
         startTime = firstTimedPoint?.time || null;
+        console.log('📅 CSV start time:', startTime, 'from', parsed.points.length, 'points');
       }
 
       return startTime;
     } catch (error) {
-      console.warn('Failed to extract date from track file:', error);
+      console.error('❌ Failed to extract date from track file:', error);
       return null;
     }
   }
@@ -101,6 +116,13 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
   }
 
   async function uploadTrackFile(file: File): Promise<string> {
+    console.log('🚀 Starting track file upload:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      userAgent: navigator.userAgent
+    });
+
     setUploadProgress("Getting upload URL...");
 
     // Determine content type based on file extension
@@ -114,35 +136,51 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
       contentType = "application/xml";
     }
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "gpx", // Keep as "gpx" for S3 bucket compatibility
-        filename: file.name,
-        contentType: contentType,
-      }),
-    });
+    console.log('📝 Upload request details:', { fileExtension, contentType });
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error ?? "Failed to prepare track file upload. Please check your file and try again.");
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "gpx", // Keep as "gpx" for S3 bucket compatibility
+          filename: file.name,
+          contentType: contentType,
+        }),
+      });
+
+      console.log('📡 Upload URL response:', { status: res.status, ok: res.ok });
+
+      if (!res.ok) {
+        const data = await res.json();
+        console.error('❌ Upload URL failed:', { status: res.status, error: data });
+        throw new Error(`Upload preparation failed (${res.status}): ${data.error ?? "Unknown error"}`);
+      }
+
+      const { uploadUrl, key } = await res.json();
+      console.log('✅ Got upload URL, starting file upload to S3...');
+
+      setUploadProgress("Uploading track file...");
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": contentType },
+      });
+
+      console.log('📤 S3 upload response:', { status: uploadRes.status, ok: uploadRes.ok });
+
+      if (!uploadRes.ok) {
+        const errorText = await uploadRes.text().catch(() => "Unable to read error");
+        console.error('❌ S3 upload failed:', { status: uploadRes.status, errorText });
+        throw new Error(`File upload to storage failed (${uploadRes.status}). ${errorText ? 'Error: ' + errorText : 'Please check your internet connection and try again.'}`);
+      }
+
+      console.log('✅ File upload successful:', { key });
+      return key;
+    } catch (error) {
+      console.error('💥 Upload error:', error);
+      throw error;
     }
-
-    const { uploadUrl, key } = await res.json();
-
-    setUploadProgress("Uploading track file...");
-    const uploadRes = await fetch(uploadUrl, {
-      method: "PUT",
-      body: file,
-      headers: { "Content-Type": contentType },
-    });
-
-    if (!uploadRes.ok) {
-      throw new Error("Failed to upload track file. Please check your internet connection and try again.");
-    }
-
-    return key;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -161,25 +199,42 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
     setError(null);
 
     try {
+      console.log('🏁 Starting FKT submission:', {
+        routeId,
+        fileName: trackFile.name,
+        extractedDate: extractedDate.toISOString(),
+        browser: navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'
+      });
+
       // Step 1: Upload track file to S3
       const gpxS3Key = await uploadTrackFile(trackFile);
 
       // Step 2: Submit attempt metadata
       setUploadProgress("Validating track...");
+      console.log('📝 Submitting FKT attempt data...');
+
+      const submitData = {
+        routeId,
+        ...form,
+        date: extractedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        gpxS3Key,
+        windSpeedKnots: form.windSpeedKnots || null,
+      };
+
+      console.log('📤 Submission payload:', submitData);
+
       const res = await fetch("/api/attempts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          routeId,
-          ...form,
-          date: extractedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-          gpxS3Key,
-          windSpeedKnots: form.windSpeedKnots || null,
-        }),
+        body: JSON.stringify(submitData),
       });
+
+      console.log('📡 FKT submission response:', { status: res.status, ok: res.ok });
 
       if (!res.ok) {
         const data = await res.json();
+        console.error('❌ FKT submission failed:', { status: res.status, data });
+
         let errMsg = data.error ?? "Submission failed";
 
         // Add helpful context for validation errors
@@ -198,10 +253,25 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
       }
 
       const attempt = await res.json();
+      console.log('🎉 FKT submission successful:', { attemptId: attempt.id });
       setSuccess(true);
       setTimeout(() => router.push(`/attempts/${attempt.id}`), 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error. Please try again.");
+      console.error('💥 FKT submission error:', err);
+
+      let errorMessage = "Unknown error occurred";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+
+      // Add browser-specific context
+      if (navigator.userAgent.includes('Safari')) {
+        errorMessage += " (Safari detected - if this persists, try using Chrome or Firefox)";
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
       setUploadProgress(null);
