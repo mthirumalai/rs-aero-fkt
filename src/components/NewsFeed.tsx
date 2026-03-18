@@ -105,7 +105,7 @@ export function NewsFeed() {
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="font-display text-3xl uppercase tracking-wide mb-8 text-center">
-          News Feed
+          New FKTs and Routes
         </h2>
 
         <div className="space-y-4">
@@ -118,7 +118,7 @@ export function NewsFeed() {
                   {event.type === "route_approved" ? (
                     <div>
                       <p className="text-lg font-medium">
-                        New Route: <Link
+                        Route: <Link
                           href={`/routes/${event.data.routeId}`}
                           className="text-primary font-semibold hover:underline"
                         >
@@ -132,7 +132,7 @@ export function NewsFeed() {
                   ) : (
                     <div>
                       <p className="text-lg font-medium">
-                        New FKT: <Link
+                        FKT: <Link
                           href={`/routes/${event.data.routeId}`}
                           className="text-primary font-semibold hover:underline"
                         >
