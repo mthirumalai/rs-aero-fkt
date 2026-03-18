@@ -118,7 +118,12 @@ export function NewsFeed() {
                   {event.type === "route_approved" ? (
                     <div>
                       <p className="text-lg font-medium">
-                        New route approved: <span className="text-primary font-semibold">{event.data.routeName}</span> •
+                        New route approved: <Link
+                          href={`/routes/${event.data.routeId}`}
+                          className="text-primary font-semibold hover:underline"
+                        >
+                          {event.data.routeName}
+                        </Link> •
                         <span className="text-sm text-muted-foreground ml-1">
                           Submitted by {event.data.submitterName}
                         </span> •
@@ -130,10 +135,26 @@ export function NewsFeed() {
                   ) : (
                     <div>
                       <p className="text-lg font-medium">
-                        New FKT attempt: <span className="text-primary font-semibold">{event.data.routeName}</span> •
+                        New FKT attempt: <Link
+                          href={`/routes/${event.data.routeId}`}
+                          className="text-primary font-semibold hover:underline"
+                        >
+                          {event.data.routeName}
+                        </Link> •
                         <span className="font-bold text-lg ml-2">{event.data.sailorName}</span> •
                         <span className="font-semibold text-blue-600 ml-1">{event.data.rigSize?.replace('AERO_', 'Aero ')}</span> •
-                        <span className="font-bold text-green-600 ml-1">{event.data.durationSec && formatDuration(event.data.durationSec)}</span>
+                        {event.data.attemptId && event.data.durationSec ? (
+                          <Link
+                            href={`/attempts/${event.data.attemptId}`}
+                            className="font-bold text-green-600 ml-1 hover:underline"
+                          >
+                            {formatDuration(event.data.durationSec)}
+                          </Link>
+                        ) : (
+                          <span className="font-bold text-green-600 ml-1">
+                            {event.data.durationSec && formatDuration(event.data.durationSec)}
+                          </span>
+                        )}
                       </p>
                     </div>
                   )}

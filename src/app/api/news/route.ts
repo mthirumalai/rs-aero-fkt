@@ -8,6 +8,8 @@ export type NewsEvent = {
   data: {
     routeName: string;
     country: string;
+    routeId: string;
+    attemptId?: string;
     sailorName?: string;
     rigSize?: string;
     durationSec?: number;
@@ -39,6 +41,7 @@ export async function GET() {
       where: { status: "APPROVED" },
       select: {
         id: true,
+        routeId: true,
         sailorName: true,
         rigSize: true,
         durationSec: true,
@@ -66,6 +69,7 @@ export async function GET() {
       data: {
         routeName: route.name,
         country: route.country,
+        routeId: route.id,
         submitterName: route.submittedBy?.name || "Unknown"
       }
     }));
@@ -77,6 +81,8 @@ export async function GET() {
       data: {
         routeName: attempt.route.name,
         country: attempt.route.country,
+        routeId: attempt.routeId,
+        attemptId: attempt.id,
         sailorName: attempt.sailorName || attempt.athlete.name || "Unknown",
         rigSize: attempt.rigSize,
         durationSec: attempt.durationSec
