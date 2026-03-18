@@ -123,10 +123,7 @@ export function NewsFeed() {
                           className="text-primary font-semibold hover:underline"
                         >
                           {event.data.routeName}
-                        </Link> by {event.data.submitterName}, {formatEventDate(event.date)} •
-                        <Link href="/routes" className="text-primary hover:underline ml-1">
-                          Submit FKT
-                        </Link>
+                        </Link> by {event.data.submitterName}, {formatEventDate(event.date)}
                       </p>
                     </div>
                   ) : (
@@ -158,12 +155,19 @@ export function NewsFeed() {
           ))}
         </div>
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 space-x-4">
           <Link
             href="/fkts"
             className="text-primary hover:underline font-medium"
           >
-            View all FKT attempts →
+            FKTs
+          </Link>
+          <span className="text-muted-foreground">•</span>
+          <Link
+            href="/routes"
+            className="text-primary hover:underline font-medium"
+          >
+            Routes
           </Link>
         </div>
       </div>
