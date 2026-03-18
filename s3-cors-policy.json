@@ -1,0 +1,29 @@
+{
+  "CORSRules": [
+    {
+      "AllowedHeaders": [
+        "Authorization",
+        "Content-Type",
+        "X-Amz-*",
+        "*"
+      ],
+      "AllowedMethods": [
+        "GET",
+        "PUT",
+        "POST",
+        "DELETE",
+        "HEAD"
+      ],
+      "AllowedOrigins": [
+        "https://rs-aero-fkt-production.up.railway.app",
+        "http://localhost:3000",
+        "https://localhost:3000"
+      ],
+      "ExposeHeaders": [
+        "ETag",
+        "x-amz-meta-custom-header"
+      ],
+      "MaxAgeSeconds": 3000
+    }
+  ]
+}

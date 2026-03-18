@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { NewsFeed } from "@/components/NewsFeed";
 
 export default async function HomePage() {
 
@@ -26,6 +27,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* News Feed */}
+      <NewsFeed />
     </div>
   );
 }
