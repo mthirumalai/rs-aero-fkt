@@ -13,7 +13,7 @@ export default async function HomePage() {
             RS Aero Fastest Known Times
           </h1>
           <p className="text-lg text-white/80 mb-8 font-sans">
-            The definitive record of the fastest passages made by an RS Aero for classic sailing routes.
+            The definitive record of the fastest passages made by an RS Aero.
             <br />
             Got a route? Got a GPX track for that route? Let&apos;s put it in the books!
           </p>

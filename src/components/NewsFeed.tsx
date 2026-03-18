@@ -108,51 +108,51 @@ export function NewsFeed() {
           New FKTs and Routes
         </h2>
 
-        <div className="space-y-4">
-          {events.map((event) => (
-            <div key={event.id} className="bg-white rounded-lg border p-6 shadow-sm">
-              <div className="flex items-start gap-4">
-                <EventIcon type={event.type} />
-
-                <div className="flex-1 min-w-0">
-                  {event.type === "route_approved" ? (
-                    <div>
-                      <p className="text-lg font-medium">
-                        Route: <Link
-                          href={`/routes/${event.data.routeId}`}
-                          className="text-primary font-semibold hover:underline"
-                        >
-                          {event.data.routeName}
-                        </Link> by {event.data.submitterName}, {formatEventDate(event.date)}
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-lg font-medium">
-                        FKT: <Link
-                          href={`/routes/${event.data.routeId}`}
-                          className="text-primary font-semibold hover:underline"
-                        >
-                          {event.data.routeName}
-                        </Link> by {event.data.sailorName}, <span className="font-semibold text-blue-600">{event.data.rigSize?.replace('AERO_', 'Aero ')}</span> in {event.data.attemptId && event.data.durationSec ? (
-                          <Link
-                            href={`/attempts/${event.data.attemptId}`}
-                            className="font-bold text-green-600 hover:underline"
-                          >
-                            {formatDuration(event.data.durationSec)}
-                          </Link>
-                        ) : (
-                          <span className="font-bold text-green-600">
-                            {event.data.durationSec && formatDuration(event.data.durationSec)}
-                          </span>
-                        )}, {formatEventDate(event.date)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+          <table className="w-full">
+            <tbody>
+              {events.map((event) => (
+                <tr key={event.id} className="border-b last:border-b-0">
+                  <td className="py-4 px-4 text-sm text-muted-foreground w-20">
+                    {formatEventDate(event.date)}
+                  </td>
+                  <td className="py-4 px-3 w-12 text-sm">
+                    <EventIcon type={event.type} />
+                  </td>
+                  <td className="py-4 px-4 text-sm">
+                    <Link
+                      href={`/routes/${event.data.routeId}`}
+                      className="text-primary hover:underline"
+                    >
+                      {event.data.routeName}
+                    </Link>
+                  </td>
+                  <td className="py-4 px-4 text-sm">
+                    {event.type === "route_approved"
+                      ? event.data.submitterName
+                      : event.data.sailorName}
+                  </td>
+                  <td className="py-4 px-4 w-20 text-sm">
+                    {event.type === "fkt_attempt" && (
+                      <span className="text-blue-600">
+                        {event.data.rigSize?.replace('AERO_', 'Aero ')}
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-4 px-4 w-24 text-sm">
+                    {event.type === "fkt_attempt" && event.data.attemptId && event.data.durationSec && (
+                      <Link
+                        href={`/attempts/${event.data.attemptId}`}
+                        className="text-green-600 hover:underline"
+                      >
+                        {formatDuration(event.data.durationSec)}
+                      </Link>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         <div className="text-center mt-8 space-x-4">
