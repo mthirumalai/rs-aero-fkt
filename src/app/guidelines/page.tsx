@@ -9,10 +9,7 @@ export const metadata: Metadata = {
 export default function GuidelinesPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <h1 className="text-3xl font-bold mb-2">Guidelines</h1>
-      <p className="text-muted-foreground mb-8">
-        How to submit routes and FKT attempts.
-      </p>
+      <h1 className="text-3xl font-bold mb-8">Guidelines</h1>
 
       <div className="space-y-10">
         <section>
