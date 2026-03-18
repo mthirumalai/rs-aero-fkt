@@ -121,7 +121,7 @@ export function ContactForm() {
       <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
         <p className="text-2xl font-bold text-green-800 mb-2">Message Sent!</p>
         <p className="text-green-700">
-          Thank you for your feedback. We'll get back to you soon.
+          Thank you for your feedback. We&apos;ll get back to you soon.
         </p>
       </div>
     );

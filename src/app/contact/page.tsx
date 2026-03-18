@@ -12,7 +12,7 @@ export default function ContactPage() {
 
       <div className="mb-8 space-y-4 text-muted-foreground">
         <p>
-          <strong>Enjoying the app?</strong> We'd love to hear from you.
+          <strong>Enjoying the app?</strong> We&apos;d love to hear from you.
         </p>
         <p>
           <strong>Did you run into an issue?</strong> Tell us more so we can fix it.

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { COUNTRY_NAMES } from "@/lib/regions";
 import { formatDuration } from "@/lib/gpx/parser";
 import type { NewsEvent } from "@/app/api/news/route";
 
