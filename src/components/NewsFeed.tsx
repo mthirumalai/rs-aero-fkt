@@ -118,12 +118,11 @@ export function NewsFeed() {
                   {event.type === "route_approved" ? (
                     <div>
                       <p className="text-lg font-medium">
-                        New route approved: <span className="text-primary font-semibold">{event.data.routeName}</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {COUNTRY_NAMES[event.data.country] || event.data.country} •
-                        Submitted by {event.data.submitterName} •
-                        <Link href="/routes" className="text-primary hover:underline ml-1">
+                        New route approved: <span className="text-primary font-semibold">{event.data.routeName}</span> •
+                        <span className="text-sm text-muted-foreground ml-1">
+                          Submitted by {event.data.submitterName}
+                        </span> •
+                        <Link href="/routes" className="text-primary hover:underline text-sm ml-1">
                           Submit an FKT attempt →
                         </Link>
                       </p>
@@ -131,13 +130,10 @@ export function NewsFeed() {
                   ) : (
                     <div>
                       <p className="text-lg font-medium">
-                        New FKT attempt: <span className="text-primary font-semibold">{event.data.routeName}</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {event.data.sailorName} •
-                        {event.data.rigSize?.replace('AERO_', 'Aero ')} •
-                        {event.data.durationSec && formatDuration(event.data.durationSec)} •
-                        {COUNTRY_NAMES[event.data.country] || event.data.country}
+                        New FKT attempt: <span className="text-primary font-semibold">{event.data.routeName}</span> •
+                        <span className="font-bold text-lg ml-2">{event.data.sailorName}</span> •
+                        <span className="font-semibold text-blue-600 ml-1">{event.data.rigSize?.replace('AERO_', 'Aero ')}</span> •
+                        <span className="font-bold text-green-600 ml-1">{event.data.durationSec && formatDuration(event.data.durationSec)}</span>
                       </p>
                     </div>
                   )}
