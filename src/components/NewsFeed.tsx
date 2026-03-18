@@ -137,7 +137,7 @@ export function NewsFeed() {
                           className="text-primary font-semibold hover:underline"
                         >
                           {event.data.routeName}
-                        </Link> by <span className="font-bold">{event.data.sailorName}</span>, <span className="font-semibold text-blue-600">{event.data.rigSize?.replace('AERO_', 'Aero ')}</span> in {event.data.attemptId && event.data.durationSec ? (
+                        </Link> by {event.data.sailorName}, <span className="font-semibold text-blue-600">{event.data.rigSize?.replace('AERO_', 'Aero ')}</span> in {event.data.attemptId && event.data.durationSec ? (
                           <Link
                             href={`/attempts/${event.data.attemptId}`}
                             className="font-bold text-green-600 hover:underline"
