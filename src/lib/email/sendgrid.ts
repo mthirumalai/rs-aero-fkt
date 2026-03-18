@@ -165,3 +165,100 @@ This link can only be used once.
 
   await sgMail.send(msg);
 }
+
+export async function sendContactEmailViaSendGrid(data: {
+  type: string;
+  name: string;
+  email: string;
+  description: string;
+  attachmentKeys?: string[];
+  attachmentNames?: string[];
+}): Promise<void> {
+  const { type, name, email, description, attachmentKeys = [], attachmentNames = [] } = data;
+
+  if (IS_LOCAL_DEV) {
+    console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║  [LOCAL DEV] Contact form email (SendGrid - not sent)      ║
+╠══════════════════════════════════════════════════════════════╣
+║  Type: ${type}
+║  From: ${name} (${email})
+╠══════════════════════════════════════════════════════════════╣
+║  Message: ${description}
+║  Attachments: ${attachmentNames.join(', ') || 'None'}
+╚══════════════════════════════════════════════════════════════╝
+`);
+    return;
+  }
+
+  // Build attachment section for email
+  let attachmentSection = "";
+  if (attachmentKeys.length > 0) {
+    const attachmentList = attachmentNames.map((fileName, index) => {
+      const key = attachmentKeys[index];
+      const photosBucket = process.env.S3_BUCKET_PHOTOS!;
+      const awsRegion = process.env.AWS_REGION!;
+      const fileUrl = `https://${photosBucket}.s3.${awsRegion}.amazonaws.com/${key}`;
+      return `<li><a href="${fileUrl}" target="_blank">${fileName}</a></li>`;
+    }).join('');
+
+    attachmentSection = `
+    <h3>Attachments:</h3>
+    <ul>${attachmentList}</ul>`;
+  }
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+      <h2 style="color:#ec008c">RS Aero FKT Contact Form Submission</h2>
+
+      <p><strong>Type:</strong> ${type}</p>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+
+      <h3>Message:</h3>
+      <div style="background:#f9f9f9;border-left:4px solid #ec008c;padding:15px;border-radius:5px;margin:15px 0;">
+        ${description.replace(/\n/g, '<br>')}
+      </div>
+
+      ${attachmentSection}
+
+      <hr style="margin:20px 0;">
+      <p style="color:#666;font-size:12px;">
+        This message was sent via the RS Aero FKT contact form.
+      </p>
+    </div>
+  `;
+
+  const textAttachments = attachmentKeys.length > 0
+    ? `\n\nATTACHMENTS:\n${attachmentNames.map((fileName, index) => {
+        const key = attachmentKeys[index];
+        const photosBucket = process.env.S3_BUCKET_PHOTOS!;
+        const awsRegion = process.env.AWS_REGION!;
+        const fileUrl = `https://${photosBucket}.s3.${awsRegion}.amazonaws.com/${key}`;
+        return `• ${fileName}: ${fileUrl}`;
+      }).join('\n')}`
+    : '';
+
+  const text = `RS Aero FKT Contact Form Submission
+
+Type: ${type}
+Name: ${name}
+Email: ${email}
+
+Message:
+${description}${textAttachments}
+
+---
+This message was sent via the RS Aero FKT contact form.`;
+
+  const msg = {
+    to: "president@rsaerona.org",
+    cc: email, // CC the sender
+    from: process.env.SES_FROM_EMAIL!,
+    subject: `RS Aero FKT Contact Form: ${type}`,
+    html,
+    text,
+  };
+
+  await sgMail.send(msg);
+}

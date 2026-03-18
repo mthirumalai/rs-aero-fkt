@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendContactEmail } from "@/lib/email/contact";
+import { sendContactEmailViaSendGrid } from "@/lib/email/sendgrid";
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const typeLabel = typeLabels[type] || "Contact Form";
 
-    await sendContactEmail({
+    await sendContactEmailViaSendGrid({
       type: typeLabel,
       name,
       email,
