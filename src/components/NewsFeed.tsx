@@ -105,7 +105,7 @@ export function NewsFeed() {
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="font-display text-3xl uppercase tracking-wide mb-8 text-center">
-          Latest Activity
+          News Feed
         </h2>
 
         <div className="space-y-4">
@@ -118,50 +118,40 @@ export function NewsFeed() {
                   {event.type === "route_approved" ? (
                     <div>
                       <p className="text-lg font-medium">
-                        New route approved: <Link
+                        New Route: <Link
                           href={`/routes/${event.data.routeId}`}
                           className="text-primary font-semibold hover:underline"
                         >
                           {event.data.routeName}
-                        </Link> •
-                        <span className="text-sm text-muted-foreground ml-1">
-                          Submitted by {event.data.submitterName}
-                        </span> •
-                        <Link href="/routes" className="text-primary hover:underline text-sm ml-1">
-                          Submit an FKT attempt →
+                        </Link> by {event.data.submitterName}, {formatEventDate(event.date)} •
+                        <Link href="/routes" className="text-primary hover:underline ml-1">
+                          Submit FKT
                         </Link>
                       </p>
                     </div>
                   ) : (
                     <div>
                       <p className="text-lg font-medium">
-                        New FKT attempt: <Link
+                        New FKT: <Link
                           href={`/routes/${event.data.routeId}`}
                           className="text-primary font-semibold hover:underline"
                         >
                           {event.data.routeName}
-                        </Link> •
-                        <span className="font-bold text-lg ml-2">{event.data.sailorName}</span> •
-                        <span className="font-semibold text-blue-600 ml-1">{event.data.rigSize?.replace('AERO_', 'Aero ')}</span> •
-                        {event.data.attemptId && event.data.durationSec ? (
+                        </Link> by <span className="font-bold">{event.data.sailorName}</span>, <span className="font-semibold text-blue-600">{event.data.rigSize?.replace('AERO_', 'Aero ')}</span> in {event.data.attemptId && event.data.durationSec ? (
                           <Link
                             href={`/attempts/${event.data.attemptId}`}
-                            className="font-bold text-green-600 ml-1 hover:underline"
+                            className="font-bold text-green-600 hover:underline"
                           >
                             {formatDuration(event.data.durationSec)}
                           </Link>
                         ) : (
-                          <span className="font-bold text-green-600 ml-1">
+                          <span className="font-bold text-green-600">
                             {event.data.durationSec && formatDuration(event.data.durationSec)}
                           </span>
-                        )}
+                        )}, {formatEventDate(event.date)}
                       </p>
                     </div>
                   )}
-
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {formatEventDate(event.date)}
-                  </p>
                 </div>
               </div>
             </div>
