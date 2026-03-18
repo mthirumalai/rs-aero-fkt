@@ -57,6 +57,17 @@ export async function GET() {
       take: 5, // Get more than 3 in case we need to filter
     });
 
+    console.log('📰 News API - Raw data:', {
+      routeCount: recentRoutes.length,
+      attemptCount: recentAttempts.length,
+      attempts: recentAttempts.map(a => ({
+        id: a.id,
+        sailor: a.sailorName,
+        route: a.route.name,
+        submittedAt: a.submittedAt
+      }))
+    });
+
     // Convert to news events
     const routeEvents: NewsEvent[] = recentRoutes.map(route => ({
       id: `route-${route.id}`,
@@ -86,6 +97,16 @@ export async function GET() {
     const allEvents = [...routeEvents, ...attemptEvents]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 3); // Take top 3
+
+    console.log('📰 News API - Final events:', {
+      totalEvents: allEvents.length,
+      events: allEvents.map(e => ({
+        id: e.id,
+        type: e.type,
+        routeName: e.data.routeName,
+        sailorName: e.data.sailorName
+      }))
+    });
 
     return NextResponse.json({ events: allEvents });
   } catch (error) {
