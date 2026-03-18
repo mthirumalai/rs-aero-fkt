@@ -22,6 +22,9 @@ export function Nav() {
       {/* Dark grey top bar — #616161, matches rsaerosailing.org */}
       <div style={{ backgroundColor: "#616161" }} className="text-white text-sm py-2 px-8">
         <div className="flex items-center justify-end gap-3">
+          <Link href="/contact" className="text-white/80 hover:text-white text-sm transition-colors">
+            Contact Us
+          </Link>
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
