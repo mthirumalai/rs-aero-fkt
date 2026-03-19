@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDuration } from "@/lib/gpx/parser";
 import type { NewsEvent } from "@/app/api/news/route";
+import { RigIcon } from "@/components/RigIcon";
 
 export function NewsFeed() {
   const [events, setEvents] = useState<NewsEvent[]>([]);
@@ -132,10 +133,8 @@ export function NewsFeed() {
                       : event.data.sailorName}
                   </td>
                   <td className="py-4 px-4 w-20 text-sm">
-                    {event.type === "fkt_attempt" && (
-                      <span className="text-blue-600">
-                        {event.data.rigSize?.replace('AERO_', 'Aero ')}
-                      </span>
+                    {event.type === "fkt_attempt" && event.data.rigSize && (
+                      <RigIcon rigSize={event.data.rigSize} size={32} />
                     )}
                   </td>
                   <td className="py-4 px-4 w-24 text-sm">

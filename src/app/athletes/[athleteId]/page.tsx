@@ -6,17 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDuration } from "@/lib/gpx/parser";
 import { auth } from "@/lib/auth";
 import { ProfileEditForm } from "./ProfileEditForm";
+import { RigIcon } from "@/components/RigIcon";
 
 interface Props {
   params: { athleteId: string };
 }
 
-const RIG_LABELS: Record<string, string> = {
-  AERO_5: "Aero 5",
-  AERO_6: "Aero 6",
-  AERO_7: "Aero 7",
-  AERO_9: "Aero 9",
-};
 
 export async function generateMetadata({ params }: Props) {
   const user = await prisma.user.findUnique({ where: { id: params.athleteId } });
@@ -99,7 +94,9 @@ export default async function AthleteProfilePage({ params }: Props) {
           return (
             <div key={rig} className="bg-card border rounded-lg p-4 text-center">
               <p className="text-2xl font-bold">{count}</p>
-              <p className="text-sm text-muted-foreground">{RIG_LABELS[rig]}</p>
+              <div className="flex justify-center mt-1">
+                <RigIcon rigSize={rig} size={20} />
+              </div>
             </div>
           );
         })}
@@ -127,9 +124,7 @@ export default async function AthleteProfilePage({ params }: Props) {
                     {attempt.route.name}
                   </Link>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-xs">
-                      {RIG_LABELS[attempt.rigSize]}
-                    </Badge>
+                    <RigIcon rigSize={attempt.rigSize} size={18} />
                     <span className="text-xs text-muted-foreground">
                       {new Date(attempt.date).toLocaleDateString()}
                     </span>

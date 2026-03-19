@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { RegionFilter } from "@/components/RegionFilter";
 import { getCountriesForRegion, REGION_LABELS, type Region } from "@/lib/regions";
+import { RigIcon } from "@/components/RigIcon";
 
 // Utility function to format duration in seconds to readable time
 function formatDuration(durationSec: number): string {
@@ -93,10 +94,26 @@ export default async function RoutesPage({ searchParams }: Props) {
                 <TableHead className="min-w-[200px]">Route</TableHead>
                 <TableHead>Start</TableHead>
                 <TableHead>End</TableHead>
-                <TableHead className="text-center">5 Rig</TableHead>
-                <TableHead className="text-center">6 Rig</TableHead>
-                <TableHead className="text-center">7 Rig</TableHead>
-                <TableHead className="text-center">9 Rig</TableHead>
+                <TableHead className="text-center">
+                  <div className="flex justify-center" title="Aero 5">
+                    <RigIcon rigSize="AERO_5" size={28} />
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex justify-center" title="Aero 6">
+                    <RigIcon rigSize="AERO_6" size={28} />
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex justify-center" title="Aero 7">
+                    <RigIcon rigSize="AERO_7" size={28} />
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex justify-center" title="Aero 9">
+                    <RigIcon rigSize="AERO_9" size={28} />
+                  </div>
+                </TableHead>
                 <TableHead>Submit</TableHead>
               </TableRow>
             </TableHeader>

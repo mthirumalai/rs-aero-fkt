@@ -10,7 +10,7 @@ Fastest Known Times for RS Aero sailing routes — all four rig sizes (5, 6, 7, 
 - **Storage**: AWS S3 (GPX files + photos)
 - **Maps**: Leaflet + react-leaflet (OpenStreetMap)
 - **Charts**: Recharts (SOG time-series)
-- **Email**: AWS SES (admin approval notifications)
+- **Email**: SendGrid (contact form) + AWS SES (admin approval notifications)
 - **UI**: Tailwind CSS + shadcn/ui
 
 ## Setup
@@ -19,6 +19,7 @@ Fastest Known Times for RS Aero sailing routes — all four rig sizes (5, 6, 7, 
 - Node.js 20+ (required by Prisma)
 - PostgreSQL database (AWS RDS recommended)
 - AWS account (S3, SES)
+- SendGrid account (for contact form emails)
 - Google OAuth app (Google Cloud Console)
 - Apple OAuth app (Apple Developer)
 
@@ -60,7 +61,8 @@ npm run dev
 | `AWS_SECRET_ACCESS_KEY` | AWS IAM credentials |
 | `S3_BUCKET_GPX` | Private S3 bucket for GPX tracks |
 | `S3_BUCKET_PHOTOS` | Public-read S3 bucket for photos |
-| `SES_FROM_EMAIL` | Verified SES sender email |
+| `SENDGRID_API_KEY` | SendGrid API key for contact form emails |
+| `SES_FROM_EMAIL` | Sender email address (for both SendGrid and SES) |
 | `ADMIN_EMAIL` | Admin email for route approval |
 
 ## AWS S3 Buckets

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ const CONTACT_TYPES = [
 ];
 
 export function ContactForm() {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,11 +23,22 @@ export function ContactForm() {
 
   const [form, setForm] = useState({
     type: "",
-    name: "",
-    email: "",
+    name: session?.user?.name || "",
+    email: session?.user?.email || "",
     description: "",
   });
   const [attachments, setAttachments] = useState<File[]>([]);
+
+  // Update form with session data when it loads
+  useEffect(() => {
+    if (session?.user) {
+      setForm(prevForm => ({
+        ...prevForm,
+        name: session.user.name || "",
+        email: session.user.email || "",
+      }));
+    }
+  }, [session]);
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -158,29 +171,37 @@ export function ContactForm() {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name *</Label>
-          <Input
-            id="name"
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            placeholder="Your name"
-            required
-          />
+      {!session?.user && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name *</Label>
+            <Input
+              id="name"
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              placeholder="Your name"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={form.email}
+              onChange={(e) => update("email", e.target.value)}
+              placeholder="your.email@example.com"
+              required
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email Address *</Label>
-          <Input
-            id="email"
-            type="email"
-            value={form.email}
-            onChange={(e) => update("email", e.target.value)}
-            placeholder="your.email@example.com"
-            required
-          />
+      )}
+
+      {session?.user && (
+        <div className="bg-muted/50 rounded-md p-3 text-sm">
+          <p><strong>Signed in as:</strong> {session.user.name || "User"} ({session.user.email})</p>
         </div>
-      </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="description">Description *</Label>

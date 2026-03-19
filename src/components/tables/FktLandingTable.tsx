@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/gpx/parser";
 import { COUNTRY_NAMES } from "@/lib/regions";
+import { RigIcon } from "@/components/RigIcon";
 import type { Route, RigSize } from "@prisma/client";
 
 type FktEntry = {
@@ -46,10 +47,26 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
           <TableRow>
             <TableHead className="min-w-[140px] max-w-[200px]">Route</TableHead>
             <TableHead>Country</TableHead>
-            <TableHead className="text-center">Aero 5</TableHead>
-            <TableHead className="text-center">Aero 6</TableHead>
-            <TableHead className="text-center">Aero 7</TableHead>
-            <TableHead className="text-center">Aero 9</TableHead>
+            <TableHead className="text-center">
+              <div className="flex justify-center" title="Aero 5">
+                <RigIcon rigSize="AERO_5" size={28} />
+              </div>
+            </TableHead>
+            <TableHead className="text-center">
+              <div className="flex justify-center" title="Aero 6">
+                <RigIcon rigSize="AERO_6" size={28} />
+              </div>
+            </TableHead>
+            <TableHead className="text-center">
+              <div className="flex justify-center" title="Aero 7">
+                <RigIcon rigSize="AERO_7" size={28} />
+              </div>
+            </TableHead>
+            <TableHead className="text-center">
+              <div className="flex justify-center" title="Aero 9">
+                <RigIcon rigSize="AERO_9" size={28} />
+              </div>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

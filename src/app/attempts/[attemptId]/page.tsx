@@ -6,6 +6,7 @@ import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
 import { distanceNm } from "@/lib/gpx/validator";
 import { DistanceTraveledStat } from "@/components/stats/DistanceTraveledStat";
 import { TrackPlayback } from "@/components/playback/TrackPlayback";
+import { RigIcon } from "@/components/RigIcon";
 
 interface Props {
   params: { attemptId: string };
@@ -71,7 +72,7 @@ export default async function AttemptDetailPage({ params }: Props) {
             className="text-primary hover:underline"
           >
             {attempt.athlete.name}
-          </Link>. Rig: <span className="text-foreground">{attempt.rigSize.replace('AERO_', '')}</span>
+          </Link>. Rig: <RigIcon rigSize={attempt.rigSize} size={24} className="inline-block" />
         </p>
       </div>
 

@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/gpx/parser";
 import type { RigSize } from "@prisma/client";
+import { RigIcon } from "@/components/RigIcon";
 
 interface Attempt {
   id: string;
@@ -24,12 +25,6 @@ interface Attempt {
   athlete: { id: string; name: string | null };
 }
 
-const RIG_LABELS: Record<RigSize, string> = {
-  AERO_5: "Aero 5",
-  AERO_6: "Aero 6",
-  AERO_7: "Aero 7",
-  AERO_9: "Aero 9",
-};
 
 type SortKey = "date" | "durationSec" | "rigSize" | "athlete";
 type SortDir = "asc" | "desc";
@@ -110,7 +105,9 @@ export function FktAttemptsTable({ attempts }: { attempts: Attempt[] }) {
                 {new Date(attempt.date).toLocaleDateString()}
               </TableCell>
               <TableCell>
-                <Badge variant="outline">{RIG_LABELS[attempt.rigSize]}</Badge>
+                <div className="flex justify-center">
+                  <RigIcon rigSize={attempt.rigSize} size={24} />
+                </div>
               </TableCell>
               <TableCell className="font-mono font-semibold">
                 {formatDuration(attempt.durationSec)}

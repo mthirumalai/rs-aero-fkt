@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RigIcon } from "@/components/RigIcon";
 
 type FailedAttempt = {
   id: string;
@@ -95,9 +96,9 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
                         {COUNTRY_NAMES[attempt.route.country] ?? attempt.route.country}
                       </TableCell>
                       <TableCell className="w-24">
-                        <Badge variant="outline">
-                          {attempt.rigSize.replace('AERO_', 'Aero ')}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <RigIcon rigSize={attempt.rigSize as any} size={24} />
+                        </div>
                       </TableCell>
                       <TableCell className="w-32">
                         <div className="text-sm truncate" title={attempt.sailorName ?? ''}>
@@ -154,9 +155,10 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
                 Failed FKT Submission
               </p>
               <h3 className="text-xl font-semibold">{selectedFailure.route.name}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {selectedFailure.rigSize.replace('AERO_', 'Aero ')} • {new Date(selectedFailure.date).toLocaleDateString()}
-              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                <RigIcon rigSize={selectedFailure.rigSize as any} size={18} />
+                <span>• {new Date(selectedFailure.date).toLocaleDateString()}</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
