@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/gpx/parser";
 import type { RigSize } from "@prisma/client";
 import { RigIcon } from "@/components/RigIcon";

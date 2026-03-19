@@ -97,7 +97,7 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
                       </TableCell>
                       <TableCell className="w-24">
                         <div className="flex justify-center">
-                          <RigIcon rigSize={attempt.rigSize as any} size={24} />
+                          <RigIcon rigSize={attempt.rigSize as "AERO_5" | "AERO_6" | "AERO_7" | "AERO_9"} size={24} />
                         </div>
                       </TableCell>
                       <TableCell className="w-32">
@@ -156,7 +156,7 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
               </p>
               <h3 className="text-xl font-semibold">{selectedFailure.route.name}</h3>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                <RigIcon rigSize={selectedFailure.rigSize as any} size={18} />
+                <RigIcon rigSize={selectedFailure.rigSize as "AERO_5" | "AERO_6" | "AERO_7" | "AERO_9"} size={18} />
                 <span>• {new Date(selectedFailure.date).toLocaleDateString()}</span>
               </div>
             </div>
