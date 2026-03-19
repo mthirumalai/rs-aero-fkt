@@ -134,7 +134,7 @@ export function NewsFeed() {
                   </td>
                   <td className="py-4 px-4 w-20 text-sm">
                     {event.type === "fkt_attempt" && event.data.rigSize && (
-                      <RigIcon rigSize={event.data.rigSize} size={32} />
+                      <RigIcon rigSize={event.data.rigSize as "AERO_5" | "AERO_6" | "AERO_7" | "AERO_9"} size={32} />
                     )}
                   </td>
                   <td className="py-4 px-4 w-24 text-sm">
