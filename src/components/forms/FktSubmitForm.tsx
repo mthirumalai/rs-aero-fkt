@@ -83,14 +83,20 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferre
       } else if (fileExtension === 'vcc') {
         console.log('🗂️ Parsing as VCC file...');
         const parsed = parseVccXml(text);
-        // Get the first point with a timestamp
-        const firstTimedPoint = parsed.points.find(p => p.time !== null);
-        startTime = firstTimedPoint?.time || null;
-        console.log('📅 VCC start time:', startTime, 'from', parsed.points.length, 'points');
+        console.log('🔍 VCC parse result:', {
+          totalPoints: parsed.points.length,
+          errors: parsed.errors,
+          hasStartTime: !!parsed.startTime,
+          startTime: parsed.startTime?.toISOString(),
+          metadata: parsed.metadata
+        });
+        // VCC parser already calculates startTime for us
+        startTime = parsed.startTime || null;
+        console.log('📅 Final VCC start time:', startTime);
       } else if (fileExtension === 'csv') {
         console.log('🗂️ Parsing as CSV file...');
         const parsed = parseVelocitkCsv(text);
-        // Get the first point with a timestamp
+        // CSV parser doesn't pre-calculate startTime, so find first point with timestamp
         const firstTimedPoint = parsed.points.find(p => p.time !== null);
         startTime = firstTimedPoint?.time || null;
         console.log('📅 CSV start time:', startTime, 'from', parsed.points.length, 'points');

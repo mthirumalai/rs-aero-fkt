@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { parseGpxXml, type GpxPoint } from "@/lib/gpx/parser";
+import { parseVccXml } from "@/lib/velocitek/vcc-parser";
+import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 import { computeSog, type SogPoint } from "@/lib/gpx/sog";
 import { Button } from "@/components/ui/button";
 
@@ -42,19 +44,36 @@ export function TrackPlayback({ attemptId }: Props) {
       : 0;
   const totalMs = endTimeMs - startTimeMs;
 
-  // Load GPX
+  // Load track file
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch(`/api/attempts/${attemptId}/gpx`);
-        if (!res.ok) throw new Error("Failed to fetch GPX URL");
-        const { url } = await res.json();
+        if (!res.ok) throw new Error("Failed to fetch track file");
 
-        const gpxRes = await fetch(url);
-        if (!gpxRes.ok) throw new Error("Failed to download GPX");
-        const xml = await gpxRes.text();
+        // Get the content directly (not JSON)
+        const content = await res.text();
 
-        const parsed = parseGpxXml(xml);
+        // Determine file type from content-type header or content
+        const contentType = res.headers.get('content-type') || '';
+        let parsed: { points: GpxPoint[] };
+
+        if (contentType.includes('xml') || content.trim().startsWith('<?xml')) {
+          if (content.includes('VelocitekControlCenter')) {
+            // VCC file
+            parsed = parseVccXml(content);
+          } else {
+            // GPX file
+            parsed = parseGpxXml(content);
+          }
+        } else if (contentType.includes('csv') || content.includes(',')) {
+          // CSV file
+          parsed = parseVelocitkCsv(content);
+        } else {
+          // Default to GPX parsing
+          parsed = parseGpxXml(content);
+        }
+
         setPoints(parsed.points);
         setSogPoints(computeSog(parsed.points));
 
@@ -63,7 +82,7 @@ export function TrackPlayback({ attemptId }: Props) {
           setCurrentTimeMs(timed[0].time!.getTime());
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load GPX");
+        setError(err instanceof Error ? err.message : "Failed to load track");
       } finally {
         setLoading(false);
       }
