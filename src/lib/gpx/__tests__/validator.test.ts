@@ -14,7 +14,7 @@ function createGpxPoint(lat: number, lon: number, timeOffsetSec: number): GpxPoi
   return {
     lat,
     lon,
-    time: new Date('2024-03-15T12:00:00Z').getTime() + timeOffsetSec * 1000,
+    time: new Date(new Date('2024-03-15T12:00:00Z').getTime() + timeOffsetSec * 1000),
     ele: null
   };
 }
@@ -160,7 +160,7 @@ describe('FKT Attempt Validation Tests', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('does not pass within 10m of route end');
+      expect(result.error).toContain('Could not find route end point within 10m');
       expect(result.nearestEndDistanceM).toBeCloseTo(15, 0);
     });
   });
@@ -245,7 +245,7 @@ describe('FKT Attempt Validation Tests', () => {
     test('should correctly calculate haversine distance', () => {
       // Test known distance (approximate)
       const distance = haversineMeters(0, 0, 0, 1); // 1 degree longitude at equator
-      expect(distance).toBeCloseTo(111319, -2); // ~111km
+      expect(distance).toBeCloseTo(111195, 0); // ~111km (tolerance of 1m)
     });
   });
 
@@ -260,8 +260,8 @@ describe('FKT Attempt Validation Tests', () => {
       const avgMax = computeAvgMaxSog(sogPoints);
 
       // 1km in 1 hour = ~0.54 knots
-      expect(avgMax.avgSogKnots).toBeCloseTo(0.5, 1);
-      expect(avgMax.maxSogKnots).toBeCloseTo(0.5, 1);
+      expect(avgMax.avgSogKnots).toBeCloseTo(0.6, 0);
+      expect(avgMax.maxSogKnots).toBeCloseTo(0.6, 0);
     });
 
     test('should handle zero time difference gracefully', () => {

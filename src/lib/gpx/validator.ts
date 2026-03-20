@@ -12,7 +12,7 @@ export interface ValidationResult {
   error?: string;
 }
 
-function haversineMeters(
+export function haversineMeters(
   lat1: number,
   lon1: number,
   lat2: number,
