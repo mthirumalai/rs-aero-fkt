@@ -18,12 +18,16 @@ export default async function SubmitFktPage({ params }: Props) {
     redirect(`/api/auth/signin?callbackUrl=/routes/${params.routeId}/submit-fkt`);
   }
 
-  const [route, attemptCount] = await Promise.all([
+  const [route, attemptCount, user] = await Promise.all([
     prisma.route.findUnique({
       where: { id: params.routeId, status: "APPROVED" },
     }),
     prisma.fktAttempt.count({
       where: { routeId: params.routeId, status: "APPROVED" }
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user?.id },
+      select: { preferredRigSize: true }
     })
   ]);
 
@@ -37,7 +41,12 @@ export default async function SubmitFktPage({ params }: Props) {
           <span className="font-medium">Route:</span> <Link href={`/routes/${route.id}`} className="text-primary underline hover:no-underline">{route.name}</Link>. <span className="font-medium">Start:</span> {route.startName}, <span className="font-medium">End:</span> {route.endName}. <span className="font-medium">Attempts so far:</span> {attemptCount}
         </p>
       </div>
-      <FktSubmitForm routeId={route.id} submitterName={session.user?.name || ""} submitterEmail={session.user?.email || ""} />
+      <FktSubmitForm
+        routeId={route.id}
+        submitterName={session.user?.name || ""}
+        submitterEmail={session.user?.email || ""}
+        preferredRigSize={user?.preferredRigSize || null}
+      />
     </div>
   );
 }

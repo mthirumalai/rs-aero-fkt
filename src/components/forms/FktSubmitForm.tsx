@@ -14,6 +14,7 @@ interface Props {
   routeId: string;
   submitterName: string;
   submitterEmail: string;
+  preferredRigSize: string | null;
 }
 
 const RIG_SIZES = [
@@ -23,7 +24,7 @@ const RIG_SIZES = [
   { value: "AERO_9", label: "Aero 9" },
 ];
 
-export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props) {
+export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferredRigSize }: Props) {
   const router = useRouter();
   const errorRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail }: Props)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    rigSize: "",
+    rigSize: preferredRigSize || "",
     windSpeedKnots: "",
     windDirection: "",
     currentNotes: "",
