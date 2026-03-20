@@ -12,9 +12,11 @@ export async function GET(
     select: { gpxS3Key: true, status: true },
   });
 
-  if (!attempt || attempt.status === "REJECTED") {
+  if (!attempt) {
     return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
   }
+
+  // Allow viewing GPX files for REJECTED attempts (needed for admin diagnosis)
 
   const url = await getDownloadUrl(GPX_BUCKET, attempt.gpxS3Key);
   return NextResponse.json({ url });

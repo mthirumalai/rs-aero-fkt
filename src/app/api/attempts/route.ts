@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { GPX_BUCKET } from "@/lib/s3";
 import { readFileContent } from "@/lib/storage";
 import { parseGpxXml } from "@/lib/gpx/parser";
+import { parseVccXml } from "@/lib/velocitek/vcc-parser";
+import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 import { validateGpxTrack } from "@/lib/gpx/validator";
 import { computeSog, computeAvgMaxSog } from "@/lib/gpx/sog";
 import type { RigSize } from "@prisma/client";
@@ -113,19 +115,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 
-  // Parse and validate GPX
-  console.log('🔍 Parsing GPX file...');
+  // Parse track file (GPX, VCC, or CSV)
+  console.log('🔍 Parsing track file...');
   let parsed;
   try {
-    parsed = parseGpxXml(gpxXml);
-    console.log('✅ GPX parsed successfully:', {
+    // Detect file format and parse accordingly
+    const fileExtension = gpxS3Key.split('.').pop()?.toLowerCase();
+    console.log('📁 Detected file extension:', fileExtension);
+
+    if (fileExtension === 'vcc') {
+      console.log('🔧 Parsing as VCC file...');
+      parsed = parseVccXml(gpxXml);
+    } else if (fileExtension === 'csv') {
+      console.log('🔧 Parsing as CSV file...');
+      parsed = parseVelocitkCsv(gpxXml);
+    } else {
+      console.log('🔧 Parsing as GPX file...');
+      parsed = parseGpxXml(gpxXml);
+    }
+
+    console.log('✅ Track file parsed successfully:', {
       pointCount: parsed.points.length,
       startTime: parsed.startTime,
-      endTime: parsed.endTime
+      endTime: parsed.endTime,
+      format: fileExtension
     });
   } catch (error) {
-    const errorMsg = "Invalid GPX file format. Please ensure your file is a valid GPX track.";
-    console.log('❌ FKT Submission: Failed to parse GPX file:', {
+    const errorMsg = "Invalid track file format. Please ensure your file is a valid GPX, VCC, or CSV track file.";
+    console.log('❌ FKT Submission: Failed to parse track file:', {
+      fileExtension,
       error: error instanceof Error ? error.message : String(error)
     });
 
@@ -140,7 +158,7 @@ export async function POST(req: NextRequest) {
           durationSec: 0,
           gpxS3Key,
           gpxValidated: false,
-          writeUp: `GPX parse failed: ${error instanceof Error ? error.message : String(error)}`,
+          writeUp: `Track file parse failed: ${error instanceof Error ? error.message : String(error)}`,
           sailorName: sailorName || null,
           sailorEmail: sailorEmail || null,
           status: "REJECTED",
