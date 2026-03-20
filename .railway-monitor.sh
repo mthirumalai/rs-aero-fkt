@@ -3,13 +3,20 @@
 # Railway Deployment Monitor
 # Automatically monitors Railway deployments after git push
 
+# Check if monitoring is already running
+if pgrep -f "railway-monitor.sh" > /dev/null; then
+    echo "⚠️ Railway monitoring already running. Killing old processes..."
+    pkill -f "railway-monitor.sh"
+    sleep 2
+fi
+
 # Load config
 source "$(dirname "$0")/.railway-monitor.config" 2>/dev/null || {
     echo "Error: .railway-monitor.config not found"
     exit 1
 }
 
-echo "🚀 Monitoring Railway deployment..."
+echo "🚀 Starting Railway deployment monitoring..."
 
 # Wait for Railway to pick up the push
 sleep 30
