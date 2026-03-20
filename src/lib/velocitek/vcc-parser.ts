@@ -11,6 +11,8 @@ export interface VccParseResult {
     downloadedOn?: string;
     deviceSerial?: string;
   };
+  startTime?: Date;
+  endTime?: Date;
 }
 
 function parseDateTime(dateTimeStr: string): Date | null {
@@ -64,19 +66,32 @@ export function parseVccXml(xmlText: string): VccParseResult {
       result.metadata.deviceSerial = deviceInfo.getAttribute('ftdiSerialNumber') || undefined;
     }
 
-    // Find all trackpoints
-    const trackpoints = doc.querySelectorAll('Trackpoint');
-    result.metadata.totalRows = trackpoints.length;
+    // Find all trackpoints (handle namespaced elements)
+    let trackpointElements: Element[] = [];
 
-    trackpoints.forEach((trackpoint, index) => {
+    // Try different ways to find Trackpoint elements
+    const trackpoints = doc.querySelectorAll('Trackpoint');
+    if (trackpoints.length > 0) {
+      trackpointElements = Array.from(trackpoints);
+    } else {
+      // If namespace is used, getElementsByTagName ignores namespace
+      const allElements = doc.getElementsByTagName('*');
+      for (let i = 0; i < allElements.length; i++) {
+        const element = allElements[i];
+        if (element.localName === 'Trackpoint' || element.tagName.endsWith('Trackpoint')) {
+          trackpointElements.push(element);
+        }
+      }
+    }
+
+    result.metadata.totalRows = trackpointElements.length;
+
+    trackpointElements.forEach((trackpoint, index) => {
       try {
         // Extract attributes
         const dateTime = trackpoint.getAttribute('dateTime');
         const latStr = trackpoint.getAttribute('latitude');
         const lngStr = trackpoint.getAttribute('longitude');
-        // Note: speed and heading are available but not used for basic track parsing
-        // const speedStr = trackpoint.getAttribute('speed');
-        // const headingStr = trackpoint.getAttribute('heading');
 
         // Validate required fields
         if (!latStr || !lngStr) {
@@ -131,6 +146,16 @@ export function parseVccXml(xmlText: string): VccParseResult {
         if (!b.time) return -1;
         return a.time.getTime() - b.time.getTime();
       });
+    }
+
+    // Set start and end times
+    if (result.points.length > 0) {
+      const firstPoint = result.points.find(p => p.time);
+      const lastPoint = result.points.reverse().find(p => p.time);
+      result.points.reverse(); // restore order
+
+      result.startTime = firstPoint?.time || undefined;
+      result.endTime = lastPoint?.time || undefined;
     }
 
   } catch (error) {
