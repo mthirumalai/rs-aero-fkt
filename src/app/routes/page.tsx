@@ -181,8 +181,8 @@ export default async function RoutesPage({ searchParams }: Props) {
                       ) : <span className="text-muted-foreground text-sm">—</span>;
                     })()}
                   </TableCell>
-                  <TableCell>
-                    <Button asChild size="sm" variant="outline" className="text-xs h-8">
+                  <TableCell className="py-1">
+                    <Button asChild size="sm" variant="outline" className="text-xs h-6 px-2 py-0">
                       <Link href={`/routes/${route.id}/submit-fkt`}>
                         Submit FKT
                       </Link>
