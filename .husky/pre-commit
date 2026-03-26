@@ -9,4 +9,15 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "✅ All tests passed! Proceeding with commit..."
+echo "✅ Tests passed!"
+
+echo "🏗️ Checking build integrity..."
+npm run build > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+  echo "❌ Build failed! This will cause display issues in production."
+  echo "💡 Run 'npm run build' to see detailed error messages"
+  exit 1
+fi
+
+echo "✅ Build check passed! Proceeding with commit..."

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { FktLandingTable } from "@/components/tables/FktLandingTable";
+import { PageHeader } from "@/components/PageHeader";
 import type { RigSize } from "@prisma/client";
 
 const RIG_SIZES: RigSize[] = ["AERO_5", "AERO_6", "AERO_7", "AERO_9"];
@@ -79,20 +80,19 @@ export default async function FktsPage() {
   const tableData = await getFktTableData();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">All Known FKTs</h1>
-          <p className="text-muted-foreground mt-1">
-            Fastest Known Times across all routes and rig sizes
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/routes/submit">Submit a Route</Link>
-        </Button>
+    <>
+      <PageHeader
+        title="All Known FKTs"
+        description="Fastest Known Times across all routes and rig sizes"
+        actions={
+          <Button asChild>
+            <Link href="/routes/submit">Submit a Route</Link>
+          </Button>
+        }
+      />
+      <div className="container mx-auto px-4 py-8">
+        <FktLandingTable data={tableData} />
       </div>
-
-      <FktLandingTable data={tableData} />
-    </div>
+    </>
   );
 }

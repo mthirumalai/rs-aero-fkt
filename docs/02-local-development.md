@@ -162,6 +162,45 @@ Minimum GPX structure:
 </gpx>
 ```
 
+## Git Hooks and Testing
+
+### Pre-commit Checks
+Both tests and build verification run automatically before each commit to prevent broken functionality and display issues.
+
+**What runs:**
+- Unit tests (Jest)
+- Build check (Next.js compilation)
+
+**To bypass for urgent commits:**
+```bash
+# Skip pre-commit hook (including tests and build check)
+git commit -m "urgent fix" --no-verify
+
+# Or set environment variable
+HUSKY=0 git commit -m "urgent fix"
+```
+
+**Manual checks:**
+```bash
+# Run just the build check manually
+npm run build
+
+# Run smoke test (build + server start + file checks)
+npm run smoke-test
+```
+
+### Manual Test Execution
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run in watch mode
+npm run test:watch
+```
+
 ## Debugging
 
 ### Check Logs

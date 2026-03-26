@@ -86,17 +86,24 @@ export function NewsFeed() {
     return date.toLocaleDateString();
   }
 
-  function EventIcon({ type }: { type: "route_approved" | "fkt_attempt" }) {
+  function EventIcon({ type }: { type: "route_proposed" | "route_approved" | "fkt_attempt" }) {
+    if (type === "route_proposed") {
+      return (
+        <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+          <span className="text-yellow-600 font-bold text-sm">🗺️</span>
+        </div>
+      );
+    }
     if (type === "route_approved") {
       return (
-        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-          <span className="text-green-600 font-bold text-lg">📍</span>
+        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+          <span className="text-green-600 font-bold text-sm">📍</span>
         </div>
       );
     }
     return (
-      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-        <span className="text-blue-600 font-bold text-lg">🏆</span>
+      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+        <span className="text-blue-600 font-bold text-sm">🏆</span>
       </div>
     );
   }
@@ -113,35 +120,47 @@ export function NewsFeed() {
             <tbody>
               {events.map((event) => (
                 <tr key={event.id} className="border-b last:border-b-0">
-                  <td className="py-4 px-4 text-sm text-muted-foreground w-20">
+                  <td className="py-2 px-3 text-xs text-muted-foreground w-20 whitespace-nowrap">
                     {formatEventDate(event.date)}
                   </td>
-                  <td className="py-4 px-3 w-12 text-sm">
+                  <td className="py-2 px-2 w-12">
                     <EventIcon type={event.type} />
                   </td>
-                  <td className="py-4 px-4 text-sm">
-                    <Link
-                      href={`/routes/${event.data.routeId}`}
-                      className="text-primary hover:underline"
-                    >
-                      {event.data.routeName}
-                    </Link>
+                  <td className="py-2 px-3 text-sm">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      <Link
+                        href={`/routes/${event.data.routeId}`}
+                        className="text-primary hover:underline text-sm"
+                      >
+                        {event.data.routeName}
+                      </Link>
+                      {event.type === "route_proposed" && (
+                        <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">
+                          Proposed
+                        </span>
+                      )}
+                      {event.type === "route_approved" && (
+                        <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                          Approved
+                        </span>
+                      )}
+                    </div>
                   </td>
-                  <td className="py-4 px-4 text-sm">
-                    {event.type === "route_approved"
-                      ? event.data.submitterName
-                      : event.data.sailorName}
+                  <td className="py-2 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                    {event.type === "fkt_attempt"
+                      ? event.data.sailorName
+                      : event.data.submitterName}
                   </td>
-                  <td className="py-4 px-4 w-20 text-sm">
+                  <td className="py-2 px-3 w-20 text-center">
                     {event.type === "fkt_attempt" && event.data.rigSize && (
-                      <RigIcon rigSize={event.data.rigSize as "AERO_5" | "AERO_6" | "AERO_7" | "AERO_9"} size={32} />
+                      <RigIcon rigSize={event.data.rigSize as "AERO_5" | "AERO_6" | "AERO_7" | "AERO_9"} size={28} />
                     )}
                   </td>
-                  <td className="py-4 px-4 w-24 text-sm">
+                  <td className="py-2 px-3 w-24 text-center whitespace-nowrap">
                     {event.type === "fkt_attempt" && event.data.attemptId && event.data.durationSec && (
                       <Link
                         href={`/attempts/${event.data.attemptId}`}
-                        className="text-green-600 hover:underline"
+                        className="font-mono text-sm font-semibold text-primary hover:underline"
                       >
                         {formatDuration(event.data.durationSec)}
                       </Link>

@@ -33,14 +33,32 @@ export async function POST(
   const isApprove = action !== "reject";
   const newStatus = isApprove ? "APPROVED" : "REJECTED";
 
-  const updated = await prisma.route.update({
-    where: { id: params.routeId },
-    data: {
-      status: newStatus,
-      approvedAt: isApprove ? new Date() : null,
-      approvalToken: null,
-      rejectionReason: isApprove ? null : rejectionReason.trim(),
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    // Update the route status
+    const updatedRoute = await tx.route.update({
+      where: { id: params.routeId },
+      data: {
+        status: newStatus,
+        approvedAt: isApprove ? new Date() : null,
+        approvalToken: null,
+        rejectionReason: isApprove ? null : rejectionReason.trim(),
+      },
+    });
+
+    // If approving the route, also approve any pending FKT attempts for this route
+    if (isApprove) {
+      await tx.fktAttempt.updateMany({
+        where: {
+          routeId: params.routeId,
+          status: "PENDING"
+        },
+        data: {
+          status: "APPROVED"
+        }
+      });
+    }
+
+    return updatedRoute;
   });
 
   // Record the status change in history
@@ -48,7 +66,7 @@ export async function POST(
     params.routeId,
     route.status, // fromStatus
     newStatus, // toStatus
-    isApprove ? "Route approved" : rejectionReason.trim(),
+    isApprove ? "Route approved with associated FKT attempts" : rejectionReason.trim(),
     undefined, // changedById - we don't have admin user ID from token-based approval
     token
   );

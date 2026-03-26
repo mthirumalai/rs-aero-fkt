@@ -12,6 +12,7 @@ import {
 import { RegionFilter } from "@/components/RegionFilter";
 import { getCountriesForRegion, REGION_LABELS, type Region } from "@/lib/regions";
 import { RigIcon } from "@/components/RigIcon";
+import { PageHeader } from "@/components/PageHeader";
 
 // Utility function to format duration in seconds to readable time
 function formatDuration(durationSec: number): string {
@@ -63,19 +64,17 @@ export default async function RoutesPage({ searchParams }: Props) {
   });
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">All Routes</h1>
-          <p className="text-muted-foreground mt-1">
-            {routes.length} approved route{routes.length !== 1 ? "s" : ""}
-            {region ? ` in ${REGION_LABELS[region]}` : ""}
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/routes/submit">Submit a Route</Link>
-        </Button>
-      </div>
+    <>
+      <PageHeader
+        title="All Routes"
+        description={`${routes.length} approved route${routes.length !== 1 ? "s" : ""}${region ? ` in ${REGION_LABELS[region]}` : ""}`}
+        actions={
+          <Button asChild>
+            <Link href="/routes/submit">Submit a Route</Link>
+          </Button>
+        }
+      />
+      <div className="container mx-auto px-4 py-8">
 
       <RegionFilter currentRegion={region} />
 
@@ -123,67 +122,67 @@ export default async function RoutesPage({ searchParams }: Props) {
                   <TableCell className="font-medium">
                     <Link
                       href={`/routes/${route.id}`}
-                      className="text-primary underline hover:no-underline"
+                      className="text-primary underline hover:no-underline text-sm"
                     >
                       {route.name}
                     </Link>
                   </TableCell>
-                  <TableCell>{route.startName}</TableCell>
-                  <TableCell>{route.endName}</TableCell>
-                  <TableCell className="text-center text-sm">
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{route.startName}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{route.endName}</TableCell>
+                  <TableCell className="text-center whitespace-nowrap">
                     {(() => {
                       const fkt = getBestFktForRig(route.attempts, 'AERO_5');
                       return fkt ? (
                         <Link
                           href={`/attempts/${fkt.id}`}
-                          className="text-primary underline hover:no-underline"
+                          className="font-mono text-sm font-semibold text-primary underline hover:no-underline"
                         >
                           {formatDuration(fkt.durationSec)}
                         </Link>
-                      ) : '—';
+                      ) : <span className="text-muted-foreground text-sm">—</span>;
                     })()}
                   </TableCell>
-                  <TableCell className="text-center text-sm">
+                  <TableCell className="text-center whitespace-nowrap">
                     {(() => {
                       const fkt = getBestFktForRig(route.attempts, 'AERO_6');
                       return fkt ? (
                         <Link
                           href={`/attempts/${fkt.id}`}
-                          className="text-primary underline hover:no-underline"
+                          className="font-mono text-sm font-semibold text-primary underline hover:no-underline"
                         >
                           {formatDuration(fkt.durationSec)}
                         </Link>
-                      ) : '—';
+                      ) : <span className="text-muted-foreground text-sm">—</span>;
                     })()}
                   </TableCell>
-                  <TableCell className="text-center text-sm">
+                  <TableCell className="text-center whitespace-nowrap">
                     {(() => {
                       const fkt = getBestFktForRig(route.attempts, 'AERO_7');
                       return fkt ? (
                         <Link
                           href={`/attempts/${fkt.id}`}
-                          className="text-primary underline hover:no-underline"
+                          className="font-mono text-sm font-semibold text-primary underline hover:no-underline"
                         >
                           {formatDuration(fkt.durationSec)}
                         </Link>
-                      ) : '—';
+                      ) : <span className="text-muted-foreground text-sm">—</span>;
                     })()}
                   </TableCell>
-                  <TableCell className="text-center text-sm">
+                  <TableCell className="text-center whitespace-nowrap">
                     {(() => {
                       const fkt = getBestFktForRig(route.attempts, 'AERO_9');
                       return fkt ? (
                         <Link
                           href={`/attempts/${fkt.id}`}
-                          className="text-primary underline hover:no-underline"
+                          className="font-mono text-sm font-semibold text-primary underline hover:no-underline"
                         >
                           {formatDuration(fkt.durationSec)}
                         </Link>
-                      ) : '—';
+                      ) : <span className="text-muted-foreground text-sm">—</span>;
                     })()}
                   </TableCell>
                   <TableCell>
-                    <Button asChild size="sm" variant="outline">
+                    <Button asChild size="sm" variant="outline" className="text-xs h-8">
                       <Link href={`/routes/${route.id}/submit-fkt`}>
                         Submit FKT
                       </Link>
@@ -195,6 +194,7 @@ export default async function RoutesPage({ searchParams }: Props) {
           </Table>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

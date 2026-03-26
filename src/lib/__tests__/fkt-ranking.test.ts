@@ -21,9 +21,8 @@ jest.mock('../prisma', () => ({
 }));
 
 describe('FKT Ranking System Tests', () => {
-  let mockRoute: any;
-  let mockUsers: any[];
-  let mockAttempts: any[];
+  let mockRoute: { id: string; name: string; status: string; startLat: number; startLng: number; endLat: number; endLng: number };
+  let mockAttempts: { id: string; durationSec: number; rigSize: string; rank?: number }[];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -38,13 +37,6 @@ describe('FKT Ranking System Tests', () => {
       endLat: 34.518056,
       endLng: -77.448056
     };
-
-    // Mock users
-    mockUsers = [
-      { id: 'user-alice', name: 'Alice Johnson', email: 'alice@example.com' },
-      { id: 'user-bob', name: 'Bob Smith', email: 'bob@example.com' },
-      { id: 'user-charlie', name: 'Charlie Wilson', email: 'charlie@example.com' }
-    ];
 
     mockAttempts = [];
 
@@ -420,7 +412,7 @@ async function calculateRankings(routeId: string, rigSize: string) {
 
 // Helper function to update rankings in database (simulates actual update logic)
 async function updateRankingsInDatabase(routeId: string, rigSize: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async () => {
     const rankedAttempts = await calculateRankings(routeId, rigSize);
 
     for (const attempt of rankedAttempts) {

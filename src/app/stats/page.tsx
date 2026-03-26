@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { COUNTRY_NAMES, getRegion, REGION_LABELS } from "@/lib/regions";
+import { PageHeader } from "@/components/PageHeader";
 
 async function getStats() {
   // First get all unique sailors (both registered and unregistered)
@@ -134,13 +135,12 @@ export default async function StatsPage() {
   const stats = await getStats();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Statistics</h1>
-        <p className="text-muted-foreground mt-1">
-          Insights from the RS Aero FKT community
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="Statistics"
+        description="Insights from the RS Aero FKT community"
+      />
+      <div className="container mx-auto px-4 py-8">
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -257,6 +257,7 @@ export default async function StatsPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

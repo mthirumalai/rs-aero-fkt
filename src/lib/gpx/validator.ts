@@ -135,8 +135,6 @@ export function validateGpxTrack(
   };
 }
 
-export { haversineMeters };
-
 /** Great-circle distance in nautical miles between two lat/lng points */
 export function distanceNm(
   lat1: number, lon1: number,

@@ -16,6 +16,13 @@ import RouteCreationMap from "@/components/map/RouteCreationMap";
 
 type SubmissionMode = "manual" | "track_file";
 
+const RIG_SIZES = [
+  { value: "AERO_5", label: "Aero 5" },
+  { value: "AERO_6", label: "Aero 6" },
+  { value: "AERO_7", label: "Aero 7" },
+  { value: "AERO_9", label: "Aero 9" },
+];
+
 
 export function RouteSubmitFormWithGpx() {
   const router = useRouter();
@@ -24,8 +31,11 @@ export function RouteSubmitFormWithGpx() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [mode, setMode] = useState<SubmissionMode>("manual");
+  const [submitFkt, setSubmitFkt] = useState(false);
+  const [extractedDate, setExtractedDate] = useState<Date | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
 
-  // Form data
+  // Route form data
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -36,6 +46,18 @@ export function RouteSubmitFormWithGpx() {
     endName: "",
     endLat: "",
     endLng: "",
+  });
+
+  // FKT form data
+  const [fktForm, setFktForm] = useState({
+    rigSize: "",
+    windSpeedKnots: "",
+    windDirection: "",
+    currentNotes: "",
+    writeUp: "",
+    trackSourceUrl: "",
+    sailorName: "",
+    sailorEmail: "",
   });
 
   // Track file-related state
@@ -59,6 +81,21 @@ export function RouteSubmitFormWithGpx() {
     }
   }
 
+  function updateFkt(field: keyof typeof fktForm, value: string) {
+    setFktForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files) {
+      setPhotoFiles(Array.from(files));
+    }
+  }
+
+  function removePhoto(index: number) {
+    setPhotoFiles(prev => prev.filter((_, i) => i !== index));
+  }
+
 
 
 
@@ -77,6 +114,32 @@ export function RouteSubmitFormWithGpx() {
       return null;
     }
     return val;
+  }
+
+  async function extractDateFromFile(file: File): Promise<Date | null> {
+    try {
+      const text = await file.text();
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+      let startTime: Date | null = null;
+
+      if (fileExtension === 'gpx') {
+        const parsed = parseGpxXml(text);
+        startTime = parsed.startTime;
+      } else if (fileExtension === 'vcc') {
+        const parsed = parseVccXml(text);
+        startTime = parsed.startTime || null;
+      } else if (fileExtension === 'csv') {
+        const parsed = parseVelocitkCsv(text);
+        const firstTimedPoint = parsed.points.find(p => p.time !== null);
+        startTime = firstTimedPoint?.time || null;
+      }
+
+      return startTime;
+    } catch (error) {
+      console.error('Failed to extract date from track file:', error);
+      return null;
+    }
   }
 
   async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -131,6 +194,10 @@ export function RouteSubmitFormWithGpx() {
       setTrackFile(file); // Store the file for potential FKT submission
       setTrackPoints(points);
 
+      // Extract date for FKT submission if needed
+      const date = await extractDateFromFile(file);
+      setExtractedDate(date);
+
       // Auto-set initial start and end points (first and last points)
       const startIndex = 0;
       const endIndex = points.length - 1;
@@ -153,6 +220,7 @@ export function RouteSubmitFormWithGpx() {
       setError(`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}. Please ensure it's a valid GPX or Velocitek file (.csv/.vcc).`);
       setTrackPoints([]);
       setTrackFile(null);
+      setExtractedDate(null);
     }
   }
 
@@ -186,6 +254,8 @@ export function RouteSubmitFormWithGpx() {
       setSelectedStartIndex(null);
       setSelectedEndIndex(null);
       setSelectionMode(null);
+      setTrackFile(null);
+      setExtractedDate(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -201,10 +271,111 @@ export function RouteSubmitFormWithGpx() {
     }
   }
 
+  async function uploadPhotoFile(file: File): Promise<string> {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "photo",
+        filename: file.name,
+        contentType: file.type,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(`Photo upload preparation failed: ${data.error ?? "Unknown error"}`);
+    }
+
+    const { uploadUrl, key } = await res.json();
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error(`Photo upload to storage failed`);
+    }
+
+    return key;
+  }
+
+  async function uploadTrackFile(file: File): Promise<string> {
+    // Determine content type based on file extension
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    let contentType = "application/octet-stream";
+    if (fileExtension === 'gpx') {
+      contentType = "application/gpx+xml";
+    } else if (fileExtension === 'csv') {
+      contentType = "text/csv";
+    } else if (fileExtension === 'vcc') {
+      contentType = "application/xml";
+    }
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "gpx",
+        filename: file.name,
+        contentType: contentType,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(`Upload preparation failed: ${data.error ?? "Unknown error"}`);
+    }
+
+    const { uploadUrl, key } = await res.json();
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": contentType },
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error(`File upload to storage failed`);
+    }
+
+    return key;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setCoordErrors({});
+
+    // Validation for FKT submission
+    if (submitFkt) {
+      if (mode === "manual") {
+        setError("FKT submission requires a track file. Please switch to 'Upload Track File' mode.");
+        return;
+      }
+      if (!trackFile) {
+        setError("Please select a track file for FKT submission.");
+        return;
+      }
+      if (!extractedDate) {
+        setError("Could not extract date from track file. Please ensure your track file contains timestamps.");
+        return;
+      }
+      if (!fktForm.rigSize) {
+        setError("Please select a rig size for your FKT attempt.");
+        return;
+      }
+      if (!fktForm.sailorName) {
+        setError("Please enter the sailor's name for the FKT attempt.");
+        return;
+      }
+      if (!fktForm.sailorEmail) {
+        setError("Please enter the sailor's email for the FKT attempt.");
+        return;
+      }
+    }
 
     let startLat, startLng, endLat, endLng;
 
@@ -230,23 +401,82 @@ export function RouteSubmitFormWithGpx() {
       endLng = endPoint.lon;
     }
 
-
     setLoading(true);
     try {
       // Step 1: Submit route
-      const res = await fetch("/api/routes", {
+      const routeRes = await fetch("/api/routes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, startLat, startLng, endLat, endLng }),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
+      if (!routeRes.ok) {
+        const data = await routeRes.json();
         setError(data.error ?? "Route submission failed");
         return;
       }
 
-      await res.json();
+      const route = await routeRes.json();
+
+      // Step 2: Submit FKT if enabled
+      if (submitFkt && trackFile && extractedDate) {
+        try {
+          // Upload track file
+          const gpxS3Key = await uploadTrackFile(trackFile);
+
+          // Submit FKT attempt
+          const fktData = {
+            routeId: route.id,
+            ...fktForm,
+            date: extractedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+            gpxS3Key,
+            windSpeedKnots: fktForm.windSpeedKnots || null,
+          };
+
+          const fktRes = await fetch("/api/attempts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(fktData),
+          });
+
+          if (!fktRes.ok) {
+            const fktData = await fktRes.json();
+            // Route was submitted successfully, but FKT failed
+            setError(`Route submitted successfully, but FKT submission failed: ${fktData.error ?? "Unknown error"}. You can submit your FKT attempt later from the route page after it's approved.`);
+            return;
+          }
+
+          const fktAttempt = await fktRes.json();
+
+          // Upload photos if any
+          if (photoFiles.length > 0) {
+            try {
+              for (const photoFile of photoFiles) {
+                const s3Key = await uploadPhotoFile(photoFile);
+
+                // Create photo record
+                await fetch("/api/photos", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    attemptId: fktAttempt.id,
+                    s3Key,
+                    caption: null,
+                  }),
+                });
+              }
+            } catch (photoError) {
+              console.error('Photo upload failed:', photoError);
+              // Don't fail the whole submission for photo errors
+            }
+          }
+        } catch (fktError) {
+          // Route was submitted successfully, but FKT failed
+          setError(`Route submitted successfully, but FKT submission failed: ${fktError instanceof Error ? fktError.message : "Unknown error"}. You can submit your FKT attempt later from the route page after it's approved.`);
+          return;
+        }
+      }
+
       setSuccess(true);
     } catch {
       setError("Network error. Please try again.");
@@ -263,12 +493,17 @@ export function RouteSubmitFormWithGpx() {
     return (
       <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
         <p className="text-2xl font-bold text-green-800 mb-2">
-          Route Submitted!
+          {submitFkt ? "Route & FKT Submitted!" : "Route Submitted!"}
         </p>
-        <p className="text-green-700">
+        <p className="text-green-700 mb-2">
           Your route has been submitted for admin review. You&apos;ll see it appear on the
           routes page once approved.
         </p>
+        {submitFkt && (
+          <p className="text-green-700">
+            Your FKT attempt has also been submitted and will become active when the route is approved.
+          </p>
+        )}
         <Button className="mt-6" variant="outline" onClick={() => router.push("/routes")}>
           Back to Routes
         </Button>
@@ -462,19 +697,188 @@ export function RouteSubmitFormWithGpx() {
                   )}
                 </div>
 
-                {/* FKT Submission Option - Temporarily disabled */}
-                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
-                      <p className="font-semibold text-yellow-800">
-                        🏆 Submit FKT Later
-                      </p>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        After your route is approved by an admin, you&apos;ll be able to submit your FKT attempt from the route page.
-                        This ensures your GPX track is validated against the approved route coordinates.
-                      </p>
-                    </div>
+                {/* FKT Submission Option */}
+                <div className="mt-6 border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="submitFkt"
+                      type="checkbox"
+                      checked={submitFkt}
+                      onChange={(e) => setSubmitFkt(e.target.checked)}
+                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    />
+                    <Label htmlFor="submitFkt" className="font-semibold text-sm text-muted-foreground cursor-pointer">
+                      🏆 Also submit FKT attempt for this route
+                    </Label>
                   </div>
+                  <p className="text-sm text-muted-foreground">
+                    The FKT will be pending until the route is approved.
+                  </p>
+
+                  {submitFkt && (
+                    <>
+                      {extractedDate && (
+                        <div className="space-y-2">
+                          <Label>Date of Attempt</Label>
+                          <div className="px-3 py-2 border rounded-md bg-muted text-sm">
+                            <span className="text-muted-foreground">Extracted from track: </span>
+                            <span className="font-medium">
+                              {extractedDate.toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="border-t pt-4 space-y-4">
+                        {/* Sailor Details */}
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-sm text-foreground">Sailor Details</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="fktSailorName">Sailor Name *</Label>
+                              <Input
+                                id="fktSailorName"
+                                value={fktForm.sailorName}
+                                onChange={(e) => updateFkt("sailorName", e.target.value)}
+                                placeholder="Full name of the sailor"
+                                required={submitFkt}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="fktSailorEmail">Sailor Email *</Label>
+                              <Input
+                                id="fktSailorEmail"
+                                type="email"
+                                value={fktForm.sailorEmail}
+                                onChange={(e) => updateFkt("sailorEmail", e.target.value)}
+                                placeholder="Email address"
+                                required={submitFkt}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Rig Size */}
+                        <div className="space-y-2">
+                          <Label htmlFor="fktRigSize">Rig Size *</Label>
+                          <select
+                            id="fktRigSize"
+                            value={fktForm.rigSize}
+                            onChange={(e) => updateFkt("rigSize", e.target.value)}
+                            required={submitFkt}
+                            className="w-full border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="">Select rig size...</option>
+                            {RIG_SIZES.map((r) => (
+                              <option key={r.value} value={r.value}>
+                                {r.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Conditions */}
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-sm text-foreground">Conditions (Optional)</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="fktWindSpeed">Wind Speed (knots)</Label>
+                              <Input
+                                id="fktWindSpeed"
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                value={fktForm.windSpeedKnots}
+                                onChange={(e) => updateFkt("windSpeedKnots", e.target.value)}
+                                placeholder="e.g., 15"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="fktWindDirection">Wind Direction</Label>
+                              <Input
+                                id="fktWindDirection"
+                                value={fktForm.windDirection}
+                                onChange={(e) => updateFkt("windDirection", e.target.value)}
+                                placeholder="e.g., SW, 225°"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="fktCurrentNotes">Current / Tidal Conditions</Label>
+                            <Input
+                              id="fktCurrentNotes"
+                              value={fktForm.currentNotes}
+                              onChange={(e) => updateFkt("currentNotes", e.target.value)}
+                              placeholder="e.g., 1.5kt favourable tide"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Write-up */}
+                        <div className="space-y-2">
+                          <Label htmlFor="fktWriteUp">Write-up (Optional)</Label>
+                          <Textarea
+                            id="fktWriteUp"
+                            value={fktForm.writeUp}
+                            onChange={(e) => updateFkt("writeUp", e.target.value)}
+                            placeholder="Describe your attempt, conditions, tactics..."
+                            rows={4}
+                          />
+                        </div>
+
+                        {/* Track Source URL */}
+                        <div className="space-y-2">
+                          <Label htmlFor="fktTrackSourceUrl">Track Source URL (Optional)</Label>
+                          <Input
+                            id="fktTrackSourceUrl"
+                            type="url"
+                            value={fktForm.trackSourceUrl}
+                            onChange={(e) => updateFkt("trackSourceUrl", e.target.value)}
+                            placeholder="e.g. https://www.chartedsails.com/session/..."
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Link to your track on Charted Sails, Strava, or similar.
+                          </p>
+                        </div>
+
+                        {/* Photos */}
+                        <div className="space-y-2">
+                          <Label htmlFor="fktPhotos">Photos (Optional)</Label>
+                          <Input
+                            id="fktPhotos"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handlePhotoChange}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Upload photos from your attempt (max 10MB per photo).
+                          </p>
+                          {photoFiles.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-sm text-muted-foreground mb-2">
+                                {photoFiles.length} photo{photoFiles.length !== 1 ? 's' : ''} selected:
+                              </p>
+                              <div className="space-y-2">
+                                {photoFiles.map((file, index) => (
+                                  <div key={index} className="flex items-center justify-between bg-muted rounded-md p-2">
+                                    <span className="text-sm truncate flex-1">{file.name}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => removePhoto(index)}
+                                      className="text-red-600 hover:text-red-800 text-sm ml-2"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </>
             )}
@@ -570,7 +974,12 @@ export function RouteSubmitFormWithGpx() {
         </div>
 
         <Button type="submit" disabled={loading} className="w-full" size="lg">
-          {loading ? "Submitting..." : "Submit Route for Approval"}
+          {loading
+            ? "Submitting..."
+            : submitFkt
+              ? "Submit Route & FKT for Approval"
+              : "Submit Route for Approval"
+          }
         </Button>
       </form>
     </>

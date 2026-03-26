@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = {
   title: "Guidelines — RS Aero FKT",
@@ -8,8 +9,9 @@ export const metadata: Metadata = {
 
 export default function GuidelinesPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <h1 className="text-3xl font-bold mb-8">Guidelines</h1>
+    <>
+      <PageHeader title="Guidelines" />
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
 
       <div className="space-y-10">
         <section>
@@ -159,6 +161,7 @@ export default function GuidelinesPage() {
           </div>
         </section>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

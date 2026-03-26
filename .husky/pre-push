@@ -1,13 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🧪 Running core tests before push..."
-npm run test:fast
-
-if [ $? -ne 0 ]; then
-  echo "❌ Tests failed! Push aborted."
-  echo "💡 Run 'npm test' to see detailed results"
-  exit 1
-fi
-
-echo "✅ All tests passed! Proceeding with push..."
+echo "🚀 Proceeding with push..."

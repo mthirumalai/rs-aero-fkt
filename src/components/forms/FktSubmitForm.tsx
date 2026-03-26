@@ -44,6 +44,7 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferre
   });
   const [trackFile, setTrackFile] = useState<File | null>(null);
   const [extractedDate, setExtractedDate] = useState<Date | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
 
   // Scroll to error message when error appears
   useEffect(() => {
@@ -120,6 +121,48 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferre
     } else {
       setExtractedDate(null);
     }
+  }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files) {
+      setPhotoFiles(Array.from(files));
+    }
+  }
+
+  function removePhoto(index: number) {
+    setPhotoFiles(prev => prev.filter((_, i) => i !== index));
+  }
+
+  async function uploadPhotoFile(file: File): Promise<string> {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "photo",
+        filename: file.name,
+        contentType: file.type,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(`Photo upload preparation failed: ${data.error ?? "Unknown error"}`);
+    }
+
+    const { uploadUrl, key } = await res.json();
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error(`Photo upload to storage failed`);
+    }
+
+    return key;
   }
 
   async function uploadTrackFile(file: File): Promise<string> {
@@ -261,6 +304,32 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferre
 
       const attempt = await res.json();
       console.log('🎉 FKT submission successful:', { attemptId: attempt.id });
+
+      // Upload photos if any
+      if (photoFiles.length > 0) {
+        setUploadProgress("Uploading photos...");
+        try {
+          for (const photoFile of photoFiles) {
+            const s3Key = await uploadPhotoFile(photoFile);
+
+            // Create photo record
+            await fetch("/api/photos", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                attemptId: attempt.id,
+                s3Key,
+                caption: null, // No caption during submission, can be added later
+              }),
+            });
+          }
+          console.log('📸 Photos uploaded successfully');
+        } catch (photoError) {
+          console.error('Photo upload failed:', photoError);
+          // Don't fail the whole submission for photo errors
+        }
+      }
+
       setSuccess(true);
       setTimeout(() => router.push(`/attempts/${attempt.id}`), 1500);
     } catch (err) {
@@ -450,6 +519,41 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferre
         <p className="text-xs text-muted-foreground">
           Optional. Link to your track on Charted Sails, Strava, or similar. A GPX file upload above is still required for validation.
         </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="photos">Photos <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Input
+          id="photos"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handlePhotoChange}
+        />
+        <p className="text-xs text-muted-foreground">
+          Upload photos from your attempt (max 10MB per photo). You can also add photos later from the attempt page.
+        </p>
+        {photoFiles.length > 0 && (
+          <div className="mt-3">
+            <p className="text-sm text-muted-foreground mb-2">
+              {photoFiles.length} photo{photoFiles.length !== 1 ? 's' : ''} selected:
+            </p>
+            <div className="space-y-2">
+              {photoFiles.map((file, index) => (
+                <div key={index} className="flex items-center justify-between bg-muted rounded-md p-2">
+                  <span className="text-sm truncate flex-1">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index)}
+                    className="text-red-600 hover:text-red-800 text-sm ml-2"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <Button

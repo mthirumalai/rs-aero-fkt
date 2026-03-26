@@ -37,7 +37,7 @@ export async function GET(
         'Content-Disposition': `attachment; filename="track.${fileExtension}"`,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to retrieve track file" }, { status: 500 });
   }
 }

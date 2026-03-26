@@ -9,6 +9,34 @@ import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 import { validateGpxTrack } from "@/lib/gpx/validator";
 import { computeSog, computeAvgMaxSog } from "@/lib/gpx/sog";
 import type { RigSize } from "@prisma/client";
+import type { ParsedGpx } from "@/lib/gpx/parser";
+import type { VccParseResult } from "@/lib/velocitek/vcc-parser";
+import type { VeloctekParseResult } from "@/lib/velocitek/parser";
+
+// Convert different parser results to ParsedGpx format
+function normalizeToParseGpx(parsed: ParsedGpx | VccParseResult | VeloctekParseResult): ParsedGpx {
+  if ('durationSec' in parsed) {
+    // Already ParsedGpx
+    return parsed;
+  }
+
+  // For VCC and Veloctek results, calculate duration from points
+  const timedPoints = parsed.points.filter((p) => p.time !== null);
+  const startTime = timedPoints.length > 0 ? timedPoints[0].time : null;
+  const endTime = timedPoints.length > 0 ? timedPoints[timedPoints.length - 1].time : null;
+
+  let durationSec: number | null = null;
+  if (startTime && endTime) {
+    durationSec = Math.round((endTime.getTime() - startTime.getTime()) / 1000);
+  }
+
+  return {
+    points: parsed.points,
+    startTime,
+    endTime,
+    durationSec
+  };
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -64,18 +92,18 @@ export async function POST(req: NextRequest) {
     }, { status: 400 });
   }
 
-  // Fetch route
+  // Fetch route (allow both pending and approved routes)
   console.log('🔍 Fetching route:', routeId);
   const route = await prisma.route.findUnique({
-    where: { id: routeId, status: "APPROVED" },
+    where: { id: routeId },
   });
-  if (!route) {
-    console.log('❌ FKT Submission: Route not found or not approved:', routeId);
+  if (!route || (route.status !== "PENDING" && route.status !== "APPROVED")) {
+    console.log('❌ FKT Submission: Route not found or invalid status:', routeId, route?.status);
     return NextResponse.json({
-      error: "Route not found or not approved for FKT submissions"
+      error: "Route not found or not available for FKT submissions"
     }, { status: 404 });
   }
-  console.log('✅ Route found:', { id: route.id, name: route.name });
+  console.log('✅ Route found:', { id: route.id, name: route.name, status: route.status });
 
   // Fetch GPX from S3 (or local filesystem in dev)
   console.log('📁 Fetching GPX file:', { bucket: GPX_BUCKET, key: gpxS3Key });
@@ -117,10 +145,10 @@ export async function POST(req: NextRequest) {
 
   // Parse track file (GPX, VCC, or CSV)
   console.log('🔍 Parsing track file...');
+  // Detect file format and parse accordingly
+  const fileExtension = gpxS3Key.split('.').pop()?.toLowerCase();
   let parsed;
   try {
-    // Detect file format and parse accordingly
-    const fileExtension = gpxS3Key.split('.').pop()?.toLowerCase();
     console.log('📁 Detected file extension:', fileExtension);
 
     if (fileExtension === 'vcc') {
@@ -136,8 +164,8 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ Track file parsed successfully:', {
       pointCount: parsed.points.length,
-      startTime: parsed.startTime,
-      endTime: parsed.endTime,
+      startTime: 'startTime' in parsed ? parsed.startTime : 'N/A',
+      endTime: 'endTime' in parsed ? parsed.endTime : 'N/A',
       format: fileExtension
     });
   } catch (error) {
@@ -172,8 +200,9 @@ export async function POST(req: NextRequest) {
   }
 
   console.log('🔍 Validating GPX track against route...');
+  const normalizedParsed = normalizeToParseGpx(parsed);
   const validation = validateGpxTrack(
-    parsed,
+    normalizedParsed,
     route.startLat,
     route.startLng,
     route.endLat,
@@ -241,6 +270,11 @@ export async function POST(req: NextRequest) {
 
   // Save attempt
   console.log('💾 Saving FKT attempt...');
+
+  // Set FKT status based on route status
+  const attemptStatus = route.status === "APPROVED" ? "APPROVED" : "PENDING";
+  console.log('📋 FKT status will be:', attemptStatus, 'based on route status:', route.status);
+
   try {
     const attempt = await prisma.fktAttempt.create({
       data: {
@@ -260,7 +294,7 @@ export async function POST(req: NextRequest) {
         trackSourceUrl: trackSourceUrl || null,
         sailorName: sailorName || null,
         sailorEmail: sailorEmail || null,
-        status: "APPROVED",
+        status: attemptStatus,
       },
     });
 
@@ -268,7 +302,8 @@ export async function POST(req: NextRequest) {
       attemptId: attempt.id,
       routeName: route.name,
       durationSec: validation.durationSec,
-      sailorName: sailorName
+      sailorName: sailorName,
+      status: attemptStatus
     });
 
     return NextResponse.json(attempt, { status: 201 });
