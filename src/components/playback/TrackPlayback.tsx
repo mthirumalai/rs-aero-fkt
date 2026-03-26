@@ -173,69 +173,67 @@ export function TrackPlayback({ attemptId }: Props) {
         />
       </div>
 
-      {/* SOG Chart */}
+      {/* SOG Chart and Timeline Controls */}
       {sogPoints.length > 0 && (
-        <div className="border rounded-lg">
-          <div className="w-full h-[200px] p-4">
+        <div className="border rounded-lg p-4 space-y-1">
+          {/* SOG Chart */}
+          <div className="w-full h-[200px]">
             <SogChart sogPoints={sogPoints} currentTimeMs={currentTimeMs} />
+          </div>
+
+          {/* Scrub Bar */}
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={0.01}
+            value={progressPct}
+            onChange={handleScrub}
+            className="w-full accent-primary"
+            style={{
+              width: 'calc(100% - 125px)', // Match chart: 75px left + 50px right = 125px total
+              marginLeft: '75px', // Match chart left margin
+              marginRight: '50px' // Match chart right margin
+            }}
+          />
+
+          {/* Playback Controls */}
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handlePlayPause}
+              className="text-sm font-medium"
+            >
+              {isPlaying ? "⏸ Pause" : currentTimeMs >= endTimeMs ? "↺ Restart" : "▶ Play"}
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {SPEED_OPTIONS.map((s) => (
+                <Button
+                  key={s}
+                  onClick={() => setSpeed(s)}
+                  variant={speed === s ? "default" : "secondary"}
+                  size="sm"
+                  className="text-sm font-medium"
+                >
+                  {s}x
+                </Button>
+              ))}
+            </div>
+
+            <div className="text-sm text-muted-foreground ml-auto text-right">
+              <div>Elapsed: {(() => {
+                const totalSec = Math.floor((currentTimeMs - startTimeMs) / 1000);
+                const h = Math.floor(totalSec / 3600);
+                const m = Math.floor((totalSec % 3600) / 60);
+                const s = totalSec % 60;
+                return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+              })()}</div>
+              <div>Local: {new Date(currentTimeMs).toLocaleTimeString('en-US', { hour12: false })}</div>
+              <div>UTC: {new Date(currentTimeMs).toISOString().substr(11, 8)}</div>
+            </div>
           </div>
         </div>
       )}
-
-      {/* Timeline Controls */}
-      <div className="border rounded-lg p-4 space-y-3">
-        {/* Scrub Bar */}
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={0.01}
-          value={progressPct}
-          onChange={handleScrub}
-          className="w-full accent-primary"
-          style={{
-            width: 'calc(100% - 125px)', // Match chart: 75px left + 50px right = 125px total
-            marginLeft: '75px', // Match chart left margin
-            marginRight: '50px' // Match chart right margin
-          }}
-        />
-
-        {/* Playback Controls */}
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={handlePlayPause}
-            className="text-sm font-medium"
-          >
-            {isPlaying ? "⏸ Pause" : currentTimeMs >= endTimeMs ? "↺ Restart" : "▶ Play"}
-          </Button>
-
-          <div className="flex items-center gap-1">
-            {SPEED_OPTIONS.map((s) => (
-              <Button
-                key={s}
-                onClick={() => setSpeed(s)}
-                variant={speed === s ? "default" : "secondary"}
-                size="sm"
-                className="text-sm font-medium"
-              >
-                {s}x
-              </Button>
-            ))}
-          </div>
-
-          <div className="text-sm text-muted-foreground ml-auto text-right">
-            <div>Elapsed: {(() => {
-              const totalSec = Math.floor((currentTimeMs - startTimeMs) / 1000);
-              const h = Math.floor(totalSec / 3600);
-              const m = Math.floor((totalSec % 3600) / 60);
-              const s = totalSec % 60;
-              return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-            })()}</div>
-            <div>Local: {new Date(currentTimeMs).toLocaleTimeString('en-US', { hour12: false })}</div>
-            <div>UTC: {new Date(currentTimeMs).toISOString().substr(11, 8)}</div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

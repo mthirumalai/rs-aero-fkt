@@ -2,11 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatDuration } from "@/lib/gpx/parser";
-import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
 import { distanceNm } from "@/lib/gpx/validator";
 import { DistanceTraveledStat } from "@/components/stats/DistanceTraveledStat";
 import { TrackPlayback } from "@/components/playback/TrackPlayback";
 import { RigIcon } from "@/components/RigIcon";
+import { AttemptPhotosSection } from "@/components/AttemptPhotosSection";
+import { auth } from "@/lib/auth";
 
 interface Props {
   params: { attemptId: string };
@@ -25,16 +26,25 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function AttemptDetailPage({ params }: Props) {
-  const attempt = await prisma.fktAttempt.findUnique({
-    where: { id: params.attemptId, status: "APPROVED" },
-    include: {
-      route: true,
-      athlete: { select: { id: true, name: true, image: true } },
-      photos: true,
-    },
-  });
+  const [session, attempt] = await Promise.all([
+    auth(),
+    prisma.fktAttempt.findUnique({
+      where: { id: params.attemptId, status: "APPROVED" },
+      include: {
+        route: true,
+        athlete: { select: { id: true, name: true, image: true } },
+        photos: true,
+      },
+    }),
+  ]);
 
   if (!attempt) notFound();
+
+  // Check if user can upload photos (athlete or sailor)
+  const canUploadPhotos = session?.user?.id && (
+    session.user.id === attempt.athleteId ||
+    (session.user.email && attempt.sailorEmail && session.user.email === attempt.sailorEmail)
+  );
 
   // Get all approved attempts for this route and rig to determine ranking
   const allAttemptsForRouteRig = await prisma.fktAttempt.findMany({
@@ -156,7 +166,6 @@ export default async function AttemptDetailPage({ params }: Props) {
 
       {/* Track Playback */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Track Playback</h2>
         <TrackPlayback
           attemptId={attempt.id}
         />
@@ -192,22 +201,11 @@ export default async function AttemptDetailPage({ params }: Props) {
       )}
 
       {/* Photos */}
-      {attempt.photos.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Photos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {attempt.photos.map((photo) => (
-              <div key={photo.id} className="aspect-video rounded-lg overflow-hidden bg-muted">
-                <img
-                  src={getPhotoUrl(photo.s3Key)}
-                  alt={photo.caption ?? "Attempt photo"}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <AttemptPhotosSection
+        initialPhotos={attempt.photos}
+        attemptId={attempt.id}
+        canUploadPhotos={!!canUploadPhotos}
+      />
     </div>
   );
 }
