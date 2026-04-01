@@ -103,7 +103,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         <div className="bg-card border rounded-lg p-4 text-center">
           <p className="text-sm text-muted-foreground">Great Circle Distance</p>
           <p className="text-2xl">
-            {distanceNm(attempt.route.startLat, attempt.route.startLng, attempt.route.endLat, attempt.route.endLng)} nm
+            {distanceNm(attempt.route.startLat, attempt.route.startLng, attempt.route.finishLat, attempt.route.finishLng)} nm
           </p>
         </div>
         <div className="bg-card border rounded-lg p-4 text-center">

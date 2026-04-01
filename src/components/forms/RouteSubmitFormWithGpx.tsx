@@ -43,9 +43,9 @@ export function RouteSubmitFormWithGpx() {
     startName: "",
     startLat: "",
     startLng: "",
-    endName: "",
-    endLat: "",
-    endLng: "",
+    finishName: "",
+    finishLat: "",
+    finishLng: "",
   });
 
   // FKT form data
@@ -198,21 +198,21 @@ export function RouteSubmitFormWithGpx() {
       const date = await extractDateFromFile(file);
       setExtractedDate(date);
 
-      // Auto-set initial start and end points (first and last points)
+      // Auto-set initial start and finish points (first and last points)
       const startIndex = 0;
-      const endIndex = points.length - 1;
+      const finishIndex = points.length - 1;
       setSelectedStartIndex(startIndex);
-      setSelectedEndIndex(endIndex);
+      setSelectedEndIndex(finishIndex);
 
       // Auto-populate form fields with initial points
       const startPoint = points[startIndex];
-      const endPoint = points[endIndex];
+      const finishPoint = points[finishIndex];
       setForm(f => ({
         ...f,
         startLat: startPoint.lat.toFixed(6),
         startLng: startPoint.lon.toFixed(6),
-        endLat: endPoint.lat.toFixed(6),
-        endLng: endPoint.lon.toFixed(6),
+        finishLat: finishPoint.lat.toFixed(6),
+        finishLng: finishPoint.lon.toFixed(6),
       }));
 
       setError(null);
@@ -239,8 +239,8 @@ export function RouteSubmitFormWithGpx() {
       setSelectedEndIndex(index);
       setForm(f => ({
         ...f,
-        endLat: point.lat.toFixed(6),
-        endLng: point.lon.toFixed(6),
+        finishLat: point.lat.toFixed(6),
+        finishLng: point.lon.toFixed(6),
       }));
     }
     setSelectionMode(null);
@@ -265,8 +265,8 @@ export function RouteSubmitFormWithGpx() {
         ...f,
         startLat: "",
         startLng: "",
-        endLat: "",
-        endLng: "",
+        finishLat: "",
+        finishLng: "",
       }));
     }
   }
@@ -377,28 +377,28 @@ export function RouteSubmitFormWithGpx() {
       }
     }
 
-    let startLat, startLng, endLat, endLng;
+    let startLat, startLng, finishLat, finishLng;
 
     if (mode === "manual") {
       startLat = validateCoord("startLat", form.startLat, "lat");
       startLng = validateCoord("startLng", form.startLng, "lng");
-      endLat = validateCoord("endLat", form.endLat, "lat");
-      endLng = validateCoord("endLng", form.endLng, "lng");
+      finishLat = validateCoord("finishLat", form.finishLat, "lat");
+      finishLng = validateCoord("finishLng", form.finishLng, "lng");
 
-      if (startLat === null || startLng === null || endLat === null || endLng === null) return;
+      if (startLat === null || startLng === null || finishLat === null || finishLng === null) return;
     } else {
       // GPX mode - points should be auto-selected, but validate just in case
       if (selectedStartIndex === null || selectedEndIndex === null) {
-        setError("Start and end points are required. Please reload your GPX file or select points manually.");
+        setError("Start and finish points are required. Please reload your GPX file or select points manually.");
         return;
       }
 
       const startPoint = trackPoints[selectedStartIndex];
-      const endPoint = trackPoints[selectedEndIndex];
+      const finishPoint = trackPoints[selectedEndIndex];
       startLat = startPoint.lat;
       startLng = startPoint.lon;
-      endLat = endPoint.lat;
-      endLng = endPoint.lon;
+      finishLat = finishPoint.lat;
+      finishLng = finishPoint.lon;
     }
 
     setLoading(true);
@@ -407,7 +407,7 @@ export function RouteSubmitFormWithGpx() {
       const routeRes = await fetch("/api/routes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, startLat, startLng, endLat, endLng }),
+        body: JSON.stringify({ ...form, startLat, startLng, finishLat, finishLng }),
       });
 
       if (!routeRes.ok) {
@@ -585,7 +585,7 @@ export function RouteSubmitFormWithGpx() {
         {mode === "track_file" && (
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-700">
-              📁 Upload your GPX or Velocitek file (.csv/.vcc) below. Start and end points will be set automatically to the first and last track points.
+              📁 Upload your GPX or Velocitek file (.csv/.vcc) below. Start and finish points will be set automatically to the first and last track points.
               Use the buttons above the map to adjust them if needed.
             </p>
           </div>
@@ -670,7 +670,7 @@ export function RouteSubmitFormWithGpx() {
                     }`}
                     style={{ backgroundColor: selectionMode === "end" ? "#dc2626" : "#ef4444" }}
                   >
-                    {selectionMode === "end" ? "Cancel" : "Select End Point"}
+                    {selectionMode === "end" ? "Cancel" : "Select Finish Point"}
                   </button>
                 </div>
 
@@ -690,7 +690,7 @@ export function RouteSubmitFormWithGpx() {
                     <span className="text-green-600 ml-2">• Start point: #{selectedStartIndex + 1}</span>
                   )}
                   {selectedEndIndex !== null && (
-                    <span className="text-red-600 ml-2">• End point: #{selectedEndIndex + 1}</span>
+                    <span className="text-red-600 ml-2">• Finish point: #{selectedEndIndex + 1}</span>
                   )}
                   {selectedStartIndex !== null && selectedEndIndex !== null && (
                     <span className="text-blue-600 ml-2">• Ready to submit!</span>
@@ -941,24 +941,24 @@ export function RouteSubmitFormWithGpx() {
           </div>
         </div>
 
-        {/* End Point */}
+        {/* Finish Point */}
         <div className="border rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            End Point
+            Finish Point
           </h3>
           <div className="space-y-2">
-            <Label htmlFor="endName">Name *</Label>
+            <Label htmlFor="finishName">Name *</Label>
             <Input
-              id="endName"
-              value={form.endName}
-              onChange={(e) => update("endName", e.target.value)}
+              id="finishName"
+              value={form.finishName}
+              onChange={(e) => update("finishName", e.target.value)}
               placeholder="e.g., Weymouth Harbour Entrance"
               required
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <CoordField id="endLat" label="Latitude" value={form.endLat} type="lat" disabled={mode === "track_file"} />
-            <CoordField id="endLng" label="Longitude" value={form.endLng} type="lng" disabled={mode === "track_file"} />
+            <CoordField id="finishLat" label="Latitude" value={form.finishLat} type="lat" disabled={mode === "track_file"} />
+            <CoordField id="finishLng" label="Longitude" value={form.finishLng} type="lng" disabled={mode === "track_file"} />
           </div>
         </div>
 

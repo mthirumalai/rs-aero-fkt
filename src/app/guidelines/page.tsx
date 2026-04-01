@@ -18,7 +18,7 @@ export default function GuidelinesPage() {
           <h2 className="text-2xl font-semibold mb-4 pb-2 border-b">Submitting a Route</h2>
           <div className="prose prose-sm max-w-none space-y-4">
             <p>
-              A route consists of a start point and an end point between which sailors
+              A route consists of a start point and a finish point between which sailors
               compete for the fastest known time. Please make the two points easy to find
               so others can attempt it as well. So pick two buoys whose latitude, longitude coordinates
               are well known.
@@ -32,23 +32,23 @@ export default function GuidelinesPage() {
             </p>
             <ul className="list-disc pl-5 space-y-2">
               <li>
-                <strong>📍 Manual Entry:</strong> Enter the start and end point coordinates
+                <strong>📍 Manual Entry:</strong> Enter the start and finish point coordinates
                 directly if you know them.
               </li>
               <li>
                 <strong>📂 GPX Upload:</strong> Upload a GPX track of the route and click
-                on the map to select the exact start and end points from your track. This is
+                on the map to select the exact start and finish points from your track. This is
                 ideal when you have a GPS recording but don&apos;t know the precise coordinates.
               </li>
             </ul>
             <h3 className="font-semibold text-base">Requirements</h3>
             <ul className="list-disc pl-5 space-y-2">
               <li>
-                <strong>Clear endpoints:</strong> Both the start and end point must have
+                <strong>Clear start and finish points:</strong> Both the start and finish point must have
                 accurate GPS coordinates (latitude/longitude) to within a few metres.
                 This is important because when others submit FKT attempts, we are going to check
-                their GPX tracks against the start and end points you submitted so please be diligent.
-                When using GPX upload, click precisely on the intended start/end waypoints.
+                their GPX tracks against the start and finish points you submitted so please be diligent.
+                When using GPX upload, click precisely on the intended start/finish waypoints.
               </li>
               <li>
                 <strong>One-way:</strong> Routes are point-to-point only. There are no
@@ -142,7 +142,7 @@ export default function GuidelinesPage() {
               },
               {
                 q: "Does the direction matter?",
-                a: "The route is defined as start → end. Your GPX must pass the start point before the end point. We may add reverse-direction routes in the future.",
+                a: "The route is defined as start → finish. Your GPX must pass the start point before the finish point. We may add reverse-direction routes in the future.",
               },
               {
                 q: "What if my GPS coordinates are slightly off?",

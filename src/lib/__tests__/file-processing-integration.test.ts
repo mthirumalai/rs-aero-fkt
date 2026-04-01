@@ -60,7 +60,7 @@ describe('File Processing Integration Tests', () => {
       expect(validation.valid).toBe(true);
       expect(validation.durationSec).toBe(5400);
       expect(validation.nearestStartDistanceM).toBe(0);
-      expect(validation.nearestEndDistanceM).toBe(0);
+      expect(validation.nearestFinishDistanceM).toBe(0);
       expect(validation.racePoints).toBeDefined();
       expect(validation.racePoints!.length).toBe(5); // All points in race segment
 
@@ -188,7 +188,7 @@ describe('File Processing Integration Tests', () => {
       expect(validation.valid).toBe(true);
       expect(validation.durationSec).toBe(5400); // 90 minutes
       expect(validation.nearestStartDistanceM).toBe(0);
-      expect(validation.nearestEndDistanceM).toBe(0);
+      expect(validation.nearestFinishDistanceM).toBe(0);
 
       // Step 4: Compute SOG for validated race segment
       const sogPoints = computeSog(validation.racePoints!);

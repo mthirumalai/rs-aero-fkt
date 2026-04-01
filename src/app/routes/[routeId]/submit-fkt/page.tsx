@@ -38,7 +38,7 @@ export default async function SubmitFktPage({ params }: Props) {
       <div className="mb-6">
         <h1 className="text-3xl font-bold uppercase tracking-wide">Submit an FKT Attempt</h1>
         <p className="text-lg text-muted-foreground mt-2">
-          <span className="font-medium">Route:</span> <Link href={`/routes/${route.id}`} className="text-primary underline hover:no-underline">{route.name}</Link>. <span className="font-medium">Start:</span> {route.startName}, <span className="font-medium">End:</span> {route.endName}. <span className="font-medium">Attempts so far:</span> {attemptCount}
+          <span className="font-medium">Route:</span> <Link href={`/routes/${route.id}`} className="text-primary underline hover:no-underline">{route.name}</Link>. <span className="font-medium">Start:</span> {route.startName}, <span className="font-medium">Finish:</span> {route.finishName}. <span className="font-medium">Attempts so far:</span> {attemptCount}
         </p>
       </div>
       <FktSubmitForm

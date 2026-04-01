@@ -14,10 +14,10 @@ const RouteMapInner = dynamic(() => import("./RouteMapInner"), {
 interface Props {
   startLat: number;
   startLng: number;
-  endLat: number;
-  endLng: number;
+  finishLat: number;
+  finishLng: number;
   startName: string;
-  endName: string;
+  finishName: string;
 }
 
 export function RouteMap(props: Props) {

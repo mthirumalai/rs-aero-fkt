@@ -36,9 +36,9 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, description, country, startName, endName, startLat, startLng, endLat, endLng } = body;
+  const { name, description, country, startName, finishName, startLat, startLng, finishLat, finishLng } = body;
 
-  if (!name || !country || !startName || !endName || startLat == null || startLng == null || endLat == null || endLng == null) {
+  if (!name || !country || !startName || !finishName || startLat == null || startLng == null || finishLat == null || finishLng == null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -50,11 +50,11 @@ export async function POST(req: NextRequest) {
       description,
       country,
       startName,
-      endName,
+      finishName,
       startLat: parseFloat(startLat),
       startLng: parseFloat(startLng),
-      endLat: parseFloat(endLat),
-      endLng: parseFloat(endLng),
+      finishLat: parseFloat(finishLat),
+      finishLng: parseFloat(finishLng),
       submittedById: session.user.id,
       approvalToken,
       status: "PENDING",

@@ -31,7 +31,7 @@ const testCases: TestCase[] = [
     file: "test-exact-points.gpx",
     expectedValid: true,
     expectedDuration: 3600,
-    description: "Track starting exactly at start point and ending exactly at end point"
+    description: "Track starting exactly at start point and ending exactly at finish point"
   },
   {
     name: "Test 2: No Start Circle",
@@ -98,7 +98,7 @@ async function runTest(testCase: TestCase): Promise<void> {
     if (originalResult.valid) {
       console.log(`   Duration: ${originalResult.durationSec}s (${Math.round(originalResult.durationSec! / 60)} min)`);
       console.log(`   Start distance: ${originalResult.nearestStartDistanceM}m`);
-      console.log(`   End distance: ${originalResult.nearestEndDistanceM}m`);
+      console.log(`   Finish distance: ${originalResult.nearestFinishDistanceM}m`);
     } else {
       console.log(`   Error: ${originalResult.error}`);
     }
@@ -108,14 +108,14 @@ async function runTest(testCase: TestCase): Promise<void> {
     if (enhancedResult.valid) {
       console.log(`   Duration: ${enhancedResult.durationSec}s (${Math.round(enhancedResult.durationSec! / 60)} min)`);
       console.log(`   Start distance: ${enhancedResult.nearestStartDistanceM}m`);
-      console.log(`   End distance: ${enhancedResult.nearestEndDistanceM}m`);
+      console.log(`   Finish distance: ${enhancedResult.nearestFinishDistanceM}m`);
 
       if (enhancedResult.timingDetails) {
         const details = enhancedResult.timingDetails;
         console.log(`   Start circle entries: ${details.startCircleEntries}`);
         console.log(`   Start circle exits: ${details.startCircleExits}`);
-        console.log(`   End circle entries: ${details.endCircleEntries}`);
-        console.log(`   End circle exits: ${details.endCircleExits}`);
+        console.log(`   Finish circle entries: ${details.finishCircleEntries}`);
+        console.log(`   Finish circle exits: ${details.finishCircleExits}`);
         console.log(`   False start detected: ${details.falseStartDetected}`);
         console.log(`   Re-finish detected: ${details.reFinishDetected}`);
       }

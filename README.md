@@ -99,7 +99,7 @@ aws s3api put-bucket-cors --bucket your-bucket-name --cors-configuration file://
 
 ## Key Features
 
-- **GPX validation**: Tracks validated against route endpoints within 10m tolerance
+- **GPX validation**: Tracks validated against route start and finish points within 10m tolerance
 - **Track playback**: 1x/2x/5x/10x speed, animated map marker via RAF loop
 - **SOG chart**: Speed over ground synced to playback cursor
 - **Region filtering**: Routes filterable by region (AU, EU, UK/IRL, NA, Other)

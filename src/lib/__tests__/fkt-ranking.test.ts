@@ -21,7 +21,7 @@ jest.mock('../prisma', () => ({
 }));
 
 describe('FKT Ranking System Tests', () => {
-  let mockRoute: { id: string; name: string; status: string; startLat: number; startLng: number; endLat: number; endLng: number };
+  let mockRoute: { id: string; name: string; status: string; startLat: number; startLng: number; finishLat: number; finishLng: number };
   let mockAttempts: { id: string; durationSec: number; rigSize: string; rank?: number }[];
 
   beforeEach(() => {
@@ -34,8 +34,8 @@ describe('FKT Ranking System Tests', () => {
       status: 'APPROVED',
       startLat: 33.948889,
       startLng: -78.011667,
-      endLat: 34.518056,
-      endLng: -77.448056
+      finishLat: 34.518056,
+      finishLng: -77.448056
     };
 
     mockAttempts = [];

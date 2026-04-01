@@ -5,12 +5,12 @@ This directory contains GPX test files for validating the FKT attempt submission
 ## Test Cases
 
 ### Test 0: Happy Path - Exact Points (`test-exact-points.gpx`)
-- **Purpose**: Track starting exactly at start point and ending exactly at end point
+- **Purpose**: Track starting exactly at start point and ending exactly at finish point
 - **Expected**: ✅ Valid, 1 hour duration
-- **Tests**: Basic validation with perfect start/end alignment
+- **Tests**: Basic validation with perfect start/finish alignment
 
 ### Test 1: Happy Path - Within Tolerance (`test-fkt-attempt.gpx`)
-- **Purpose**: Track with start/end points within 10m tolerance circles
+- **Purpose**: Track with start/finish points within 10m tolerance circles
 - **Expected**: ✅ Valid
 - **Tests**: Tolerance circle validation
 
@@ -19,10 +19,10 @@ This directory contains GPX test files for validating the FKT attempt submission
 - **Expected**: ❌ Invalid
 - **Tests**: Start circle entry requirement
 
-### Test 3: Invalid - No End Circle Entry
-- **Purpose**: Track that never enters end point 10m circle
+### Test 3: Invalid - No Finish Circle Entry
+- **Purpose**: Track that never enters finish point 10m circle
 - **Expected**: ❌ Invalid
-- **Tests**: End circle entry requirement
+- **Tests**: Finish circle entry requirement
 
 ### Test 4: False Start (`test-false-start.gpx`)
 - **Purpose**: Track enters start circle, leaves, then re-enters
@@ -33,20 +33,20 @@ This directory contains GPX test files for validating the FKT attempt submission
   - Duration: 52 minutes (12:08 to 13:00)
 
 ### Test 5: Re-finish (`test-re-finish.gpx`)
-- **Purpose**: Track enters end circle, leaves, then re-enters
+- **Purpose**: Track enters finish circle, leaves, then re-enters
 - **Expected**: ✅ Valid, timing from first entry
 - **Key Requirements**:
-  - Time stops when first entering end circle
-  - Ignore subsequent end circle entries
+  - Time stops when first entering finish circle
+  - Ignore subsequent finish circle entries
   - Duration: 50 minutes (12:00 to 12:50)
 
 ## Validation Rules
 
 ### Circle Entry/Exit Logic
 - **Start Circle**: 10m radius around route start point
-- **End Circle**: 10m radius around route end point
+- **Finish Circle**: 10m radius around route finish point
 - **Timing Start**: When track LEAVES start circle (after final entry)
-- **Timing End**: When track first ENTERS end circle
+- **Timing End**: When track first ENTERS finish circle
 
 ### SOG (Speed Over Ground) Requirements
 - Calculate for all track segments between timing points
@@ -79,6 +79,6 @@ All test files use standard GPX 1.1 format with:
 
 ## Coordinate Reference
 - **Route Start**: Southport (33.948889°, -78.011667°)
-- **Route End**: Sneads Ferry (34.518056°, -77.448056°)
+- **Route Finish**: Sneads Ferry (34.518056°, -77.448056°)
 - **Distance**: ~40 nautical miles
-- **Tolerance**: 10 meters for start/end validation
+- **Tolerance**: 10 meters for start/finish validation

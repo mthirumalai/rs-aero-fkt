@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function RouteDetailPage({ params }: Props) {
   const route = await prisma.route.findUnique({
-    where: { id: params.routeId, status: "APPROVED" },
+    where: { id: params.routeId },
     include: {
       submittedBy: { select: { id: true, name: true } },
       photos: true,
@@ -50,6 +50,11 @@ export default async function RouteDetailPage({ params }: Props) {
             <Badge variant="secondary">
               {COUNTRY_NAMES[route.country] ?? route.country}
             </Badge>
+            {route.status === "PENDING" && (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                Pending Approval
+              </Badge>
+            )}
             {route.approvedAt && (
               <span className="text-sm text-muted-foreground">
                 Approved {new Date(route.approvedAt).toLocaleDateString()}
@@ -57,14 +62,26 @@ export default async function RouteDetailPage({ params }: Props) {
             )}
           </div>
         </div>
-        <Button asChild>
-          <Link href={`/routes/${route.id}/submit-fkt`}>Submit an FKT</Link>
-        </Button>
+        {route.status === "APPROVED" && (
+          <Button asChild>
+            <Link href={`/routes/${route.id}/submit-fkt`}>Submit an FKT</Link>
+          </Button>
+        )}
       </div>
 
       {/* Description */}
       {route.description && (
         <p className="text-muted-foreground mb-6">{route.description}</p>
+      )}
+
+      {/* Pending route notice */}
+      {route.status === "PENDING" && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <h3 className="font-medium text-yellow-800 mb-1">Route Pending Approval</h3>
+          <p className="text-sm text-yellow-700">
+            This route is currently under review by an administrator. Once approved, sailors will be able to submit FKT attempts.
+          </p>
+        </div>
       )}
 
       {/* Route Details + Map */}
@@ -81,17 +98,17 @@ export default async function RouteDetailPage({ params }: Props) {
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">End</p>
-                <p className="font-medium">{route.endName}</p>
+                <p className="text-muted-foreground">Finish</p>
+                <p className="font-medium">{route.finishName}</p>
                 <p className="font-mono text-xs text-muted-foreground">
-                  {route.endLat.toFixed(6)}, {route.endLng.toFixed(6)}
+                  {route.finishLat.toFixed(6)}, {route.finishLng.toFixed(6)}
                 </p>
               </div>
             </div>
             <div className="text-sm">
               <span className="text-muted-foreground">Great-circle distance: </span>
               <span className="font-medium">
-                {distanceNm(route.startLat, route.startLng, route.endLat, route.endLng)} nm
+                {distanceNm(route.startLat, route.startLng, route.finishLat, route.finishLng)} nm
               </span>
             </div>
             <div className="text-sm">
@@ -110,10 +127,10 @@ export default async function RouteDetailPage({ params }: Props) {
           <RouteMap
             startLat={route.startLat}
             startLng={route.startLng}
-            endLat={route.endLat}
-            endLng={route.endLng}
+            finishLat={route.finishLat}
+            finishLng={route.finishLng}
             startName={route.startName}
-            endName={route.endName}
+            finishName={route.finishName}
           />
         </div>
       </div>

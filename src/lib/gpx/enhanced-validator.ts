@@ -5,18 +5,18 @@ export interface EnhancedValidationResult {
   valid: boolean;
   durationSec?: number;
   startPoint?: GpxPoint;
-  endPoint?: GpxPoint;
-  /** Track points between when leaving start circle and entering end circle */
+  finishPoint?: GpxPoint;
+  /** Track points between when leaving start circle and entering finish circle */
   racePoints?: GpxPoint[];
   nearestStartDistanceM?: number;
-  nearestEndDistanceM?: number;
+  nearestFinishDistanceM?: number;
   error?: string;
   /** Timing details for debugging */
   timingDetails?: {
     startCircleEntries: number;
     startCircleExits: number;
-    endCircleEntries: number;
-    endCircleExits: number;
+    finishCircleEntries: number;
+    finishCircleExits: number;
     falseStartDetected: boolean;
     reFinishDetected: boolean;
   };
@@ -31,16 +31,16 @@ interface CircleEvent {
 
 /**
  * Enhanced GPX validator that properly handles:
- * - Timing from leaving start circle to entering end circle
+ * - Timing from leaving start circle to entering finish circle
  * - False starts (multiple start circle entries/exits)
- * - Re-finishes (multiple end circle entries/exits)
+ * - Re-finishes (multiple finish circle entries/exits)
  */
 export function validateGpxTrackEnhanced(
   gpx: ParsedGpx,
   routeStartLat: number,
   routeStartLng: number,
-  routeEndLat: number,
-  routeEndLng: number,
+  routeFinishLat: number,
+  routeFinishLng: number,
   toleranceM = 10
 ): EnhancedValidationResult {
   const { points } = gpx;
@@ -56,14 +56,14 @@ export function validateGpxTrackEnhanced(
 
   // Analyze circle entry/exit events
   const startEvents = analyzeCircleEvents(points, routeStartLat, routeStartLng, toleranceM);
-  const endEvents = analyzeCircleEvents(points, routeEndLat, routeEndLng, toleranceM);
+  const finishEvents = analyzeCircleEvents(points, routeFinishLat, routeFinishLng, toleranceM);
 
   // Find nearest distances for error reporting
   const nearestStartDist = Math.min(...points.map(p =>
     haversineMeters(p.lat, p.lon, routeStartLat, routeStartLng)
   ));
-  const nearestEndDist = Math.min(...points.map(p =>
-    haversineMeters(p.lat, p.lon, routeEndLat, routeEndLng)
+  const nearestFinishDist = Math.min(...points.map(p =>
+    haversineMeters(p.lat, p.lon, routeFinishLat, routeFinishLng)
   ));
 
   // Check if track enters start circle
@@ -76,18 +76,18 @@ export function validateGpxTrackEnhanced(
     };
   }
 
-  // Check if track enters end circle
-  const endEntries = endEvents.filter(e => e.eventType === 'enter');
-  if (endEntries.length === 0) {
+  // Check if track enters finish circle
+  const finishEntries = finishEvents.filter(e => e.eventType === 'enter');
+  if (finishEntries.length === 0) {
     return {
       valid: false,
-      nearestEndDistanceM: Math.round(nearestEndDist),
-      error: `Track does not pass within ${toleranceM}m of route end (nearest: ${Math.round(nearestEndDist)}m)`,
+      nearestFinishDistanceM: Math.round(nearestFinishDist),
+      error: `Track does not pass within ${toleranceM}m of route finish (nearest: ${Math.round(nearestFinishDist)}m)`,
     };
   }
 
   // Determine timing points based on requirements
-  const timingResult = calculateRaceTiming(startEvents, endEvents, points);
+  const timingResult = calculateRaceTiming(startEvents, finishEvents, points);
 
   if (!timingResult.success) {
     return {
@@ -96,14 +96,14 @@ export function validateGpxTrackEnhanced(
     };
   }
 
-  const { startTimingPoint, endTimingPoint, racePoints } = timingResult;
+  const { startTimingPoint, finishTimingPoint, racePoints } = timingResult;
 
-  if (!startTimingPoint || !endTimingPoint || !startTimingPoint.time || !endTimingPoint.time) {
+  if (!startTimingPoint || !finishTimingPoint || !startTimingPoint.time || !finishTimingPoint.time) {
     return { valid: false, error: "Timing points are missing timestamps" };
   }
 
   const durationSec = Math.round(
-    (endTimingPoint.time.getTime() - startTimingPoint.time.getTime()) / 1000
+    (finishTimingPoint.time.getTime() - startTimingPoint.time.getTime()) / 1000
   );
 
   if (durationSec <= 0) {
@@ -111,23 +111,23 @@ export function validateGpxTrackEnhanced(
   }
 
   const startExits = startEvents.filter(e => e.eventType === 'exit');
-  const endExits = endEvents.filter(e => e.eventType === 'exit');
+  const finishExits = finishEvents.filter(e => e.eventType === 'exit');
 
   return {
     valid: true,
     durationSec,
     startPoint: startTimingPoint,
-    endPoint: endTimingPoint,
+    finishPoint: finishTimingPoint,
     racePoints,
     nearestStartDistanceM: Math.round(nearestStartDist),
-    nearestEndDistanceM: Math.round(nearestEndDist),
+    nearestFinishDistanceM: Math.round(nearestFinishDist),
     timingDetails: {
       startCircleEntries: startEntries.length,
       startCircleExits: startExits.length,
-      endCircleEntries: endEntries.length,
-      endCircleExits: endExits.length,
+      finishCircleEntries: finishEntries.length,
+      finishCircleExits: finishExits.length,
       falseStartDetected: startEntries.length > 1,
-      reFinishDetected: endEntries.length > 1,
+      reFinishDetected: finishEntries.length > 1,
     },
   };
 }
@@ -188,31 +188,31 @@ interface TimingResult {
   success: boolean;
   error?: string;
   startTimingPoint?: GpxPoint;
-  endTimingPoint?: GpxPoint;
+  finishTimingPoint?: GpxPoint;
   racePoints?: GpxPoint[];
 }
 
 /**
  * Calculate race timing based on circle entry/exit requirements:
  * - Timing starts when leaving start circle (after last start circle entry)
- * - Timing ends when first entering end circle
+ * - Timing ends when first entering finish circle
  * - Handle false starts and re-finishes
  */
 function calculateRaceTiming(
   startEvents: CircleEvent[],
-  endEvents: CircleEvent[],
+  finishEvents: CircleEvent[],
   points: GpxPoint[]
 ): TimingResult {
   const startEntries = startEvents.filter(e => e.eventType === 'enter');
   const startExits = startEvents.filter(e => e.eventType === 'exit');
-  const endEntries = endEvents.filter(e => e.eventType === 'enter');
+  const finishEntries = finishEvents.filter(e => e.eventType === 'enter');
 
   if (startEntries.length === 0) {
     return { success: false, error: "Track never enters start circle" };
   }
 
-  if (endEntries.length === 0) {
-    return { success: false, error: "Track never enters end circle" };
+  if (finishEntries.length === 0) {
+    return { success: false, error: "Track never enters finish circle" };
   }
 
   // Find the timing start point (when leaving start circle after final entry)
@@ -236,32 +236,32 @@ function calculateRaceTiming(
     }
   }
 
-  // Find the timing end point (first entry into end circle)
-  const endTimingPoint = endEntries[0].point;
+  // Find the timing finish point (first entry into finish circle)
+  const finishTimingPoint = finishEntries[0].point;
 
   // Ensure timing makes sense chronologically
-  if (!startTimingPoint.time || !endTimingPoint.time) {
+  if (!startTimingPoint.time || !finishTimingPoint.time) {
     return { success: false, error: "Timing points missing timestamps" };
   }
 
-  if (endTimingPoint.time.getTime() <= startTimingPoint.time.getTime()) {
-    return { success: false, error: "End timing point occurs before or at start timing point" };
+  if (finishTimingPoint.time.getTime() <= startTimingPoint.time.getTime()) {
+    return { success: false, error: "Finish timing point occurs before or at start timing point" };
   }
 
-  // Extract race points (between start timing and end timing)
+  // Extract race points (between start timing and finish timing)
   const startTimingIndex = points.findIndex(p => p === startTimingPoint);
-  const endTimingIndex = points.findIndex(p => p === endTimingPoint);
+  const finishTimingIndex = points.findIndex(p => p === finishTimingPoint);
 
-  if (startTimingIndex === -1 || endTimingIndex === -1) {
+  if (startTimingIndex === -1 || finishTimingIndex === -1) {
     return { success: false, error: "Could not locate timing points in track" };
   }
 
-  const racePoints = points.slice(startTimingIndex, endTimingIndex + 1);
+  const racePoints = points.slice(startTimingIndex, finishTimingIndex + 1);
 
   return {
     success: true,
     startTimingPoint,
-    endTimingPoint,
+    finishTimingPoint,
     racePoints,
   };
 }

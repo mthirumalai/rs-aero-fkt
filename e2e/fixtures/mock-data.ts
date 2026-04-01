@@ -7,7 +7,7 @@ export const mockRoutes = [
     id: 'route-1',
     name: 'Solent Crossing',
     startPoint: { lat: 50.7580, lng: -1.2950, name: 'Cowes' },
-    endPoint: { lat: 50.8023, lng: -1.1015, name: 'Portsmouth' },
+    finishPoint: { lat: 50.8023, lng: -1.1015, name: 'Portsmouth' },
     country: 'GB',
     approved: true,
     approvalDate: '2024-01-15',
@@ -17,7 +17,7 @@ export const mockRoutes = [
     id: 'route-2',
     name: 'Thames Estuary Sprint',
     startPoint: { lat: 51.5074, lng: 0.1278, name: 'London Bridge' },
-    endPoint: { lat: 51.4894, lng: 0.5707, name: 'Southend' },
+    finishPoint: { lat: 51.4894, lng: 0.5707, name: 'Southend' },
     country: 'GB',
     approved: false,
     description: 'Fast downstream Thames route'

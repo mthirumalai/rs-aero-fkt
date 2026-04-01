@@ -46,7 +46,7 @@ const startPointIcon = new L.DivIcon({
   iconAnchor: [8, 8],
 });
 
-const endPointIcon = new L.DivIcon({
+const finishPointIcon = new L.DivIcon({
   className: "",
   html: `<div style="
     width:16px;height:16px;
@@ -113,7 +113,7 @@ function MapContent({
 
       let icon;
       if (index === selectedStartIndex) icon = startPointIcon;
-      else if (index === selectedEndIndex) icon = endPointIcon;
+      else if (index === selectedEndIndex) icon = finishPointIcon;
       else icon = createTrackPointIcon(selectionMode);
 
       return (

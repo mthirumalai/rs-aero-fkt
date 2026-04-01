@@ -92,7 +92,7 @@ export default async function RoutesPage({ searchParams }: Props) {
               <TableRow>
                 <TableHead className="min-w-[200px]">Route</TableHead>
                 <TableHead>Start</TableHead>
-                <TableHead>End</TableHead>
+                <TableHead>Finish</TableHead>
                 <TableHead className="text-center">
                   <div className="flex justify-center" title="Aero 5">
                     <RigIcon rigSize="AERO_5" size={28} />
@@ -128,7 +128,7 @@ export default async function RoutesPage({ searchParams }: Props) {
                     </Link>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{route.startName}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{route.endName}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{route.finishName}</TableCell>
                   <TableCell className="text-center whitespace-nowrap">
                     {(() => {
                       const fkt = getBestFktForRig(route.attempts, 'AERO_5');

@@ -29,32 +29,32 @@ const endIcon = new L.Icon({
   popupAnchor: [1, -34],
 });
 
-function FitBounds({ startLat, startLng, endLat, endLng }: {
-  startLat: number; startLng: number; endLat: number; endLng: number;
+function FitBounds({ startLat, startLng, finishLat, finishLng }: {
+  startLat: number; startLng: number; finishLat: number; finishLng: number;
 }) {
   const map = useMap();
   useEffect(() => {
     const bounds = L.latLngBounds(
       [startLat, startLng],
-      [endLat, endLng]
+      [finishLat, finishLng]
     );
     map.fitBounds(bounds, { padding: [40, 40] });
-  }, [map, startLat, startLng, endLat, endLng]);
+  }, [map, startLat, startLng, finishLat, finishLng]);
   return null;
 }
 
 interface Props {
   startLat: number;
   startLng: number;
-  endLat: number;
-  endLng: number;
+  finishLat: number;
+  finishLng: number;
   startName: string;
-  endName: string;
+  finishName: string;
 }
 
-export default function RouteMapInner({ startLat, startLng, endLat, endLng, startName, endName }: Props) {
-  const centerLat = (startLat + endLat) / 2;
-  const centerLng = (startLng + endLng) / 2;
+export default function RouteMapInner({ startLat, startLng, finishLat, finishLng, startName, finishName }: Props) {
+  const centerLat = (startLat + finishLat) / 2;
+  const centerLng = (startLng + finishLng) / 2;
 
   return (
     <MapContainer
@@ -66,12 +66,12 @@ export default function RouteMapInner({ startLat, startLng, endLat, endLng, star
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds startLat={startLat} startLng={startLng} endLat={endLat} endLng={endLng} />
+      <FitBounds startLat={startLat} startLng={startLng} finishLat={finishLat} finishLng={finishLng} />
       <Marker position={[startLat, startLng]} icon={startIcon}>
         <Popup><strong>Start:</strong> {startName}</Popup>
       </Marker>
-      <Marker position={[endLat, endLng]} icon={endIcon}>
-        <Popup><strong>End:</strong> {endName}</Popup>
+      <Marker position={[finishLat, finishLng]} icon={endIcon}>
+        <Popup><strong>Finish:</strong> {finishName}</Popup>
       </Marker>
     </MapContainer>
   );

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="FKT Test Generator" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
-    <name>Test 0: Exact Start and End Points</name>
-    <desc>Track starting exactly at start point and ending exactly at end point</desc>
+    <name>Test 0: Exact Start and Finish Points</name>
+    <desc>Track starting exactly at start point and ending exactly at finish point</desc>
   </metadata>
   <trk>
     <name>Exact Points Test</name>

@@ -81,7 +81,7 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Distance</p>
             <p className="text-base font-medium">
-              {distanceNm(route.startLat, route.startLng, route.endLat, route.endLng)} nm
+              {distanceNm(route.startLat, route.startLng, route.finishLat, route.finishLng)} nm
             </p>
           </div>
           <div>
@@ -125,7 +125,7 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
         )}
       </div>
 
-      {/* Start and End Point Maps */}
+      {/* Start and Finish Point Maps */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div>
           <h3 className="text-lg font-semibold mb-4">Start Point: {route.startName}</h3>
@@ -142,15 +142,15 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
           </div>
         </div>
         <div>
-          <h3 className="text-lg font-semibold mb-4">End Point: {route.endName}</h3>
+          <h3 className="text-lg font-semibold mb-4">Finish Point: {route.finishName}</h3>
           <p className="text-sm text-muted-foreground mb-4 font-mono">
-            {route.endLat.toFixed(6)}, {route.endLng.toFixed(6)}
+            {route.finishLat.toFixed(6)}, {route.finishLng.toFixed(6)}
           </p>
           <div className="h-[300px] rounded-lg overflow-hidden border">
             <PointMap
-              lat={route.endLat}
-              lng={route.endLng}
-              name={route.endName}
+              lat={route.finishLat}
+              lng={route.finishLng}
+              name={route.finishName}
               type="end"
             />
           </div>
@@ -168,10 +168,10 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
           <ApprovalMap
             startLat={route.startLat}
             startLng={route.startLng}
-            endLat={route.endLat}
-            endLng={route.endLng}
+            finishLat={route.finishLat}
+            finishLng={route.finishLng}
             startName={route.startName}
-            endName={route.endName}
+            finishName={route.finishName}
           />
         </div>
       </div>

@@ -44,8 +44,8 @@ function createPointAtDistance(baseLat: number, baseLng: number, distanceM: numb
 
 describe('FKT Attempt Validation Tests', () => {
 
-  describe('Test 0: Happy Path - Exact Start and End Points', () => {
-    test('should validate track starting exactly at start point and ending exactly at end point', () => {
+  describe('Test 0: Happy Path - Exact Start and Finish Points', () => {
+    test('should validate track starting exactly at start point and ending exactly at finish point', () => {
       const points: GpxPoint[] = [
         createGpxPoint(ROUTE_START_LAT, ROUTE_START_LNG, 0), // Exact start
         createGpxPoint(ROUTE_START_LAT + 0.1, ROUTE_START_LNG + 0.1, 1800), // Midpoint
@@ -64,9 +64,9 @@ describe('FKT Attempt Validation Tests', () => {
       expect(result.valid).toBe(true);
       expect(result.durationSec).toBe(3600); // 1 hour
       expect(result.nearestStartDistanceM).toBe(0);
-      expect(result.nearestEndDistanceM).toBe(0);
+      expect(result.nearestFinishDistanceM).toBe(0);
       expect(result.startPoint?.time).toEqual(points[0].time);
-      expect(result.endPoint?.time).toEqual(points[2].time);
+      expect(result.finishPoint?.time).toEqual(points[2].time);
     });
 
     test('should calculate correct SOG for exact start/end track', () => {
@@ -86,15 +86,15 @@ describe('FKT Attempt Validation Tests', () => {
   });
 
   describe('Test 1: Happy Path - Points Within 10m Circles', () => {
-    test('should validate track with start/end points within tolerance circles', () => {
+    test('should validate track with start/finish points within tolerance circles', () => {
       // Create points 5m from exact route points
       const [startLat, startLng] = createPointAtDistance(ROUTE_START_LAT, ROUTE_START_LNG, 5, 45);
-      const [endLat, endLng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 5, 135);
+      const [finishLat, finishLng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 5, 135);
 
       const points: GpxPoint[] = [
         createGpxPoint(startLat, startLng, 0),
         createGpxPoint(ROUTE_START_LAT + 0.1, ROUTE_START_LNG + 0.1, 1800),
-        createGpxPoint(endLat, endLng, 3600),
+        createGpxPoint(finishLat, finishLng, 3600),
       ];
 
       const result = validateGpxTrack(
@@ -108,7 +108,7 @@ describe('FKT Attempt Validation Tests', () => {
 
       expect(result.valid).toBe(true);
       expect(result.nearestStartDistanceM).toBeLessThanOrEqual(5);
-      expect(result.nearestEndDistanceM).toBeLessThanOrEqual(5);
+      expect(result.nearestFinishDistanceM).toBeLessThanOrEqual(5);
       expect(result.durationSec).toBe(3600);
     });
   });
@@ -139,15 +139,15 @@ describe('FKT Attempt Validation Tests', () => {
     });
   });
 
-  describe('Test 3: Track Does Not Enter End Circle', () => {
-    test('should reject track that never enters end point 10m circle', () => {
-      // Create points 15m from end (outside tolerance)
-      const [endLat, endLng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 15, 90);
+  describe('Test 3: Track Does Not Enter Finish Circle', () => {
+    test('should reject track that never enters finish point 10m circle', () => {
+      // Create points 15m from finish (outside tolerance)
+      const [finishLat, finishLng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 15, 90);
 
       const points: GpxPoint[] = [
         createGpxPoint(ROUTE_START_LAT, ROUTE_START_LNG, 0),
         createGpxPoint(ROUTE_START_LAT + 0.1, ROUTE_START_LNG + 0.1, 1800),
-        createGpxPoint(endLat, endLng, 3600),
+        createGpxPoint(finishLat, finishLng, 3600),
       ];
 
       const result = validateGpxTrack(
@@ -160,8 +160,8 @@ describe('FKT Attempt Validation Tests', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('Could not find route end point within 10m');
-      expect(result.nearestEndDistanceM).toBeCloseTo(15, 0);
+      expect(result.error).toContain('Could not find route finish point within 10m');
+      expect(result.nearestFinishDistanceM).toBeCloseTo(15, 0);
     });
   });
 
@@ -201,17 +201,17 @@ describe('FKT Attempt Validation Tests', () => {
   });
 
   describe('Test 5: Re-finish - Track Enters End Circle, Leaves, Re-enters', () => {
-    test('should use timing from first entry into end circle', () => {
-      const [insideEnd1Lat, insideEnd1Lng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 5, 0);
-      const [outsideEndLat, outsideEndLng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 15, 45);
-      const [insideEnd2Lat, insideEnd2Lng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 8, 90);
+    test('should use timing from first entry into finish circle', () => {
+      const [insideFinish1Lat, insideFinish1Lng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 5, 0);
+      const [outsideFinishLat, outsideFinishLng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 15, 45);
+      const [insideFinish2Lat, insideFinish2Lng] = createPointAtDistance(ROUTE_END_LAT, ROUTE_END_LNG, 8, 90);
 
       const points: GpxPoint[] = [
         createGpxPoint(ROUTE_START_LAT, ROUTE_START_LNG, 0),
         createGpxPoint(ROUTE_START_LAT + 0.1, ROUTE_START_LNG + 0.1, 1800),
-        createGpxPoint(insideEnd1Lat, insideEnd1Lng, 3000),      // First entry to end circle
-        createGpxPoint(outsideEndLat, outsideEndLng, 3300),      // Leave end circle
-        createGpxPoint(insideEnd2Lat, insideEnd2Lng, 3600),      // Re-enter end circle
+        createGpxPoint(insideFinish1Lat, insideFinish1Lng, 3000),      // First entry to finish circle
+        createGpxPoint(outsideFinishLat, outsideFinishLng, 3300),      // Leave finish circle
+        createGpxPoint(insideFinish2Lat, insideFinish2Lng, 3600),      // Re-enter finish circle
       ];
 
       const result = validateGpxTrack(
@@ -223,7 +223,7 @@ describe('FKT Attempt Validation Tests', () => {
         TOLERANCE_M
       );
 
-      // Current implementation will find first end point within tolerance
+      // Current implementation will find first finish point within tolerance
       // Expected behavior: timing should stop at first entry (3000s)
       expect(result.valid).toBe(true);
       expect(result.durationSec).toBe(3000); // Should use first entry time

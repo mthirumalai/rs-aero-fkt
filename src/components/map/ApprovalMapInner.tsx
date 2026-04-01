@@ -24,25 +24,25 @@ const endIcon = new L.Icon({
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
 });
 
-function FitBounds({ startLat, startLng, endLat, endLng }: {
-  startLat: number; startLng: number; endLat: number; endLng: number;
+function FitBounds({ startLat, startLng, finishLat, finishLng }: {
+  startLat: number; startLng: number; finishLat: number; finishLng: number;
 }) {
   const map = useMap();
   useEffect(() => {
-    map.fitBounds(L.latLngBounds([startLat, startLng], [endLat, endLng]), { padding: [60, 60] });
-  }, [map, startLat, startLng, endLat, endLng]);
+    map.fitBounds(L.latLngBounds([startLat, startLng], [finishLat, finishLng]), { padding: [60, 60] });
+  }, [map, startLat, startLng, finishLat, finishLng]);
   return null;
 }
 
 interface Props {
-  startLat: number; startLng: number; endLat: number; endLng: number;
-  startName: string; endName: string;
+  startLat: number; startLng: number; finishLat: number; finishLng: number;
+  startName: string; finishName: string;
 }
 
-export default function ApprovalMapInner({ startLat, startLng, endLat, endLng, startName, endName }: Props) {
+export default function ApprovalMapInner({ startLat, startLng, finishLat, finishLng, startName, finishName }: Props) {
   const [marine, setMarine] = useState(true); // Default to Marine
-  const center: [number, number] = [(startLat + endLat) / 2, (startLng + endLng) / 2];
-  const line: [number, number][] = [[startLat, startLng], [endLat, endLng]];
+  const center: [number, number] = [(startLat + finishLat) / 2, (startLng + finishLng) / 2];
+  const line: [number, number][] = [[startLat, startLng], [finishLat, finishLng]];
 
   return (
     <div className="relative w-full h-full">
@@ -76,16 +76,16 @@ export default function ApprovalMapInner({ startLat, startLng, endLat, endLng, s
           opacity={marine ? 1 : 0}
         />
 
-        <FitBounds startLat={startLat} startLng={startLng} endLat={endLat} endLng={endLng} />
+        <FitBounds startLat={startLat} startLng={startLng} finishLat={finishLat} finishLng={finishLng} />
 
-        {/* Straight line between endpoints */}
+        {/* Straight line between start and finish points */}
         <Polyline positions={line} color="#ec008c" weight={2} dashArray="6 4" opacity={0.8} />
 
         <Marker position={[startLat, startLng]} icon={startIcon}>
           <Popup><strong>Start:</strong> {startName}<br />{startLat.toFixed(6)}, {startLng.toFixed(6)}</Popup>
         </Marker>
-        <Marker position={[endLat, endLng]} icon={endIcon}>
-          <Popup><strong>End:</strong> {endName}<br />{endLat.toFixed(6)}, {endLng.toFixed(6)}</Popup>
+        <Marker position={[finishLat, finishLng]} icon={endIcon}>
+          <Popup><strong>Finish:</strong> {finishName}<br />{finishLat.toFixed(6)}, {finishLng.toFixed(6)}</Popup>
         </Marker>
       </MapContainer>
     </div>

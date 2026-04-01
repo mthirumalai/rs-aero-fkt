@@ -22,9 +22,9 @@ type RouteRow = {
   startName: string;
   startLat: number;
   startLng: number;
-  endName: string;
-  endLat: number;
-  endLng: number;
+  finishName: string;
+  finishLat: number;
+  finishLng: number;
   submittedAt: string;
   submittedBy: { name: string | null; email: string | null };
   approvalToken?: string | null;
@@ -104,15 +104,15 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                   >
                     <TableCell className="max-w-[200px]">
                       <div className="font-medium truncate" title={route.name}>{route.name}</div>
-                      <div className="text-xs text-muted-foreground truncate" title={`${route.startName} → ${route.endName}`}>
-                        {route.startName} → {route.endName}
+                      <div className="text-xs text-muted-foreground truncate" title={`${route.startName} → ${route.finishName}`}>
+                        {route.startName} → {route.finishName}
                       </div>
                     </TableCell>
                     <TableCell className="w-24 truncate" title={COUNTRY_NAMES[route.country] ?? route.country}>
                       {COUNTRY_NAMES[route.country] ?? route.country}
                     </TableCell>
                     <TableCell className="w-20 font-mono text-sm tabular-nums">
-                      {distanceNm(route.startLat, route.startLng, route.endLat, route.endLng)} nm
+                      {distanceNm(route.startLat, route.startLng, route.finishLat, route.finishLng)} nm
                     </TableCell>
                     <TableCell className="w-32">
                       <div className="text-sm truncate" title={route.submittedBy.name ?? ''}>{route.submittedBy.name}</div>
@@ -176,8 +176,8 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                   >
                     <TableCell className="max-w-[200px]">
                       <div className="font-medium truncate" title={route.name}>{route.name}</div>
-                      <div className="text-xs text-muted-foreground truncate" title={`${route.startName} → ${route.endName}`}>
-                        {route.startName} → {route.endName}
+                      <div className="text-xs text-muted-foreground truncate" title={`${route.startName} → ${route.finishName}`}>
+                        {route.startName} → {route.finishName}
                       </div>
                     </TableCell>
                     <TableCell className="w-24 truncate" title={COUNTRY_NAMES[route.country] ?? route.country}>
@@ -235,7 +235,7 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
               </p>
               <h3 className="text-xl font-semibold">{selectedRejected.name}</h3>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {selectedRejected.startName} → {selectedRejected.endName}
+                {selectedRejected.startName} → {selectedRejected.finishName}
               </p>
             </div>
             <div>

@@ -22,9 +22,9 @@ export function RouteSubmitForm() {
     startName: "",
     startLat: "",
     startLng: "",
-    endName: "",
-    endLat: "",
-    endLng: "",
+    finishName: "",
+    finishLat: "",
+    finishLng: "",
   });
 
   // Per-field parse errors shown inline
@@ -64,17 +64,17 @@ export function RouteSubmitForm() {
 
     const startLat = validateCoord("startLat", form.startLat, "lat");
     const startLng = validateCoord("startLng", form.startLng, "lng");
-    const endLat   = validateCoord("endLat",   form.endLat,   "lat");
-    const endLng   = validateCoord("endLng",   form.endLng,   "lng");
+    const finishLat = validateCoord("finishLat", form.finishLat, "lat");
+    const finishLng = validateCoord("finishLng", form.finishLng, "lng");
 
-    if (startLat === null || startLng === null || endLat === null || endLng === null) return;
+    if (startLat === null || startLng === null || finishLat === null || finishLng === null) return;
 
     setLoading(true);
     try {
       const res = await fetch("/api/routes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, startLat, startLng, endLat, endLng }),
+        body: JSON.stringify({ ...form, startLat, startLng, finishLat, finishLng }),
       });
 
       if (!res.ok) {
@@ -214,21 +214,21 @@ export function RouteSubmitForm() {
 
       <div className="border rounded-lg p-4 space-y-4">
         <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-          End Point
+          Finish Point
         </h3>
         <div className="space-y-2">
-          <Label htmlFor="endName">Name *</Label>
+          <Label htmlFor="finishName">Name *</Label>
           <Input
-            id="endName"
-            value={form.endName}
-            onChange={(e) => update("endName", e.target.value)}
+            id="finishName"
+            value={form.finishName}
+            onChange={(e) => update("finishName", e.target.value)}
             placeholder="e.g., Weymouth Harbour Entrance"
             required
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <CoordField id="endLat" label="Latitude"  value={form.endLat} type="lat" />
-          <CoordField id="endLng" label="Longitude" value={form.endLng} type="lng" />
+          <CoordField id="finishLat" label="Latitude"  value={form.finishLat} type="lat" />
+          <CoordField id="finishLng" label="Longitude" value={form.finishLng} type="lng" />
         </div>
       </div>
 

@@ -454,7 +454,7 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferre
           required
         />
         <p className="text-xs text-muted-foreground">
-          Your track must pass within 10m of both the route start and end points. Date will be automatically extracted from the file.
+          Your track must pass within 10m of both the route start and finish points. Date will be automatically extracted from the file.
         </p>
       </div>
 

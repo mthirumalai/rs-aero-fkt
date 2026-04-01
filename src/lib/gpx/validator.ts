@@ -4,11 +4,11 @@ export interface ValidationResult {
   valid: boolean;
   durationSec?: number;
   startPoint?: GpxPoint;
-  endPoint?: GpxPoint;
-  /** Only the track points between (inclusive) the matched start and end entries */
+  finishPoint?: GpxPoint;
+  /** Only the track points between (inclusive) the matched start and finish entries */
   racePoints?: GpxPoint[];
   nearestStartDistanceM?: number;
-  nearestEndDistanceM?: number;
+  nearestFinishDistanceM?: number;
   error?: string;
 }
 
@@ -32,8 +32,8 @@ export function validateGpxTrack(
   gpx: ParsedGpx,
   routeStartLat: number,
   routeStartLng: number,
-  routeEndLat: number,
-  routeEndLng: number,
+  routeFinishLat: number,
+  routeFinishLng: number,
   toleranceM = 10
 ): ValidationResult {
   const { points } = gpx;
@@ -67,57 +67,57 @@ export function validateGpxTrack(
     };
   }
 
-  // Find first point AFTER start that's within tolerance of end
-  let matchedEndIdx = -1;
-  let nearestEndDist = Infinity;
-  let nearestEndDistBeforeStart = Infinity;
-  let endMatchIdxBeforeStart = -1;
+  // Find first point AFTER start that's within tolerance of finish
+  let matchedFinishIdx = -1;
+  let nearestFinishDist = Infinity;
+  let nearestFinishDistBeforeStart = Infinity;
+  let finishMatchIdxBeforeStart = -1;
 
-  // Check if there's an end point match BEFORE the start (sequence issue)
+  // Check if there's a finish point match BEFORE the start (sequence issue)
   for (let i = 0; i < matchedStartIdx; i++) {
-    const dist = haversineMeters(points[i].lat, points[i].lon, routeEndLat, routeEndLng);
-    if (dist < nearestEndDistBeforeStart) {
-      nearestEndDistBeforeStart = dist;
+    const dist = haversineMeters(points[i].lat, points[i].lon, routeFinishLat, routeFinishLng);
+    if (dist < nearestFinishDistBeforeStart) {
+      nearestFinishDistBeforeStart = dist;
       if (dist <= toleranceM) {
-        endMatchIdxBeforeStart = i;
+        finishMatchIdxBeforeStart = i;
       }
     }
   }
 
   for (let i = matchedStartIdx + 1; i < points.length; i++) {
-    const dist = haversineMeters(points[i].lat, points[i].lon, routeEndLat, routeEndLng);
-    if (dist < nearestEndDist) nearestEndDist = dist;
-    if (dist <= toleranceM && matchedEndIdx === -1) {
-      matchedEndIdx = i;
+    const dist = haversineMeters(points[i].lat, points[i].lon, routeFinishLat, routeFinishLng);
+    if (dist < nearestFinishDist) nearestFinishDist = dist;
+    if (dist <= toleranceM && matchedFinishIdx === -1) {
+      matchedFinishIdx = i;
     }
   }
 
-  if (matchedEndIdx === -1) {
+  if (matchedFinishIdx === -1) {
     let errorMsg;
-    if (endMatchIdxBeforeStart !== -1) {
+    if (finishMatchIdxBeforeStart !== -1) {
       const startPoint = points[matchedStartIdx];
-      const endPoint = points[endMatchIdxBeforeStart];
-      errorMsg = `Found a point in the FKT gpx track that matches start point in the route, Point ${matchedStartIdx + 1} (${startPoint.lat.toFixed(6)}, ${startPoint.lon.toFixed(6)}). Found a point in the FKT gpx track that matches end point, point ${endMatchIdxBeforeStart + 1} (${endPoint.lat.toFixed(6)}, ${endPoint.lon.toFixed(6)}). The FKT attempt runs in the opposite direction from this route definition. Please select or load a different route.`;
+      const finishPoint = points[finishMatchIdxBeforeStart];
+      errorMsg = `Found a point in the FKT gpx track that matches start point in the route, Point ${matchedStartIdx + 1} (${startPoint.lat.toFixed(6)}, ${startPoint.lon.toFixed(6)}). Found a point in the FKT gpx track that matches finish point, point ${finishMatchIdxBeforeStart + 1} (${finishPoint.lat.toFixed(6)}, ${finishPoint.lon.toFixed(6)}). The FKT attempt runs in the opposite direction from this route definition. Please select or load a different route.`;
     } else {
       const startPoint = points[matchedStartIdx];
-      errorMsg = `Found a point in the FKT gpx track that matches start point in the route, Point ${matchedStartIdx + 1} (${startPoint.lat.toFixed(6)}, ${startPoint.lon.toFixed(6)}). Could not find route end point within ${toleranceM}m chronologically after the start point. Nearest end point after start: ${Math.round(nearestEndDist)}m.`;
+      errorMsg = `Found a point in the FKT gpx track that matches start point in the route, Point ${matchedStartIdx + 1} (${startPoint.lat.toFixed(6)}, ${startPoint.lon.toFixed(6)}). Could not find route finish point within ${toleranceM}m chronologically after the start point. Nearest finish point after start: ${Math.round(nearestFinishDist)}m.`;
     }
     return {
       valid: false,
-      nearestEndDistanceM: Math.round(nearestEndDist),
+      nearestFinishDistanceM: Math.round(nearestFinishDist),
       error: errorMsg,
     };
   }
 
   const startPoint = points[matchedStartIdx];
-  const endPoint = points[matchedEndIdx];
+  const finishPoint = points[matchedFinishIdx];
 
-  if (!startPoint.time || !endPoint.time) {
+  if (!startPoint.time || !finishPoint.time) {
     return { valid: false, error: "Matched track points are missing timestamps" };
   }
 
   const durationSec = Math.round(
-    (endPoint.time.getTime() - startPoint.time.getTime()) / 1000
+    (finishPoint.time.getTime() - startPoint.time.getTime()) / 1000
   );
 
   if (durationSec <= 0) {
@@ -128,10 +128,10 @@ export function validateGpxTrack(
     valid: true,
     durationSec,
     startPoint,
-    endPoint,
-    racePoints: points.slice(matchedStartIdx, matchedEndIdx + 1),
+    finishPoint,
+    racePoints: points.slice(matchedStartIdx, matchedFinishIdx + 1),
     nearestStartDistanceM: Math.round(nearestStartDist),
-    nearestEndDistanceM: Math.round(nearestEndDist),
+    nearestFinishDistanceM: Math.round(nearestFinishDist),
   };
 }
 

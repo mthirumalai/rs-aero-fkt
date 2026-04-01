@@ -12,8 +12,8 @@ const ApprovalMapInner = dynamic(() => import("./ApprovalMapInner"), {
 });
 
 interface Props {
-  startLat: number; startLng: number; endLat: number; endLng: number;
-  startName: string; endName: string;
+  startLat: number; startLng: number; finishLat: number; finishLng: number;
+  startName: string; finishName: string;
 }
 
 export function ApprovalMap(props: Props) {

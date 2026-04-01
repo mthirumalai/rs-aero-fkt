@@ -205,21 +205,21 @@ export async function POST(req: NextRequest) {
     normalizedParsed,
     route.startLat,
     route.startLng,
-    route.endLat,
-    route.endLng
+    route.finishLat,
+    route.finishLng
   );
 
   if (!validation.valid) {
     console.log('❌ FKT Submission: GPX validation failed:', {
       error: validation.error,
       nearestStartDistanceM: validation.nearestStartDistanceM,
-      nearestEndDistanceM: validation.nearestEndDistanceM,
+      nearestFinishDistanceM: validation.nearestFinishDistanceM,
       routeName: route.name
     });
 
     let detailedError = validation.error;
-    if (validation.nearestStartDistanceM !== undefined && validation.nearestEndDistanceM !== undefined) {
-      detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start and ${validation.nearestEndDistanceM.toFixed(1)}m of the finish. Tracks must pass within 10m of both points.`;
+    if (validation.nearestStartDistanceM !== undefined && validation.nearestFinishDistanceM !== undefined) {
+      detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start and ${validation.nearestFinishDistanceM.toFixed(1)}m of the finish. Tracks must pass within 10m of both points.`;
     }
 
     // Save failed attempt for admin tracking
@@ -255,7 +255,7 @@ export async function POST(req: NextRequest) {
       {
         error: detailedError,
         nearestStartDistanceM: validation.nearestStartDistanceM,
-        nearestEndDistanceM: validation.nearestEndDistanceM,
+        nearestFinishDistanceM: validation.nearestFinishDistanceM,
       },
       { status: 422 }
     );

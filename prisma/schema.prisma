@@ -85,11 +85,11 @@ model Route {
   description   String?
   country       String
   startName     String
-  endName       String
+  finishName    String
   startLat      Float
   startLng      Float
-  endLat        Float
-  endLng        Float
+  finishLat     Float
+  finishLng     Float
   distanceKm    Float?
   status        RouteStatus @default(PENDING)
   submittedById String
