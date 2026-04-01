@@ -12,7 +12,7 @@ interface Props {
 }
 
 // Dynamic import to avoid SSR issues with Leaflet
-const RouteCreationMapInner = dynamic(() => import("./RouteCreationMapInner"), {
+const CourseCreationMapInner = dynamic(() => import("./CourseCreationMapInner"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -21,6 +21,6 @@ const RouteCreationMapInner = dynamic(() => import("./RouteCreationMapInner"), {
   ),
 });
 
-export default function RouteCreationMap(props: Props) {
-  return <RouteCreationMapInner {...props} />;
+export default function CourseCreationMap(props: Props) {
+  return <CourseCreationMapInner {...props} />;
 }

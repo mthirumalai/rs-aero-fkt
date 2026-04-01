@@ -1,16 +1,16 @@
 import { prisma } from "@/lib/prisma";
-import { ApproveRouteForm } from "./ApproveRouteForm";
+import { ApproveCourseForm } from "./ApproveCourseForm";
 import { ApprovalMap } from "@/components/map/ApprovalMap";
 import { PointMap } from "@/components/map/PointMap";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { distanceNm } from "@/lib/gpx/validator";
-import { getRejectionHistory } from "@/lib/route-status-history";
+import { getRejectionHistory } from "@/lib/course-status-history";
 
 interface Props {
   searchParams: { token?: string; action?: string };
 }
 
-export default async function ApproveRoutePage({ searchParams }: Props) {
+export default async function ApproveCoursePage({ searchParams }: Props) {
   const { token } = searchParams;
 
   if (!token) {
@@ -22,21 +22,21 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
     );
   }
 
-  const [route, rejectionHistory] = await Promise.all([
-    prisma.route.findFirst({
+  const [course, rejectionHistory] = await Promise.all([
+    prisma.course.findFirst({
       where: { approvalToken: token },
       include: { submittedBy: { select: { name: true, email: true } } },
     }),
     // Get rejection history to show admin context
     token ? getRejectionHistory(
-      (await prisma.route.findFirst({
+      (await prisma.course.findFirst({
         where: { approvalToken: token },
         select: { id: true }
       }))?.id ?? ""
     ) : []
   ]);
 
-  if (!route) {
+  if (!course) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-red-600">Invalid or Used Token</h1>
@@ -47,12 +47,12 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
     );
   }
 
-  if (route.status !== "PENDING") {
+  if (course.status !== "PENDING") {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold">Route Already Processed</h1>
+        <h1 className="text-2xl font-bold">Course Already Processed</h1>
         <p className="text-muted-foreground mt-2">
-          This route has already been <strong>{route.status.toLowerCase()}</strong>.
+          This course has already been <strong>{course.status.toLowerCase()}</strong>.
         </p>
       </div>
     );
@@ -62,36 +62,36 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
     <>
     <div className="container mx-auto px-4 py-12 max-w-5xl">
       <h1 className="font-display text-5xl uppercase tracking-wide mb-8">
-        Approval Request for Route: <span className="text-primary">{route.name}</span>
+        Approval Request for Course: <span className="text-primary">{course.name}</span>
       </h1>
 
-      {/* Route Information */}
+      {/* Course Information */}
       <div className="bg-card border rounded-lg p-6 space-y-5 mb-8">
-        {route.description && (
+        {course.description && (
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Description</p>
-            <p className="text-base">{route.description}</p>
+            <p className="text-base">{course.description}</p>
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Country</p>
-            <p className="text-base font-medium">{COUNTRY_NAMES[route.country] ?? route.country}</p>
+            <p className="text-base font-medium">{COUNTRY_NAMES[course.country] ?? course.country}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Distance</p>
             <p className="text-base font-medium">
-              {distanceNm(route.startLat, route.startLng, route.finishLat, route.finishLng)} nm
+              {distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng)} nm
             </p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Submitted by</p>
-            <p className="text-base font-medium">{route.submittedBy.name}</p>
-            <p className="text-sm text-muted-foreground">{route.submittedBy.email}</p>
+            <p className="text-base font-medium">{course.submittedBy.name}</p>
+            <p className="text-sm text-muted-foreground">{course.submittedBy.email}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Submission Date</p>
-            <p className="text-base">{new Date(route.submittedAt).toLocaleString()}</p>
+            <p className="text-base">{new Date(course.submittedAt).toLocaleString()}</p>
           </div>
         </div>
 
@@ -128,50 +128,50 @@ export default async function ApproveRoutePage({ searchParams }: Props) {
       {/* Start and Finish Point Maps */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div>
-          <h3 className="text-lg font-semibold mb-4">Start Point: {route.startName}</h3>
+          <h3 className="text-lg font-semibold mb-4">Start Point: {course.startName}</h3>
           <p className="text-sm text-muted-foreground mb-4 font-mono">
-            {route.startLat.toFixed(6)}, {route.startLng.toFixed(6)}
+            {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
           </p>
           <div className="h-[300px] rounded-lg overflow-hidden border">
             <PointMap
-              lat={route.startLat}
-              lng={route.startLng}
-              name={route.startName}
+              lat={course.startLat}
+              lng={course.startLng}
+              name={course.startName}
               type="start"
             />
           </div>
         </div>
         <div>
-          <h3 className="text-lg font-semibold mb-4">Finish Point: {route.finishName}</h3>
+          <h3 className="text-lg font-semibold mb-4">Finish Point: {course.finishName}</h3>
           <p className="text-sm text-muted-foreground mb-4 font-mono">
-            {route.finishLat.toFixed(6)}, {route.finishLng.toFixed(6)}
+            {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
           </p>
           <div className="h-[300px] rounded-lg overflow-hidden border">
             <PointMap
-              lat={route.finishLat}
-              lng={route.finishLng}
-              name={route.finishName}
+              lat={course.finishLat}
+              lng={course.finishLng}
+              name={course.finishName}
               type="end"
             />
           </div>
         </div>
       </div>
 
-      <ApproveRouteForm routeId={route.id} token={token} />
+      <ApproveCourseForm courseId={course.id} token={token} />
     </div>
 
-    {/* Full-width route map */}
+    {/* Full-width course map */}
     <div className="w-full mt-8">
       <div className="container mx-auto px-4 py-6">
-        <h3 className="text-xl font-semibold mb-6">Complete Route</h3>
+        <h3 className="text-xl font-semibold mb-6">Complete Course</h3>
         <div className="h-[500px]">
           <ApprovalMap
-            startLat={route.startLat}
-            startLng={route.startLng}
-            finishLat={route.finishLat}
-            finishLng={route.finishLng}
-            startName={route.startName}
-            finishName={route.finishName}
+            startLat={course.startLat}
+            startLng={course.startLng}
+            finishLat={course.finishLat}
+            finishLng={course.finishLng}
+            startName={course.startName}
+            finishName={course.finishName}
           />
         </div>
       </div>

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendRouteRejectionEmail } from "@/lib/email/ses";
-import { recordRouteStatusChange } from "@/lib/route-status-history";
+import { sendCourseRejectionEmail } from "@/lib/email/ses";
+import { recordCourseStatusChange } from "@/lib/course-status-history";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { routeId: string } }
+  { params }: { params: { courseId: string } }
 ) {
   const { token, action, rejectionReason } = await req.json();
 
@@ -17,26 +17,26 @@ export async function POST(
     return NextResponse.json({ error: "A rejection reason is required" }, { status: 400 });
   }
 
-  const route = await prisma.route.findFirst({
-    where: { id: params.routeId, approvalToken: token },
+  const course = await prisma.course.findFirst({
+    where: { id: params.courseId, approvalToken: token },
     include: { submittedBy: { select: { name: true, email: true } } },
   });
 
-  if (!route) {
+  if (!course) {
     return NextResponse.json({ error: "Invalid or already used token" }, { status: 404 });
   }
 
-  if (route.status !== "PENDING") {
-    return NextResponse.json({ error: "Route has already been processed" }, { status: 400 });
+  if (course.status !== "PENDING") {
+    return NextResponse.json({ error: "Course has already been processed" }, { status: 400 });
   }
 
   const isApprove = action !== "reject";
   const newStatus = isApprove ? "APPROVED" : "REJECTED";
 
   const updated = await prisma.$transaction(async (tx) => {
-    // Update the route status
-    const updatedRoute = await tx.route.update({
-      where: { id: params.routeId },
+    // Update the course status
+    const updatedRoute = await tx.course.update({
+      where: { id: params.courseId },
       data: {
         status: newStatus,
         approvedAt: isApprove ? new Date() : null,
@@ -45,11 +45,11 @@ export async function POST(
       },
     });
 
-    // If approving the route, also approve any pending FKT attempts for this route
+    // If approving the course, also approve any pending FKT attempts for this course
     if (isApprove) {
       await tx.fktAttempt.updateMany({
         where: {
-          routeId: params.routeId,
+          courseId: params.courseId,
           status: "PENDING"
         },
         data: {
@@ -62,21 +62,21 @@ export async function POST(
   });
 
   // Record the status change in history
-  await recordRouteStatusChange(
-    params.routeId,
-    route.status, // fromStatus
+  await recordCourseStatusChange(
+    params.courseId,
+    course.status, // fromStatus
     newStatus, // toStatus
-    isApprove ? "Route approved with associated FKT attempts" : rejectionReason.trim(),
+    isApprove ? "Course approved with associated FKT attempts" : rejectionReason.trim(),
     undefined, // changedById - we don't have admin user ID from token-based approval
     token
   );
 
   if (!isApprove) {
     try {
-      await sendRouteRejectionEmail({
-        routeName: route.name,
-        submitterEmail: route.submittedBy.email,
-        submitterName: route.submittedBy.name ?? "Sailor",
+      await sendCourseRejectionEmail({
+        courseName: course.name,
+        submitterEmail: course.submittedBy.email,
+        submitterName: course.submittedBy.name ?? "Sailor",
         rejectionReason: rejectionReason.trim(),
       });
     } catch (err) {

@@ -1,20 +1,20 @@
 import { prisma } from "./prisma";
-import { RouteStatus } from "@prisma/client";
+import { CourseStatus } from "@prisma/client";
 
 /**
- * Records a route status change in the audit history
+ * Records a course status change in the audit history
  */
-export async function recordRouteStatusChange(
-  routeId: string,
-  fromStatus: RouteStatus | null,
-  toStatus: RouteStatus,
+export async function recordCourseStatusChange(
+  courseId: string,
+  fromStatus: CourseStatus | null,
+  toStatus: CourseStatus,
   reason?: string,
   changedById?: string,
   approvalToken?: string
 ): Promise<void> {
-  await prisma.routeStatusHistory.create({
+  await prisma.courseStatusHistory.create({
     data: {
-      routeId,
+      courseId,
       fromStatus,
       toStatus,
       reason: reason || null,
@@ -25,11 +25,11 @@ export async function recordRouteStatusChange(
 }
 
 /**
- * Gets the complete status history for a route
+ * Gets the complete status history for a course
  */
-export async function getRouteStatusHistory(routeId: string) {
-  return await prisma.routeStatusHistory.findMany({
-    where: { routeId },
+export async function getCourseStatusHistory(courseId: string) {
+  return await prisma.courseStatusHistory.findMany({
+    where: { courseId },
     include: {
       changedBy: {
         select: {
@@ -46,10 +46,10 @@ export async function getRouteStatusHistory(routeId: string) {
 /**
  * Gets the rejection history specifically (all REJECTED status changes)
  */
-export async function getRejectionHistory(routeId: string) {
-  return await prisma.routeStatusHistory.findMany({
+export async function getRejectionHistory(courseId: string) {
+  return await prisma.courseStatusHistory.findMany({
     where: {
-      routeId,
+      courseId,
       toStatus: "REJECTED"
     },
     include: {

@@ -7,47 +7,47 @@ test.describe('Admin Functionality', () => {
     test.skip('Admin tests require admin authentication setup');
   });
 
-  test('should show route approval dashboard', async ({ page }) => {
+  test('should show course approval dashboard', async ({ page }) => {
     await page.goto('/admin');
 
     // Look for admin dashboard
     const dashboard = page.locator('.admin-dashboard, [data-testid="admin-dashboard"]');
     await expect(dashboard).toBeVisible();
 
-    // Look for pending routes section
-    const pendingRoutes = page.locator(':has-text("Pending"), :has-text("Approval"), .pending-routes');
-    await expect(pendingRoutes.first()).toBeVisible();
+    // Look for pending courses section
+    const pendingCourses = page.locator(':has-text("Pending"), :has-text("Approval"), .pending-courses');
+    await expect(pendingCourses.first()).toBeVisible();
   });
 
-  test('should list routes pending approval', async ({ page }) => {
-    await page.goto('/admin/routes');
+  test('should list courses pending approval', async ({ page }) => {
+    await page.goto('/admin/courses');
 
-    // Look for list of routes awaiting approval
-    const pendingList = page.locator('.pending-routes-list, [data-testid="pending-routes"]');
+    // Look for list of courses awaiting approval
+    const pendingList = page.locator('.pending-courses-list, [data-testid="pending-courses"]');
     if (await pendingList.count() > 0) {
       await expect(pendingList).toBeVisible();
     }
 
-    // Look for route approval buttons
+    // Look for course approval buttons
     const approveButtons = page.locator('button:has-text("Approve"), [data-action="approve"]');
     if (await approveButtons.count() > 0) {
       await expect(approveButtons.first()).toBeVisible();
     }
   });
 
-  test('should show route details for approval', async ({ page }) => {
-    await page.goto('/admin/routes');
+  test('should show course details for approval', async ({ page }) => {
+    await page.goto('/admin/courses');
 
-    // Click on a pending route
-    const routeItem = page.locator('.pending-route, [data-testid="pending-route"]').first();
-    if (await routeItem.count() > 0) {
-      await routeItem.click();
+    // Click on a pending course
+    const courseItem = page.locator('.pending-course, [data-testid="pending-course"]').first();
+    if (await courseItem.count() > 0) {
+      await courseItem.click();
 
-      // Should show route details
+      // Should show course details
       await expect(page.locator('h1, h2')).toBeVisible();
 
-      // Should show route map
-      const map = page.locator('.leaflet-container, [data-testid="route-map"]');
+      // Should show course map
+      const map = page.locator('.leaflet-container, [data-testid="course-map"]');
       await expect(map).toBeVisible();
 
       // Should show approval controls
@@ -57,8 +57,8 @@ test.describe('Admin Functionality', () => {
     }
   });
 
-  test('should handle route approval workflow', async ({ page }) => {
-    await page.goto('/admin/routes');
+  test('should handle course approval workflow', async ({ page }) => {
+    await page.goto('/admin/courses');
 
     const approveButton = page.locator('button:has-text("Approve")').first();
     if (await approveButton.count() > 0) {
@@ -70,8 +70,8 @@ test.describe('Admin Functionality', () => {
     }
   });
 
-  test('should handle route rejection', async ({ page }) => {
-    await page.goto('/admin/routes');
+  test('should handle course rejection', async ({ page }) => {
+    await page.goto('/admin/courses');
 
     const rejectButton = page.locator('button:has-text("Reject"), button:has-text("Decline")').first();
     if (await rejectButton.count() > 0) {
@@ -88,13 +88,13 @@ test.describe('Admin Functionality', () => {
     }
   });
 
-  test('should show approved routes list', async ({ page }) => {
-    await page.goto('/admin/routes/approved');
+  test('should show approved courses list', async ({ page }) => {
+    await page.goto('/admin/courses/approved');
 
-    // Should show list of approved routes
-    const approvedRoutes = page.locator('.approved-routes, [data-testid="approved-routes"]');
-    if (await approvedRoutes.count() > 0) {
-      await expect(approvedRoutes).toBeVisible();
+    // Should show list of approved courses
+    const approvedCourses = page.locator('.approved-courses, [data-testid="approved-courses"]');
+    if (await approvedCourses.count() > 0) {
+      await expect(approvedCourses).toBeVisible();
     }
   });
 
@@ -107,7 +107,7 @@ test.describe('Admin Functionality', () => {
       await expect(stats).toBeVisible();
 
       // Look for specific metrics
-      const metrics = page.locator(':has-text("Total Routes"), :has-text("Pending"), :has-text("FKT Attempts")');
+      const metrics = page.locator(':has-text("Total Courses"), :has-text("Pending"), :has-text("FKT Attempts")');
       await expect(metrics.first()).toBeVisible();
     }
   });
@@ -123,12 +123,12 @@ test.describe('Admin Functionality', () => {
   });
 
   test('should handle bulk operations', async ({ page }) => {
-    await page.goto('/admin/routes');
+    await page.goto('/admin/courses');
 
     // Look for bulk selection checkboxes
     const checkboxes = page.locator('input[type="checkbox"]');
     if (await checkboxes.count() > 1) {
-      // Select multiple routes
+      // Select multiple courses
       await checkboxes.nth(0).check();
       await checkboxes.nth(1).check();
 

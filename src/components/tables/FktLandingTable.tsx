@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/gpx/parser";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { RigIcon } from "@/components/RigIcon";
-import type { Route, RigSize } from "@prisma/client";
+import type { Course, RigSize } from "@prisma/client";
 
 type FktEntry = {
   durationSec: number;
@@ -24,7 +24,7 @@ type FktEntry = {
 };
 
 type RowData = {
-  route: Route;
+  course: Course;
   fktsByRig: Partial<Record<RigSize, FktEntry>>;
 };
 
@@ -33,8 +33,8 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         No FKTs recorded yet.{" "}
-        <Link href="/routes/submit" className="text-primary hover:underline">
-          Submit the first route!
+        <Link href="/courses/submit" className="text-primary hover:underline">
+          Submit the first course!
         </Link>
       </div>
     );
@@ -45,7 +45,7 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-[140px] max-w-[200px]">Route</TableHead>
+            <TableHead className="min-w-[140px] max-w-[200px]">Course</TableHead>
             <TableHead>Country</TableHead>
             <TableHead className="text-center">
               <div className="flex justify-center" title="Aero 5">
@@ -70,19 +70,19 @@ export function FktLandingTable({ data }: { data: RowData[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map(({ route, fktsByRig }) => (
-            <TableRow key={route.id}>
+          {data.map(({ course, fktsByRig }) => (
+            <TableRow key={course.id}>
               <TableCell className="font-medium">
                 <Link
-                  href={`/routes/${route.id}`}
+                  href={`/courses/${course.id}`}
                   className="text-primary underline hover:no-underline"
                 >
-                  {route.name}
+                  {course.name}
                 </Link>
               </TableCell>
               <TableCell>
                 <Badge variant="secondary">
-                  {COUNTRY_NAMES[route.country] ?? route.country}
+                  {COUNTRY_NAMES[course.country] ?? course.country}
                 </Badge>
               </TableCell>
               {(["AERO_5", "AERO_6", "AERO_7", "AERO_9"] as RigSize[]).map((rig) => {

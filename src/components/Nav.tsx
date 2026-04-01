@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -21,44 +20,36 @@ export function Nav() {
     <header className="sticky top-0 z-50">
       {/* Dark grey top bar with navigation — #616161, matches rsaerosailing.org */}
       <div style={{ backgroundColor: "#616161" }} className="text-white text-sm py-2 px-8">
-        <div className="flex items-center justify-between gap-6">
-          {/* Logo/Home link */}
-          <Link href="/" className="flex items-center opacity-90 hover:opacity-100 transition-opacity">
-            <div className="bg-white px-2 py-1 rounded">
-              <Image src="/logo.png" alt="RS Aero FKT" height={24} width={80} className="h-6 w-auto" />
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-6">
-            {/* Navigation links */}
-            <nav className="hidden md:flex items-center gap-6">
+        <div className="flex items-center justify-end gap-6">
+          {/* Navigation links */}
+          <nav className="hidden md:flex items-center gap-6">
             <Link
               href="/fkts"
-              className="opacity-80 hover:opacity-100 transition-opacity text-sm font-medium"
+              className="text-gray-100 hover:text-white transition-colors text-sm font-medium"
             >
               FKTs
             </Link>
             <Link
-              href="/routes"
-              className="opacity-80 hover:opacity-100 transition-opacity text-sm font-medium"
+              href="/courses"
+              className="text-gray-100 hover:text-white transition-colors text-sm font-medium"
             >
-              Routes
+              Courses
             </Link>
             <Link
               href="/guidelines"
-              className="opacity-80 hover:opacity-100 transition-opacity text-sm font-medium"
+              className="text-gray-100 hover:text-white transition-colors text-sm font-medium"
             >
               Guidelines
             </Link>
             <Link
               href="/contact"
-              className="opacity-80 hover:opacity-100 transition-opacity text-sm font-medium"
+              className="text-gray-100 hover:text-white transition-colors text-sm font-medium"
             >
               Contact
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="opacity-80 hover:opacity-100 transition-opacity text-sm font-medium focus:outline-none">
+                <button className="text-gray-100 hover:text-white transition-colors text-sm font-medium focus:outline-none">
                   Admin ▼
                 </button>
               </DropdownMenuTrigger>
@@ -66,8 +57,8 @@ export function Nav() {
                 <DropdownMenuItem onClick={() => router.push("/stats")}>
                   Stats
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/admin/pending-routes")}>
-                  Pending Routes
+                <DropdownMenuItem onClick={() => router.push("/admin/pending-courses")}>
+                  Pending Courses
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/admin/fkt-failures")}>
                   FKT Failures
@@ -81,7 +72,7 @@ export function Nav() {
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 cursor-pointer focus:outline-none opacity-90 hover:opacity-100 transition-opacity">
+                  <button className="flex items-center gap-2 cursor-pointer focus:outline-none text-gray-100 hover:text-white transition-colors">
                     <span className="text-sm">
                       {session.user?.name?.split(" ")[0] ?? session.user?.email?.split("@")[0] ?? "User"}
                     </span>
@@ -114,16 +105,14 @@ export function Nav() {
             ) : (
               <button
                 onClick={() => signIn()}
-                className="opacity-80 hover:opacity-100 transition-opacity text-sm"
+                className="text-gray-100 hover:text-white transition-colors text-sm"
               >
                 Sign In
               </button>
             )}
           </div>
-          </div>
         </div>
       </div>
-
     </header>
   );
 }

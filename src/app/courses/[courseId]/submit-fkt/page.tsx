@@ -5,7 +5,7 @@ import { FktSubmitForm } from "@/components/forms/FktSubmitForm";
 import Link from "next/link";
 
 interface Props {
-  params: { routeId: string };
+  params: { courseId: string };
 }
 
 export const metadata = {
@@ -15,15 +15,15 @@ export const metadata = {
 export default async function SubmitFktPage({ params }: Props) {
   const session = await auth();
   if (!session) {
-    redirect(`/api/auth/signin?callbackUrl=/routes/${params.routeId}/submit-fkt`);
+    redirect(`/api/auth/signin?callbackUrl=/courses/${params.courseId}/submit-fkt`);
   }
 
-  const [route, attemptCount, user] = await Promise.all([
-    prisma.route.findUnique({
-      where: { id: params.routeId, status: "APPROVED" },
+  const [course, attemptCount, user] = await Promise.all([
+    prisma.course.findUnique({
+      where: { id: params.courseId, status: "APPROVED" },
     }),
     prisma.fktAttempt.count({
-      where: { routeId: params.routeId, status: "APPROVED" }
+      where: { courseId: params.courseId, status: "APPROVED" }
     }),
     prisma.user.findUnique({
       where: { id: session.user?.id },
@@ -31,18 +31,18 @@ export default async function SubmitFktPage({ params }: Props) {
     })
   ]);
 
-  if (!route) notFound();
+  if (!course) notFound();
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold uppercase tracking-wide">Submit an FKT Attempt</h1>
         <p className="text-lg text-muted-foreground mt-2">
-          <span className="font-medium">Route:</span> <Link href={`/routes/${route.id}`} className="text-primary underline hover:no-underline">{route.name}</Link>. <span className="font-medium">Start:</span> {route.startName}, <span className="font-medium">Finish:</span> {route.finishName}. <span className="font-medium">Attempts so far:</span> {attemptCount}
+          <span className="font-medium">Route:</span> <Link href={`/courses/${course.id}`} className="text-primary underline hover:no-underline">{course.name}</Link>. <span className="font-medium">Start:</span> {course.startName}, <span className="font-medium">Finish:</span> {course.finishName}. <span className="font-medium">Attempts so far:</span> {attemptCount}
         </p>
       </div>
       <FktSubmitForm
-        routeId={route.id}
+        courseId={course.id}
         submitterName={session.user?.name || ""}
         submitterEmail={session.user?.email || ""}
         preferredRigSize={user?.preferredRigSize || null}

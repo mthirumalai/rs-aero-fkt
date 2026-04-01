@@ -15,20 +15,20 @@ export default function GuidelinesPage() {
 
       <div className="space-y-10">
         <section>
-          <h2 className="text-2xl font-semibold mb-4 pb-2 border-b">Submitting a Route</h2>
+          <h2 className="text-2xl font-semibold mb-4 pb-2 border-b">Submitting a Guideline</h2>
           <div className="prose prose-sm max-w-none space-y-4">
             <p>
-              A route consists of a start point and a finish point between which sailors
+              A course consists of a start point and a finish point between which sailors
               compete for the fastest known time. Please make the two points easy to find
               so others can attempt it as well. So pick two buoys whose latitude, longitude coordinates
               are well known.
-              Ideally, a route should be meaningful sailing challenge.
-              The minimum sailing time for a route should be 20 minutes as a rough guideline.
-              We welcome classic routes - e.g., the delta ditch run in the Bay Area.
+              Ideally, a course should be meaningful sailing challenge.
+              The minimum sailing time for a course should be 20 minutes as a rough guideline.
+              We welcome classic courses - e.g., the delta ditch run in the Bay Area.
             </p>
             <h3 className="font-semibold text-base">Two Ways to Submit</h3>
             <p>
-              You can submit a route in two ways:
+              You can submit a course in two ways:
             </p>
             <ul className="list-disc pl-5 space-y-2">
               <li>
@@ -36,7 +36,7 @@ export default function GuidelinesPage() {
                 directly if you know them.
               </li>
               <li>
-                <strong>📂 GPX Upload:</strong> Upload a GPX track of the route and click
+                <strong>📂 GPX Upload:</strong> Upload a GPX track of the course and click
                 on the map to select the exact start and finish points from your track. This is
                 ideal when you have a GPS recording but don&apos;t know the precise coordinates.
               </li>
@@ -51,25 +51,25 @@ export default function GuidelinesPage() {
                 When using GPX upload, click precisely on the intended start/finish waypoints.
               </li>
               <li>
-                <strong>One-way:</strong> Routes are point-to-point only. There are no
+                <strong>One-way:</strong> Guidelines are point-to-point only. There are no
                 intermediate waypoints for now. 
-		Round-trip or circular routes should be submitted
-                as two separate routes.
-		Please reach out to us if you need us to enhance the app to allow routes that include one or more waypoints.
+		Round-trip or circular courses should be submitted
+                as two separate courses.
+		Please reach out to us if you need us to enhance the app to allow courses that include one or more waypoints.
               </li>
               <li>
-                <strong>Country:</strong> Select the country where the route is located
+                <strong>Country:</strong> Select the country where the course is located
                 (or the country of the start point if it crosses a border).
               </li>
               <li>
-                <strong>Admin approval:</strong> All routes are reviewed by an admin
+                <strong>Admin approval:</strong> All courses are reviewed by an admin
                 before going live. This ensures coordinate accuracy and prevents
-                duplicate routes.
+                duplicate courses.
               </li>
             </ul>
             <div className="mt-4">
               <Button asChild>
-                <Link href="/routes/submit">Submit a Route</Link>
+                <Link href="/courses/submit">Submit a Guideline</Link>
               </Button>
             </div>
           </div>
@@ -79,10 +79,10 @@ export default function GuidelinesPage() {
           <h2 className="text-2xl font-semibold mb-4 pb-2 border-b">Submitting an FKT Attempt</h2>
           <div className="prose prose-sm max-w-none space-y-4">
             <p>
-              An FKT attempt is a verified record of sailing an approved route. 
+              An FKT attempt is a verified record of sailing an approved course. 
               Records are maintained separately for each of the four RS Aero rig sizes:
               <strong> Aero 5, Aero 6, Aero 7, and Aero 9</strong>.
-	      The FKT for a route and rig is awarded to the attempt with the fastest time.
+	      The FKT for a course and rig is awarded to the attempt with the fastest time.
             </p>
             <h3 className="font-semibold text-base">GPX Track Requirements</h3>
             <ul className="list-disc pl-5 space-y-2">
@@ -98,7 +98,7 @@ export default function GuidelinesPage() {
               </li>
               <li>
                 <strong>Proximity validation:</strong> Your track must pass within
-                <strong> 10 metres</strong> of both the route&apos;s start and end
+                <strong> 10 metres</strong> of both the course&apos;s start and end
                 coordinates. The system checks this automatically.
               </li>
               <li>
@@ -121,12 +121,12 @@ export default function GuidelinesPage() {
             <h3 className="font-semibold text-base">Rig Size</h3>
             <p>
               Select the rig size you were sailing during the attempt. Each rig size
-              maintains its own separate FKT. If you sail the same route with different
+              maintains its own separate FKT. If you sail the same course with different
               rigs, you can submit separate attempts for each.
             </p>
             <div className="mt-4">
               <Button asChild variant="outline">
-                <Link href="/routes">Browse Routes to Attempt</Link>
+                <Link href="/courses">Browse Guidelines to Attempt</Link>
               </Button>
             </div>
           </div>
@@ -137,12 +137,12 @@ export default function GuidelinesPage() {
           <div className="space-y-4">
             {[
               {
-                q: "Can I submit an FKT for a route I didn't submit?",
-                a: "Yes! You can submit FKT attempts for any approved route. You will have to provide the name of the sailor.",
+                q: "Can I submit an FKT for a course I didn't submit?",
+                a: "Yes! You can submit FKT attempts for any approved course. You will have to provide the name of the sailor.",
               },
               {
                 q: "Does the direction matter?",
-                a: "The route is defined as start → finish. Your GPX must pass the start point before the finish point. We may add reverse-direction routes in the future.",
+                a: "The course is defined as start → finish. Your GPX must pass the start point before the finish point. We may add reverse-direction courses in the future.",
               },
               {
                 q: "What if my GPS coordinates are slightly off?",

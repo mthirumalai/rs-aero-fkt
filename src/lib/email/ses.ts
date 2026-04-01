@@ -1,8 +1,8 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import {
   sendMagicLinkEmailViaSendGrid,
-  sendRouteRejectionEmailViaSendGrid,
-  sendRouteApprovalEmailViaSendGrid,
+  sendCourseRejectionEmailViaSendGrid,
+  sendCourseApprovalEmailViaSendGrid,
 } from "./sendgrid";
 
 const IS_LOCAL_DEV = process.env.USE_LOCAL_DEV === "true";
@@ -79,14 +79,14 @@ export async function sendMagicLinkEmail(params: {
   }
 }
 
-// Original SES implementation for sendRouteRejectionEmail
-async function sendRouteRejectionEmailViaSES(params: {
-  routeName: string;
+// Original SES implementation for sendCourseRejectionEmail
+async function sendCourseRejectionEmailViaSES(params: {
+  courseName: string;
   submitterEmail: string;
   submitterName: string;
   rejectionReason: string;
 }): Promise<void> {
-  const { routeName, submitterEmail, submitterName, rejectionReason } = params;
+  const { courseName, submitterEmail, submitterName, rejectionReason } = params;
 
   if (IS_LOCAL_DEV) {
     console.log(`
@@ -94,7 +94,7 @@ async function sendRouteRejectionEmailViaSES(params: {
 ║  [LOCAL DEV] Route rejection email (not actually sent)       ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  To:     ${submitterEmail}
-║  Route:  ${routeName}
+║  Route:  ${courseName}
 ╠══════════════════════════════════════════════════════════════╣
 ║  Reason: ${rejectionReason}
 ╚══════════════════════════════════════════════════════════════╝
@@ -106,7 +106,7 @@ async function sendRouteRejectionEmailViaSES(params: {
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
       <h2 style="color:#ec008c">RS Aero FKT — Route Submission Update</h2>
       <p>Hi ${submitterName},</p>
-      <p>Thank you for submitting the route <strong>${routeName}</strong>. Unfortunately, it has not been approved at this time.</p>
+      <p>Thank you for submitting the course <strong>${courseName}</strong>. Unfortunately, it has not been approved at this time.</p>
       <h3 style="color:#333">Reason</h3>
       <div style="background:#f9f9f9;border-left:4px solid #ec008c;padding:12px 16px;margin:16px 0">
         ${rejectionReason.replace(/\n/g, "<br/>")}
@@ -116,14 +116,14 @@ async function sendRouteRejectionEmailViaSES(params: {
     </div>
   `;
 
-  const text = `RS Aero FKT — Route Submission Update\n\nHi ${submitterName},\n\nYour route "${routeName}" was not approved.\n\nReason:\n${rejectionReason}\n\nPlease make the necessary corrections and resubmit.\n\n— RS Aero FKT Admin`;
+  const text = `RS Aero FKT — Route Submission Update\n\nHi ${submitterName},\n\nYour course "${courseName}" was not approved.\n\nReason:\n${rejectionReason}\n\nPlease make the necessary corrections and resubmit.\n\n— RS Aero FKT Admin`;
 
   await sesClient!.send(
     new SendEmailCommand({
       Source: process.env.SES_FROM_EMAIL!,
       Destination: { ToAddresses: [submitterEmail] },
       Message: {
-        Subject: { Data: `[RS Aero FKT] Route submission not approved: ${routeName}` },
+        Subject: { Data: `[RS Aero FKT] Route submission not approved: ${courseName}` },
         Body: { Html: { Data: html }, Text: { Data: text } },
       },
     })
@@ -131,40 +131,40 @@ async function sendRouteRejectionEmailViaSES(params: {
 }
 
 // Public API - chooses between SES and SendGrid
-export async function sendRouteRejectionEmail(params: {
-  routeName: string;
+export async function sendCourseRejectionEmail(params: {
+  courseName: string;
   submitterEmail: string;
   submitterName: string;
   rejectionReason: string;
 }): Promise<void> {
   if (EMAIL_PROVIDER === "sendgrid") {
-    return sendRouteRejectionEmailViaSendGrid(params);
+    return sendCourseRejectionEmailViaSendGrid(params);
   } else {
-    return sendRouteRejectionEmailViaSES(params);
+    return sendCourseRejectionEmailViaSES(params);
   }
 }
 
-// Original SES implementation for sendRouteApprovalEmail
-async function sendRouteApprovalEmailViaSES(params: {
-  routeId: string;
-  routeName: string;
+// Original SES implementation for sendCourseApprovalEmail
+async function sendCourseApprovalEmailViaSES(params: {
+  courseId: string;
+  courseName: string;
   submitterName: string;
   submitterEmail: string;
   approvalToken: string;
   baseUrl: string;
 }): Promise<void> {
-  const { routeId, routeName, submitterName, submitterEmail, approvalToken, baseUrl } = params;
-  const approveUrl = `${baseUrl}/admin/approve-route?token=${approvalToken}`;
-  const rejectUrl = `${baseUrl}/admin/approve-route?token=${approvalToken}&action=reject`;
+  const { courseId, courseName, submitterName, submitterEmail, approvalToken, baseUrl } = params;
+  const approveUrl = `${baseUrl}/admin/approve-course?token=${approvalToken}`;
+  const rejectUrl = `${baseUrl}/admin/approve-course?token=${approvalToken}&action=reject`;
 
   if (IS_LOCAL_DEV) {
     console.log(`
 ╔══════════════════════════════════════════════════════════════╗
 ║  [LOCAL DEV] Route approval email (not actually sent)        ║
 ╠══════════════════════════════════════════════════════════════╣
-║  Route:     ${routeName}
+║  Route:     ${courseName}
 ║  Submitted: ${submitterName} (${submitterEmail})
-║  Route ID:  ${routeId}
+║  Route ID:  ${courseId}
 ╠══════════════════════════════════════════════════════════════╣
 ║  APPROVE → ${approveUrl}
 ║  REJECT  → ${rejectUrl}
@@ -174,9 +174,9 @@ async function sendRouteApprovalEmailViaSES(params: {
   }
 
   const html = `
-    <h2>New Route Submission: ${routeName}</h2>
+    <h2>New Route Submission: ${courseName}</h2>
     <p>Submitted by: ${submitterName} (${submitterEmail})</p>
-    <p>Route ID: ${routeId}</p>
+    <p>Route ID: ${courseId}</p>
     <hr />
     <p>
       <a href="${approveUrl}" style="background:#16a34a;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin-right:12px">
@@ -190,9 +190,9 @@ async function sendRouteApprovalEmailViaSES(params: {
   `;
 
   const text = `
-New Route Submission: ${routeName}
+New Route Submission: ${courseName}
 Submitted by: ${submitterName} (${submitterEmail})
-Route ID: ${routeId}
+Route ID: ${courseId}
 
 Approve: ${approveUrl}
 Reject: ${rejectUrl}
@@ -205,7 +205,7 @@ This link can only be used once.
       Source: process.env.SES_FROM_EMAIL!,
       Destination: { ToAddresses: [process.env.ADMIN_EMAIL!] },
       Message: {
-        Subject: { Data: `[RS Aero FKT] New route for approval: ${routeName}` },
+        Subject: { Data: `[RS Aero FKT] New course for approval: ${courseName}` },
         Body: {
           Html: { Data: html },
           Text: { Data: text },
@@ -216,17 +216,17 @@ This link can only be used once.
 }
 
 // Public API - chooses between SES and SendGrid
-export async function sendRouteApprovalEmail(params: {
-  routeId: string;
-  routeName: string;
+export async function sendCourseApprovalEmail(params: {
+  courseId: string;
+  courseName: string;
   submitterName: string;
   submitterEmail: string;
   approvalToken: string;
   baseUrl: string;
 }): Promise<void> {
   if (EMAIL_PROVIDER === "sendgrid") {
-    return sendRouteApprovalEmailViaSendGrid(params);
+    return sendCourseApprovalEmailViaSendGrid(params);
   } else {
-    return sendRouteApprovalEmailViaSES(params);
+    return sendCourseApprovalEmailViaSES(params);
   }
 }

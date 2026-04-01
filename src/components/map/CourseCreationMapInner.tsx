@@ -158,7 +158,7 @@ interface Props {
   selectionMode: "start" | "end" | null;
 }
 
-export default function RouteCreationMapInner({ points, selectedStartIndex, selectedEndIndex, onPointSelect, selectionMode }: Props) {
+export default function CourseCreationMapInner({ points, selectedStartIndex, selectedEndIndex, onPointSelect, selectionMode }: Props) {
   const polyline = useMemo(
     () => points.map((p): [number, number] => [p.lat, p.lon]),
     [points]

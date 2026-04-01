@@ -14,17 +14,17 @@ test.describe('Complete User Journey', () => {
     await helpers.navigateAndWait('/');
     await expect(page).toHaveTitle(/RS Aero FKT/);
 
-    // Step 2: Browse routes
-    await page.locator('a[href*="/routes"], a:has-text("Routes")').first().click();
+    // Step 2: Browse courses
+    await page.locator('a[href*="/courses"], a:has-text("Courses")').first().click();
     await helpers.waitForAppReady();
 
-    // Step 3: View route details (if any routes exist)
-    const routeLink = page.locator('a[href*="/routes/"]').first();
-    if (await routeLink.count() > 0) {
-      await routeLink.click();
+    // Step 3: View course details (if any courses exist)
+    const courseLink = page.locator('a[href*="/courses/"]').first();
+    if (await courseLink.count() > 0) {
+      await courseLink.click();
       await helpers.waitForAppReady();
 
-      // Should see route map and details
+      // Should see course map and details
       const map = page.locator('.leaflet-container');
       if (await map.count() > 0) {
         await helpers.waitForMapReady();
@@ -39,7 +39,7 @@ test.describe('Complete User Journey', () => {
         await page.goto('/submit');
       }
     } else {
-      // No routes available, go directly to submit
+      // No courses available, go directly to submit
       await page.goto('/submit');
     }
 
@@ -62,10 +62,10 @@ test.describe('Complete User Journey', () => {
       // Wait for file processing
       await page.waitForTimeout(2000);
 
-      // Select route (if dropdown exists)
-      const routeSelect = page.locator('select[name*="route"]');
-      if (await routeSelect.count() > 0) {
-        await routeSelect.selectOption({ index: 1 });
+      // Select course (if dropdown exists)
+      const courseSelect = page.locator('select[name*="course"]');
+      if (await courseSelect.count() > 0) {
+        await courseSelect.selectOption({ index: 1 });
       }
 
       // Select rig size
@@ -124,12 +124,12 @@ test.describe('Complete User Journey', () => {
 
     // Test tablet layout
     await helpers.testTabletLayout();
-    await helpers.navigateAndWait('/routes');
+    await helpers.navigateAndWait('/courses');
 
     // Should have responsive grid/list
-    const routeContainer = page.locator('[data-testid="routes-container"], .routes-grid');
-    if (await routeContainer.count() > 0) {
-      await expect(routeContainer).toBeVisible();
+    const courseContainer = page.locator('[data-testid="courses-container"], .courses-grid');
+    if (await courseContainer.count() > 0) {
+      await expect(courseContainer).toBeVisible();
     }
 
     // Test desktop layout
@@ -160,13 +160,13 @@ test.describe('Complete User Journey', () => {
   });
 
   test('should load and display FKT leaderboards', async ({ page }) => {
-    await helpers.navigateAndWait('/routes');
+    await helpers.navigateAndWait('/courses');
 
-    // Look for a route with existing FKTs
-    const routeWithRecords = page.locator('a[href*="/routes/"]:has(.fkt-time), a[href*="/routes/"]:has-text(":")');
+    // Look for a course with existing FKTs
+    const courseWithRecords = page.locator('a[href*="/courses/"]:has(.fkt-time), a[href*="/courses/"]:has-text(":")');
 
-    if (await routeWithRecords.count() > 0) {
-      await routeWithRecords.first().click();
+    if (await courseWithRecords.count() > 0) {
+      await courseWithRecords.first().click();
       await helpers.waitForAppReady();
 
       // Should show FKT records for each rig size
@@ -195,7 +195,7 @@ test.describe('Complete User Journey', () => {
   });
 
   test('should handle search and filtering', async ({ page }) => {
-    await helpers.navigateAndWait('/routes');
+    await helpers.navigateAndWait('/courses');
 
     // Look for search/filter controls
     const searchInput = page.locator('input[type="search"], input[placeholder*="search"]');

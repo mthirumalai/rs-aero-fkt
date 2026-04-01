@@ -14,7 +14,7 @@ enum RigSize {
   AERO_9
 }
 
-enum RouteStatus {
+enum CourseStatus {
   PENDING
   APPROVED
   REJECTED
@@ -74,13 +74,13 @@ model User {
 
   accounts Account[]
   sessions Session[]
-  routes   Route[]
+  courses  Course[]
   attempts FktAttempt[]
-  routeStatusChanges RouteStatusHistory[]
+  courseStatusChanges CourseStatusHistory[]
 }
 
-model Route {
-  id            String      @id @default(cuid())
+model Course {
+  id            String       @id @default(cuid())
   name          String
   description   String?
   country       String
@@ -91,32 +91,32 @@ model Route {
   finishLat     Float
   finishLng     Float
   distanceKm    Float?
-  status        RouteStatus @default(PENDING)
+  status        CourseStatus @default(PENDING)
   submittedById String
-  submittedAt   DateTime    @default(now())
+  submittedAt   DateTime     @default(now())
   approvedAt       DateTime?
   approvalToken    String?     @unique
   rejectionReason  String?
 
-  submittedBy User         @relation(fields: [submittedById], references: [id])
-  photos      RoutePhoto[]
+  submittedBy User          @relation(fields: [submittedById], references: [id])
+  photos      CoursePhoto[]
   attempts    FktAttempt[]
-  statusHistory RouteStatusHistory[]
+  statusHistory CourseStatusHistory[]
 }
 
-model RoutePhoto {
+model CoursePhoto {
   id        String   @id @default(cuid())
-  routeId   String
+  courseId  String
   s3Key     String
   caption   String?
   createdAt DateTime @default(now())
 
-  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model FktAttempt {
   id             String        @id @default(cuid())
-  routeId        String
+  courseId       String
   athleteId      String
   rigSize        RigSize
   date           DateTime
@@ -135,7 +135,7 @@ model FktAttempt {
   status           AttemptStatus @default(PENDING)
   submittedAt    DateTime      @default(now())
 
-  route   Route          @relation(fields: [routeId], references: [id])
+  course  Course         @relation(fields: [courseId], references: [id])
   athlete User           @relation(fields: [athleteId], references: [id])
   photos  AttemptPhoto[]
 }
@@ -150,19 +150,19 @@ model AttemptPhoto {
   attempt FktAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 }
 
-model RouteStatusHistory {
-  id            String      @id @default(cuid())
-  routeId       String
-  fromStatus    RouteStatus?
-  toStatus      RouteStatus
-  reason        String?     // Rejection reason or approval notes
+model CourseStatusHistory {
+  id            String       @id @default(cuid())
+  courseId      String
+  fromStatus    CourseStatus?
+  toStatus      CourseStatus
+  reason        String?      // Rejection reason or approval notes
   changedById   String?
-  changedAt     DateTime    @default(now())
-  approvalToken String?     // Token used for this status change
+  changedAt     DateTime     @default(now())
+  approvalToken String?      // Token used for this status change
 
-  route     Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  changedBy User? @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  changedBy User?  @relation(fields: [changedById], references: [id], onDelete: SetNull)
 
-  @@index([routeId])
+  @@index([courseId])
   @@index([changedAt])
 }

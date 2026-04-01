@@ -12,7 +12,7 @@ import { parseGpxXml } from "@/lib/gpx/parser";
 import type { GpxPoint } from "@/lib/gpx/parser";
 import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 import { parseVccXml } from "@/lib/velocitek/vcc-parser";
-import RouteCreationMap from "@/components/map/RouteCreationMap";
+import CourseCreationMap from "@/components/map/CourseCreationMap";
 
 type SubmissionMode = "manual" | "track_file";
 
@@ -24,7 +24,7 @@ const RIG_SIZES = [
 ];
 
 
-export function RouteSubmitFormWithGpx() {
+export function CourseSubmitFormWithGpx() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -404,19 +404,19 @@ export function RouteSubmitFormWithGpx() {
     setLoading(true);
     try {
       // Step 1: Submit route
-      const routeRes = await fetch("/api/routes", {
+      const courseRes = await fetch("/api/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, startLat, startLng, finishLat, finishLng }),
       });
 
-      if (!routeRes.ok) {
-        const data = await routeRes.json();
+      if (!courseRes.ok) {
+        const data = await courseRes.json();
         setError(data.error ?? "Route submission failed");
         return;
       }
 
-      const route = await routeRes.json();
+      const course = await courseRes.json();
 
       // Step 2: Submit FKT if enabled
       if (submitFkt && trackFile && extractedDate) {
@@ -426,7 +426,7 @@ export function RouteSubmitFormWithGpx() {
 
           // Submit FKT attempt
           const fktData = {
-            routeId: route.id,
+            courseId: course.id,
             ...fktForm,
             date: extractedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
             gpxS3Key,
@@ -486,7 +486,7 @@ export function RouteSubmitFormWithGpx() {
   }
 
   const heading = (
-    <h1 className="text-3xl font-bold mb-8">Submit a Route</h1>
+    <h1 className="text-3xl font-bold mb-8">Submit a Course</h1>
   );
 
   if (success) {
@@ -504,8 +504,8 @@ export function RouteSubmitFormWithGpx() {
             Your FKT attempt has also been submitted and will become active when the route is approved.
           </p>
         )}
-        <Button className="mt-6" variant="outline" onClick={() => router.push("/routes")}>
-          Back to Routes
+        <Button className="mt-6" variant="outline" onClick={() => router.push("/courses")}>
+          Back to Courses
         </Button>
       </div>
     );
@@ -675,7 +675,7 @@ export function RouteSubmitFormWithGpx() {
                 </div>
 
                 <div className="relative h-96 border rounded-lg overflow-hidden">
-                  <RouteCreationMap
+                  <CourseCreationMap
                     points={trackPoints}
                     selectedStartIndex={selectedStartIndex}
                     selectedEndIndex={selectedEndIndex}

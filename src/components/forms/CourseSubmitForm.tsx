@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { COUNTRY_NAMES, REGION_LABELS, getRegion } from "@/lib/regions";
 import { parseCoordinate, formatCoord } from "@/lib/coords";
 
-export function RouteSubmitForm() {
+export function CourseSubmitForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export function RouteSubmitForm() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/routes", {
+      const res = await fetch("/api/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, startLat, startLng, finishLat, finishLng }),
@@ -91,7 +91,7 @@ export function RouteSubmitForm() {
   }
 
   const heading = (
-    <h1 className="text-3xl font-bold mb-8">Submit a Route</h1>
+    <h1 className="text-3xl font-bold mb-8">Submit a Course</h1>
   );
 
   if (success) {
@@ -100,10 +100,10 @@ export function RouteSubmitForm() {
         <p className="text-2xl font-bold text-green-800 mb-2">Route Submitted!</p>
         <p className="text-green-700">
           Your route has been submitted for admin review. You&apos;ll see it appear on the
-          routes page once approved.
+          courses page once approved.
         </p>
-        <Button className="mt-6" variant="outline" onClick={() => router.push("/routes")}>
-          Back to Routes
+        <Button className="mt-6" variant="outline" onClick={() => router.push("/courses")}>
+          Back to Courses
         </Button>
       </div>
     );

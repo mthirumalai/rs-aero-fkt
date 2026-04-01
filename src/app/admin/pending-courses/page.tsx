@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { PendingRoutesClient } from "./PendingRoutesClient";
+import { PendingCoursesClient } from "./PendingCoursesClient";
 
-export const metadata = { title: "Route Submissions — RS Aero FKT" };
+export const metadata = { title: "Course Submissions — RS Aero FKT" };
 
-export default async function PendingRoutesPage() {
+export default async function PendingCoursesPage() {
   const session = await auth();
 
   const isAdmin = !!session?.user?.email && session.user.email === process.env.ADMIN_EMAIL;
@@ -19,8 +19,8 @@ export default async function PendingRoutesPage() {
     finalIsAdmin: isAdmin
   });
 
-  const [pendingRoutes, rejectedRoutes] = await Promise.all([
-    prisma.route.findMany({
+  const [pendingCourses, rejectedCourses] = await Promise.all([
+    prisma.course.findMany({
       where: { status: "PENDING" },
       select: {
         id: true,
@@ -38,7 +38,7 @@ export default async function PendingRoutesPage() {
       },
       orderBy: { submittedAt: "asc" },
     }),
-    prisma.route.findMany({
+    prisma.course.findMany({
       where: { status: "REJECTED" },
       select: {
         id: true,
@@ -58,22 +58,22 @@ export default async function PendingRoutesPage() {
     }),
   ]);
 
-  const serializePending = (r: (typeof pendingRoutes)[number]) => ({
+  const serializePending = (r: (typeof pendingCourses)[number]) => ({
     ...r,
     submittedAt: r.submittedAt.toISOString(),
     // Only expose the approval token to admins
     approvalToken: isAdmin ? r.approvalToken : null,
   });
 
-  const serializeRejected = (r: (typeof rejectedRoutes)[number]) => ({
+  const serializeRejected = (r: (typeof rejectedCourses)[number]) => ({
     ...r,
     submittedAt: r.submittedAt.toISOString(),
   });
 
   return (
-    <PendingRoutesClient
-      pendingRoutes={pendingRoutes.map(serializePending)}
-      rejectedRoutes={rejectedRoutes.map(serializeRejected)}
+    <PendingCoursesClient
+      pendingCourses={pendingCourses.map(serializePending)}
+      rejectedCourses={rejectedCourses.map(serializeRejected)}
       isAdmin={isAdmin}
     />
   );

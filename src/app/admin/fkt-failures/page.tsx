@@ -28,7 +28,7 @@ export default async function FktFailuresPage() {
     where: { status: "REJECTED" },
     select: {
       id: true,
-      routeId: true,
+      courseId: true,
       rigSize: true,
       date: true,
       gpxS3Key: true,
@@ -36,7 +36,7 @@ export default async function FktFailuresPage() {
       sailorName: true,
       sailorEmail: true,
       submittedAt: true,
-      route: {
+      course: {
         select: {
           name: true,
           country: true,

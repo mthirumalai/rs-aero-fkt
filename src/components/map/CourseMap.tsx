@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-const RouteMapInner = dynamic(() => import("./RouteMapInner"), {
+const CourseMapInner = dynamic(() => import("./CourseMapInner"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
@@ -20,6 +20,6 @@ interface Props {
   finishName: string;
 }
 
-export function RouteMap(props: Props) {
-  return <RouteMapInner {...props} />;
+export function CourseMap(props: Props) {
+  return <CourseMapInner {...props} />;
 }

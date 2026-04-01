@@ -15,12 +15,12 @@ test.describe('Landing Page', () => {
     await expect(navigation).toBeVisible();
   });
 
-  test('should show routes navigation link', async ({ page }) => {
+  test('should show courses navigation link', async ({ page }) => {
     await page.goto('/');
 
-    // Look for routes link in navigation
-    const routesLink = page.locator('a[href*="/routes"], a:has-text("Routes")');
-    await expect(routesLink).toBeVisible();
+    // Look for courses link in navigation
+    const coursesLink = page.locator('a[href*="/courses"], a:has-text("Courses")');
+    await expect(coursesLink).toBeVisible();
   });
 
   test('should show authentication button', async ({ page }) => {

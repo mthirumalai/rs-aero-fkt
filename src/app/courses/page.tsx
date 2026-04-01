@@ -35,7 +35,7 @@ interface Props {
   searchParams: { region?: string };
 }
 
-export default async function RoutesPage({ searchParams }: Props) {
+export default async function CoursesPage({ searchParams }: Props) {
   const regionParam = searchParams.region;
   const region = (regionParam && regionParam !== "all") ? regionParam as Region : undefined;
 
@@ -45,7 +45,7 @@ export default async function RoutesPage({ searchParams }: Props) {
     where.country = { in: countries };
   }
 
-  const routes = await prisma.route.findMany({
+  const courses = await prisma.course.findMany({
     where,
     orderBy: { approvedAt: "desc" },
     include: {
@@ -66,11 +66,11 @@ export default async function RoutesPage({ searchParams }: Props) {
   return (
     <>
       <PageHeader
-        title="All Routes"
-        description={`${routes.length} approved route${routes.length !== 1 ? "s" : ""}${region ? ` in ${REGION_LABELS[region]}` : ""}`}
+        title="All Courses"
+        description={`${courses.length} approved course${courses.length !== 1 ? "s" : ""}${region ? ` in ${REGION_LABELS[region]}` : ""}`}
         actions={
           <Button asChild>
-            <Link href="/routes/submit">Submit a Route</Link>
+            <Link href="/courses/submit">Submit a Course</Link>
           </Button>
         }
       />
@@ -78,10 +78,10 @@ export default async function RoutesPage({ searchParams }: Props) {
 
       <RegionFilter currentRegion={region} />
 
-      {routes.length === 0 ? (
+      {courses.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          No routes found.{" "}
-          <Link href="/routes/submit" className="text-primary underline hover:no-underline">
+          No courses found.{" "}
+          <Link href="/courses/submit" className="text-primary underline hover:no-underline">
             Be the first to submit one!
           </Link>
         </div>
@@ -90,7 +90,7 @@ export default async function RoutesPage({ searchParams }: Props) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[200px]">Route</TableHead>
+                <TableHead className="min-w-[200px]">Course</TableHead>
                 <TableHead>Start</TableHead>
                 <TableHead>Finish</TableHead>
                 <TableHead className="text-center">
@@ -117,21 +117,21 @@ export default async function RoutesPage({ searchParams }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {routes.map((route) => (
-                <TableRow key={route.id}>
+              {courses.map((course) => (
+                <TableRow key={course.id}>
                   <TableCell className="font-medium">
                     <Link
-                      href={`/routes/${route.id}`}
+                      href={`/courses/${course.id}`}
                       className="text-primary underline hover:no-underline text-sm"
                     >
-                      {route.name}
+                      {course.name}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{route.startName}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{route.finishName}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{course.startName}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{course.finishName}</TableCell>
                   <TableCell className="text-center whitespace-nowrap">
                     {(() => {
-                      const fkt = getBestFktForRig(route.attempts, 'AERO_5');
+                      const fkt = getBestFktForRig(course.attempts, 'AERO_5');
                       return fkt ? (
                         <Link
                           href={`/attempts/${fkt.id}`}
@@ -144,7 +144,7 @@ export default async function RoutesPage({ searchParams }: Props) {
                   </TableCell>
                   <TableCell className="text-center whitespace-nowrap">
                     {(() => {
-                      const fkt = getBestFktForRig(route.attempts, 'AERO_6');
+                      const fkt = getBestFktForRig(course.attempts, 'AERO_6');
                       return fkt ? (
                         <Link
                           href={`/attempts/${fkt.id}`}
@@ -157,7 +157,7 @@ export default async function RoutesPage({ searchParams }: Props) {
                   </TableCell>
                   <TableCell className="text-center whitespace-nowrap">
                     {(() => {
-                      const fkt = getBestFktForRig(route.attempts, 'AERO_7');
+                      const fkt = getBestFktForRig(course.attempts, 'AERO_7');
                       return fkt ? (
                         <Link
                           href={`/attempts/${fkt.id}`}
@@ -170,7 +170,7 @@ export default async function RoutesPage({ searchParams }: Props) {
                   </TableCell>
                   <TableCell className="text-center whitespace-nowrap">
                     {(() => {
-                      const fkt = getBestFktForRig(route.attempts, 'AERO_9');
+                      const fkt = getBestFktForRig(course.attempts, 'AERO_9');
                       return fkt ? (
                         <Link
                           href={`/attempts/${fkt.id}`}
@@ -183,7 +183,7 @@ export default async function RoutesPage({ searchParams }: Props) {
                   </TableCell>
                   <TableCell className="py-1">
                     <Button asChild size="sm" variant="outline" className="text-xs h-6 px-2 py-0">
-                      <Link href={`/routes/${route.id}/submit-fkt`}>
+                      <Link href={`/courses/${course.id}/submit-fkt`}>
                         Submit FKT
                       </Link>
                     </Button>

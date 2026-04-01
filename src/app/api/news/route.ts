@@ -3,12 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 export type NewsEvent = {
   id: string;
-  type: "route_proposed" | "route_approved" | "fkt_attempt";
+  type: "course_proposed" | "course_approved" | "fkt_attempt";
   date: string;
   data: {
-    routeName: string;
+    courseName: string;
     country: string;
-    routeId: string;
+    courseId: string;
     attemptId?: string;
     sailorName?: string;
     rigSize?: string;
@@ -20,8 +20,8 @@ export type NewsEvent = {
 
 export async function GET() {
   try {
-    // Get recent routes (both pending and approved)
-    const recentRoutes = await prisma.route.findMany({
+    // Get recent courses (both pending and approved)
+    const recentRoutes = await prisma.course.findMany({
       where: {
         OR: [
           { status: "PENDING" },
@@ -44,20 +44,20 @@ export async function GET() {
       take: 10, // Get more to account for filtering
     });
 
-    // Get recent successful FKT attempts (only for approved routes)
+    // Get recent successful FKT attempts (only for approved courses)
     const recentAttempts = await prisma.fktAttempt.findMany({
       where: {
         status: "APPROVED",
-        route: { status: "APPROVED" } // Only show FKTs for approved routes
+        course: { status: "APPROVED" } // Only show FKTs for approved courses
       },
       select: {
         id: true,
-        routeId: true,
+        courseId: true,
         sailorName: true,
         rigSize: true,
         durationSec: true,
         submittedAt: true,
-        route: {
+        course: {
           select: {
             name: true,
             country: true,
@@ -72,42 +72,42 @@ export async function GET() {
       take: 5,
     });
 
-    // Create route events - both proposed and approved
-    const routeEvents: NewsEvent[] = [];
+    // Create course events - both proposed and approved
+    const courseEvents: NewsEvent[] = [];
     const approvedRouteIds = new Set<string>();
 
-    // First pass: collect approved routes
-    recentRoutes.forEach(route => {
-      if (route.status === "APPROVED") {
-        approvedRouteIds.add(route.id);
-        routeEvents.push({
-          id: `route-approved-${route.id}`,
-          type: "route_approved" as const,
-          date: route.approvedAt!.toISOString(),
+    // First pass: collect approved courses
+    recentRoutes.forEach(course => {
+      if (course.status === "APPROVED") {
+        approvedRouteIds.add(course.id);
+        courseEvents.push({
+          id: `course-approved-${course.id}`,
+          type: "course_approved" as const,
+          date: course.approvedAt!.toISOString(),
           data: {
-            routeName: route.name,
-            country: route.country,
-            routeId: route.id,
-            submitterName: route.submittedBy?.name || "Unknown",
-            status: route.status
+            courseName: course.name,
+            country: course.country,
+            courseId: course.id,
+            submitterName: course.submittedBy?.name || "Unknown",
+            status: course.status
           }
         });
       }
     });
 
-    // Second pass: add pending routes (but only if they haven't been approved)
-    recentRoutes.forEach(route => {
-      if (route.status === "PENDING" && !approvedRouteIds.has(route.id)) {
-        routeEvents.push({
-          id: `route-proposed-${route.id}`,
-          type: "route_proposed" as const,
-          date: route.submittedAt.toISOString(),
+    // Second pass: add pending courses (but only if they haven't been approved)
+    recentRoutes.forEach(course => {
+      if (course.status === "PENDING" && !approvedRouteIds.has(course.id)) {
+        courseEvents.push({
+          id: `course-proposed-${course.id}`,
+          type: "course_proposed" as const,
+          date: course.submittedAt.toISOString(),
           data: {
-            routeName: route.name,
-            country: route.country,
-            routeId: route.id,
-            submitterName: route.submittedBy?.name || "Unknown",
-            status: route.status
+            courseName: course.name,
+            country: course.country,
+            courseId: course.id,
+            submitterName: course.submittedBy?.name || "Unknown",
+            status: course.status
           }
         });
       }
@@ -118,9 +118,9 @@ export async function GET() {
       type: "fkt_attempt" as const,
       date: attempt.submittedAt.toISOString(),
       data: {
-        routeName: attempt.route.name,
-        country: attempt.route.country,
-        routeId: attempt.routeId,
+        courseName: attempt.course.name,
+        country: attempt.course.country,
+        courseId: attempt.courseId,
         attemptId: attempt.id,
         sailorName: attempt.sailorName || attempt.athlete.name || "Unknown",
         rigSize: attempt.rigSize,
@@ -130,7 +130,7 @@ export async function GET() {
     }));
 
     // Combine and sort by date (most recent first)
-    const allEvents = [...routeEvents, ...attemptEvents]
+    const allEvents = [...courseEvents, ...attemptEvents]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5); // Take top 5 to show more activity
 

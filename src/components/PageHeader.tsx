@@ -9,9 +9,9 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
   return (
-    <div style={{ backgroundColor: "#ffffff", height: "60px" }} className="border-b flex items-center justify-between px-4">
-      {/* Left side - Logo and Title */}
-      <div className="flex items-center gap-6 h-full">
+    <div style={{ backgroundColor: "#ffffff", height: "60px" }} className="border-b flex items-center px-4 relative">
+      {/* Left side - Logo */}
+      <div className="flex items-center h-full">
         <Link href="/" className="flex items-center h-full py-2">
           <Image
             src="/logo.png"
@@ -22,20 +22,24 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
             priority
           />
         </Link>
-        <div className="flex flex-col justify-center">
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-          {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          )}
-        </div>
+      </div>
+
+      {/* Center - Title */}
+      <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col justify-center text-center">
+        <h1 className="text-2xl font-bold text-foreground whitespace-nowrap">{title}</h1>
+        {description && (
+          <p className="text-sm text-muted-foreground whitespace-nowrap">{description}</p>
+        )}
       </div>
 
       {/* Right side - Actions */}
-      {actions && (
-        <div className="flex items-center">
-          {actions}
-        </div>
-      )}
+      <div className="ml-auto">
+        {actions && (
+          <div className="flex items-center">
+            {actions}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

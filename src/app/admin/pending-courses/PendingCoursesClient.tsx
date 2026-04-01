@@ -6,6 +6,7 @@ import { COUNTRY_NAMES } from "@/lib/regions";
 import { distanceNm } from "@/lib/gpx/validator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/PageHeader";
 import {
   Table,
   TableBody,
@@ -15,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-type RouteRow = {
+type CourseRow = {
   id: string;
   name: string;
   country: string;
@@ -32,50 +33,53 @@ type RouteRow = {
 };
 
 interface Props {
-  pendingRoutes: RouteRow[];
-  rejectedRoutes: RouteRow[];
+  pendingCourses: CourseRow[];
+  rejectedCourses: CourseRow[];
   isAdmin: boolean;
 }
 
-export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: Props) {
-  const [selectedRejected, setSelectedRejected] = useState<RouteRow | null>(null);
-  const [reopeningRoute, setReopeningRoute] = useState<string | null>(null);
+export function PendingCoursesClient({ pendingCourses, rejectedCourses, isAdmin }: Props) {
+  const [selectedRejected, setSelectedRejected] = useState<CourseRow | null>(null);
+  const [reopeningCourse, setReopeningCourse] = useState<string | null>(null);
 
-  const handleReOpen = async (routeId: string) => {
-    setReopeningRoute(routeId);
+  const handleReOpen = async (courseId: string) => {
+    setReopeningCourse(courseId);
     try {
-      const response = await fetch(`/api/routes/${routeId}/reopen`, {
+      const response = await fetch(`/api/courses/${courseId}/reopen`, {
         method: 'POST',
       });
 
       if (!response.ok) {
         const error = await response.json();
-        alert(`Failed to re-open route: ${error.message || 'Unknown error'}`);
+        alert(`Failed to re-open course: ${error.message || 'Unknown error'}`);
         return;
       }
 
       // Refresh the page to show updated status
       window.location.reload();
     } catch {
-      alert('Network error while re-opening route');
+      alert('Network error while re-opening course');
     } finally {
-      setReopeningRoute(null);
+      setReopeningCourse(null);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <h1 className="font-display text-5xl uppercase tracking-wide mb-10">Route Submissions</h1>
+    <>
+      <PageHeader
+        title="Course Submissions"
+      />
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
 
       {/* PENDING TABLE */}
       <section className="mb-12">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-xl font-semibold">Awaiting Approval</h2>
-          <Badge variant="secondary">{pendingRoutes.length}</Badge>
+          <Badge variant="secondary">{pendingCourses.length}</Badge>
         </div>
-        {pendingRoutes.length === 0 ? (
+        {pendingCourses.length === 0 ? (
           <p className="text-muted-foreground text-sm py-8 text-center border rounded-lg">
-            No routes pending approval.
+            No courses pending approval.
           </p>
         ) : (
           <div className="border rounded-lg overflow-hidden">
@@ -83,7 +87,7 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
               <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="max-w-[200px]">Route</TableHead>
+                  <TableHead className="max-w-[200px]">Course</TableHead>
                   <TableHead className="w-24">Country</TableHead>
                   <TableHead className="w-20">Distance</TableHead>
                   <TableHead className="w-32">Submitted By</TableHead>
@@ -92,40 +96,40 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pendingRoutes.map((route) => (
+                {pendingCourses.map((course) => (
                   <TableRow
-                    key={route.id}
-                    className={isAdmin && route.approvalToken ? "cursor-pointer hover:bg-muted/50" : ""}
+                    key={course.id}
+                    className={isAdmin && course.approvalToken ? "cursor-pointer hover:bg-muted/50" : ""}
                     onClick={() => {
-                      if (isAdmin && route.approvalToken) {
-                        window.location.href = `/admin/approve-route?token=${route.approvalToken}`;
+                      if (isAdmin && course.approvalToken) {
+                        window.location.href = `/admin/approve-course?token=${course.approvalToken}`;
                       }
                     }}
                   >
                     <TableCell className="max-w-[200px]">
-                      <div className="font-medium truncate" title={route.name}>{route.name}</div>
-                      <div className="text-xs text-muted-foreground truncate" title={`${route.startName} → ${route.finishName}`}>
-                        {route.startName} → {route.finishName}
+                      <div className="font-medium truncate" title={course.name}>{course.name}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={`${course.startName} → ${course.finishName}`}>
+                        {course.startName} → {course.finishName}
                       </div>
                     </TableCell>
-                    <TableCell className="w-24 truncate" title={COUNTRY_NAMES[route.country] ?? route.country}>
-                      {COUNTRY_NAMES[route.country] ?? route.country}
+                    <TableCell className="w-24 truncate" title={COUNTRY_NAMES[course.country] ?? course.country}>
+                      {COUNTRY_NAMES[course.country] ?? course.country}
                     </TableCell>
                     <TableCell className="w-20 font-mono text-sm tabular-nums">
-                      {distanceNm(route.startLat, route.startLng, route.finishLat, route.finishLng)} nm
+                      {distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng)} nm
                     </TableCell>
                     <TableCell className="w-32">
-                      <div className="text-sm truncate" title={route.submittedBy.name ?? ''}>{route.submittedBy.name}</div>
-                      <div className="text-xs text-muted-foreground truncate" title={route.submittedBy.email ?? ''}>{route.submittedBy.email}</div>
+                      <div className="text-sm truncate" title={course.submittedBy.name ?? ''}>{course.submittedBy.name}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={course.submittedBy.email ?? ''}>{course.submittedBy.email}</div>
                     </TableCell>
                     <TableCell className="w-24 text-sm text-muted-foreground whitespace-nowrap">
-                      {new Date(route.submittedAt).toLocaleDateString()}
+                      {new Date(course.submittedAt).toLocaleDateString()}
                     </TableCell>
                     {isAdmin && (
                       <TableCell className="w-28" onClick={(e) => e.stopPropagation()}>
-                        {route.approvalToken ? (
+                        {course.approvalToken ? (
                           <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white whitespace-nowrap min-w-[80px]">
-                            <Link href={`/admin/approve-route?token=${route.approvalToken}`}>
+                            <Link href={`/admin/approve-course?token=${course.approvalToken}`}>
                               Review →
                             </Link>
                           </Button>
@@ -147,11 +151,11 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
       <section>
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-xl font-semibold">Rejected</h2>
-          <Badge variant="destructive">{rejectedRoutes.length}</Badge>
+          <Badge variant="destructive">{rejectedCourses.length}</Badge>
         </div>
-        {rejectedRoutes.length === 0 ? (
+        {rejectedCourses.length === 0 ? (
           <p className="text-muted-foreground text-sm py-8 text-center border rounded-lg">
-            No rejected routes.
+            No rejected courses.
           </p>
         ) : (
           <div className="border rounded-lg overflow-hidden">
@@ -159,7 +163,7 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
               <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="max-w-[200px]">Route</TableHead>
+                  <TableHead className="max-w-[200px]">Course</TableHead>
                   <TableHead className="w-24">Country</TableHead>
                   <TableHead className="w-32">Submitted By</TableHead>
                   <TableHead className="w-24">Date</TableHead>
@@ -168,34 +172,34 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rejectedRoutes.map((route) => (
+                {rejectedCourses.map((course) => (
                   <TableRow
-                    key={route.id}
+                    key={course.id}
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedRejected(route)}
+                    onClick={() => setSelectedRejected(course)}
                   >
                     <TableCell className="max-w-[200px]">
-                      <div className="font-medium truncate" title={route.name}>{route.name}</div>
-                      <div className="text-xs text-muted-foreground truncate" title={`${route.startName} → ${route.finishName}`}>
-                        {route.startName} → {route.finishName}
+                      <div className="font-medium truncate" title={course.name}>{course.name}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={`${course.startName} → ${course.finishName}`}>
+                        {course.startName} → {course.finishName}
                       </div>
                     </TableCell>
-                    <TableCell className="w-24 truncate" title={COUNTRY_NAMES[route.country] ?? route.country}>
-                      {COUNTRY_NAMES[route.country] ?? route.country}
+                    <TableCell className="w-24 truncate" title={COUNTRY_NAMES[course.country] ?? course.country}>
+                      {COUNTRY_NAMES[course.country] ?? course.country}
                     </TableCell>
                     <TableCell className="w-32">
-                      <div className="text-sm truncate" title={route.submittedBy.name ?? ''}>{route.submittedBy.name}</div>
-                      <div className="text-xs text-muted-foreground truncate" title={route.submittedBy.email ?? ''}>{route.submittedBy.email}</div>
+                      <div className="text-sm truncate" title={course.submittedBy.name ?? ''}>{course.submittedBy.name}</div>
+                      <div className="text-xs text-muted-foreground truncate" title={course.submittedBy.email ?? ''}>{course.submittedBy.email}</div>
                     </TableCell>
                     <TableCell className="w-24 text-sm text-muted-foreground whitespace-nowrap">
-                      {new Date(route.submittedAt).toLocaleDateString()}
+                      {new Date(course.submittedAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="w-32">
                       <p
                         className="text-sm text-muted-foreground truncate cursor-help"
-                        title={route.rejectionReason ?? "No reason provided"}
+                        title={course.rejectionReason ?? "No reason provided"}
                       >
-                        {route.rejectionReason ?? "—"}
+                        {course.rejectionReason ?? "—"}
                       </p>
                     </TableCell>
                     {isAdmin && (
@@ -203,10 +207,10 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
                         <Button
                           size="sm"
                           className="bg-orange-600 hover:bg-orange-700 text-white whitespace-nowrap min-w-[80px]"
-                          onClick={() => handleReOpen(route.id)}
-                          disabled={reopeningRoute === route.id}
+                          onClick={() => handleReOpen(course.id)}
+                          disabled={reopeningCourse === course.id}
                         >
-                          {reopeningRoute === route.id ? "Re-Opening..." : "Re-Open"}
+                          {reopeningCourse === course.id ? "Re-Opening..." : "Re-Open"}
                         </Button>
                       </TableCell>
                     )}
@@ -231,7 +235,7 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
           >
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
-                Rejected Route
+                Rejected Course
               </p>
               <h3 className="text-xl font-semibold">{selectedRejected.name}</h3>
               <p className="text-sm text-muted-foreground mt-0.5">
@@ -254,6 +258,7 @@ export function PendingRoutesClient({ pendingRoutes, rejectedRoutes, isAdmin }: 
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

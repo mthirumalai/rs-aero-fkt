@@ -5,23 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { distanceNm } from "@/lib/gpx/validator";
-import { RouteMap } from "@/components/map/RouteMap";
+import { CourseMap } from "@/components/map/CourseMap";
 import { FktAttemptsTable } from "@/components/tables/FktAttemptsTable";
 import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
 
 interface Props {
-  params: { routeId: string };
+  params: { courseId: string };
 }
 
 export async function generateMetadata({ params }: Props) {
-  const route = await prisma.route.findUnique({ where: { id: params.routeId } });
-  if (!route) return {};
-  return { title: `${route.name} — RS Aero FKT` };
+  const course = await prisma.course.findUnique({ where: { id: params.courseId } });
+  if (!course) return {};
+  return { title: `${course.name} — RS Aero FKT` };
 }
 
-export default async function RouteDetailPage({ params }: Props) {
-  const route = await prisma.route.findUnique({
-    where: { id: params.routeId },
+export default async function CourseDetailPage({ params }: Props) {
+  const course = await prisma.course.findUnique({
+    where: { id: params.courseId },
     include: {
       submittedBy: { select: { id: true, name: true } },
       photos: true,
@@ -33,7 +33,7 @@ export default async function RouteDetailPage({ params }: Props) {
     },
   });
 
-  if (!route) notFound();
+  if (!course) notFound();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -41,106 +41,106 @@ export default async function RouteDetailPage({ params }: Props) {
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <Link href="/routes" className="hover:underline">Routes</Link>
+            <Link href="/courses" className="hover:underline">Courses</Link>
             <span>/</span>
-            <span>{route.name}</span>
+            <span>{course.name}</span>
           </div>
-          <h1 className="text-3xl font-bold">{route.name}</h1>
+          <h1 className="text-3xl font-bold">{course.name}</h1>
           <div className="flex items-center gap-3 mt-2">
             <Badge variant="secondary">
-              {COUNTRY_NAMES[route.country] ?? route.country}
+              {COUNTRY_NAMES[course.country] ?? course.country}
             </Badge>
-            {route.status === "PENDING" && (
+            {course.status === "PENDING" && (
               <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
                 Pending Approval
               </Badge>
             )}
-            {route.approvedAt && (
+            {course.approvedAt && (
               <span className="text-sm text-muted-foreground">
-                Approved {new Date(route.approvedAt).toLocaleDateString()}
+                Approved {new Date(course.approvedAt).toLocaleDateString()}
               </span>
             )}
           </div>
         </div>
-        {route.status === "APPROVED" && (
+        {course.status === "APPROVED" && (
           <Button asChild>
-            <Link href={`/routes/${route.id}/submit-fkt`}>Submit an FKT</Link>
+            <Link href={`/courses/${course.id}/submit-fkt`}>Submit an FKT</Link>
           </Button>
         )}
       </div>
 
       {/* Description */}
-      {route.description && (
-        <p className="text-muted-foreground mb-6">{route.description}</p>
+      {course.description && (
+        <p className="text-muted-foreground mb-6">{course.description}</p>
       )}
 
-      {/* Pending route notice */}
-      {route.status === "PENDING" && (
+      {/* Pending course notice */}
+      {course.status === "PENDING" && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-yellow-800 mb-1">Route Pending Approval</h3>
+          <h3 className="font-medium text-yellow-800 mb-1">Course Pending Approval</h3>
           <p className="text-sm text-yellow-700">
-            This route is currently under review by an administrator. Once approved, sailors will be able to submit FKT attempts.
+            This course is currently under review by an administrator. Once approved, sailors will be able to submit FKT attempts.
           </p>
         </div>
       )}
 
-      {/* Route Details + Map */}
+      {/* Course Details + Map */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="space-y-4">
           <div className="border rounded-lg p-4 space-y-3">
-            <h2 className="font-semibold">Route Details</h2>
+            <h2 className="font-semibold">Course Details</h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Start</p>
-                <p className="font-medium">{route.startName}</p>
+                <p className="font-medium">{course.startName}</p>
                 <p className="font-mono text-xs text-muted-foreground">
-                  {route.startLat.toFixed(6)}, {route.startLng.toFixed(6)}
+                  {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Finish</p>
-                <p className="font-medium">{route.finishName}</p>
+                <p className="font-medium">{course.finishName}</p>
                 <p className="font-mono text-xs text-muted-foreground">
-                  {route.finishLat.toFixed(6)}, {route.finishLng.toFixed(6)}
+                  {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
                 </p>
               </div>
             </div>
             <div className="text-sm">
               <span className="text-muted-foreground">Great-circle distance: </span>
               <span className="font-medium">
-                {distanceNm(route.startLat, route.startLng, route.finishLat, route.finishLng)} nm
+                {distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng)} nm
               </span>
             </div>
             <div className="text-sm">
               <span className="text-muted-foreground">Submitted by: </span>
               <Link
-                href={`/athletes/${route.submittedBy.id}`}
+                href={`/athletes/${course.submittedBy.id}`}
                 className="font-medium text-primary hover:underline"
               >
-                {route.submittedBy.name}
+                {course.submittedBy.name}
               </Link>
             </div>
           </div>
         </div>
 
         <div className="h-[300px] lg:h-auto min-h-[300px] rounded-lg overflow-hidden border">
-          <RouteMap
-            startLat={route.startLat}
-            startLng={route.startLng}
-            finishLat={route.finishLat}
-            finishLng={route.finishLng}
-            startName={route.startName}
-            finishName={route.finishName}
+          <CourseMap
+            startLat={course.startLat}
+            startLng={course.startLng}
+            finishLat={course.finishLat}
+            finishLng={course.finishLng}
+            startName={course.startName}
+            finishName={course.finishName}
           />
         </div>
       </div>
 
       {/* Photos */}
-      {route.photos.length > 0 && (
+      {course.photos.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Route Photos</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {route.photos.map((photo) => (
+            {course.photos.map((photo) => (
               <div key={photo.id} className="aspect-video rounded-lg overflow-hidden bg-muted">
                 <img
                   src={getPhotoUrl(photo.s3Key)}
@@ -156,7 +156,7 @@ export default async function RouteDetailPage({ params }: Props) {
       {/* FKT Attempts Table */}
       <div>
         <h2 className="text-xl font-semibold mb-4">FKT Attempts</h2>
-        <FktAttemptsTable attempts={route.attempts} />
+        <FktAttemptsTable attempts={course.attempts} />
       </div>
     </div>
   );

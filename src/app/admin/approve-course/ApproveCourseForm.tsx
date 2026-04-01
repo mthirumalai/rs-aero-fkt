@@ -7,11 +7,11 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 
 interface Props {
-  routeId: string;
+  courseId: string;
   token: string;
 }
 
-export function ApproveRouteForm({ routeId, token }: Props) {
+export function ApproveCourseForm({ courseId, token }: Props) {
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
   const [result, setResult] = useState<"approved" | "rejected" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function ApproveRouteForm({ routeId, token }: Props) {
     setLoading(action);
     setError(null);
     try {
-      const res = await fetch(`/api/routes/${routeId}/approve`, {
+      const res = await fetch(`/api/courses/${courseId}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, action, rejectionReason }),
@@ -35,7 +35,7 @@ export function ApproveRouteForm({ routeId, token }: Props) {
       }
       setResult(action === "approve" ? "approved" : "rejected");
       if (action === "approve") {
-        setTimeout(() => router.push(`/routes/${routeId}`), 2000);
+        setTimeout(() => router.push(`/routes/${courseId}`), 2000);
       }
     } catch {
       setError("Network error. Please try again.");

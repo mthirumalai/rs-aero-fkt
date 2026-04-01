@@ -86,24 +86,24 @@ export function NewsFeed() {
     return date.toLocaleDateString();
   }
 
-  function EventIcon({ type }: { type: "route_proposed" | "route_approved" | "fkt_attempt" }) {
-    if (type === "route_proposed") {
+  function EventIcon({ type }: { type: "course_proposed" | "course_approved" | "fkt_attempt" }) {
+    if (type === "course_proposed") {
       return (
-        <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-          <span className="text-yellow-600 font-bold text-sm">🗺️</span>
+        <div className="px-2 py-1 bg-yellow-100 rounded text-center min-w-[60px]">
+          <span className="text-yellow-700 font-medium text-xs">Course</span>
         </div>
       );
     }
-    if (type === "route_approved") {
+    if (type === "course_approved") {
       return (
-        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-          <span className="text-green-600 font-bold text-sm">📍</span>
+        <div className="px-2 py-1 bg-green-100 rounded text-center min-w-[60px]">
+          <span className="text-green-700 font-medium text-xs">Course</span>
         </div>
       );
     }
     return (
-      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-        <span className="text-blue-600 font-bold text-sm">🏆</span>
+      <div className="px-2 py-1 bg-blue-100 rounded text-center min-w-[60px]">
+        <span className="text-blue-700 font-medium text-xs">FKT</span>
       </div>
     );
   }
@@ -112,7 +112,7 @@ export function NewsFeed() {
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="font-display text-3xl uppercase tracking-wide mb-8 text-center">
-          New FKTs and Routes
+          New FKTs and Courses
         </h2>
 
         <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
@@ -123,23 +123,23 @@ export function NewsFeed() {
                   <td className="py-2 px-3 text-xs text-muted-foreground w-20 whitespace-nowrap">
                     {formatEventDate(event.date)}
                   </td>
-                  <td className="py-2 px-2 w-12">
+                  <td className="py-2 px-2 w-20">
                     <EventIcon type={event.type} />
                   </td>
                   <td className="py-2 px-3 text-sm">
                     <div className="flex items-center gap-2 whitespace-nowrap">
                       <Link
-                        href={`/routes/${event.data.routeId}`}
+                        href={`/courses/${event.data.courseId}`}
                         className="text-primary hover:underline text-sm"
                       >
-                        {event.data.routeName}
+                        {event.data.courseName}
                       </Link>
-                      {event.type === "route_proposed" && (
+                      {event.type === "course_proposed" && (
                         <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">
                           Proposed
                         </span>
                       )}
-                      {event.type === "route_approved" && (
+                      {event.type === "course_approved" && (
                         <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
                           Approved
                         </span>
@@ -181,10 +181,10 @@ export function NewsFeed() {
           </Link>
           <span className="text-muted-foreground">•</span>
           <Link
-            href="/routes"
+            href="/courses"
             className="text-primary hover:underline font-medium"
           >
-            Routes
+            Courses
           </Link>
         </div>
       </div>

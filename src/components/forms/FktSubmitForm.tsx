@@ -11,7 +11,7 @@ import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 
 interface Props {
-  routeId: string;
+  courseId: string;
   submitterName: string;
   submitterEmail: string;
   preferredRigSize: string | null;
@@ -24,7 +24,7 @@ const RIG_SIZES = [
   { value: "AERO_9", label: "Aero 9" },
 ];
 
-export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferredRigSize }: Props) {
+export function FktSubmitForm({ courseId, submitterName, submitterEmail, preferredRigSize }: Props) {
   const router = useRouter();
   const errorRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
@@ -250,7 +250,7 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferre
 
     try {
       console.log('🏁 Starting FKT submission:', {
-        routeId,
+        courseId,
         fileName: trackFile.name,
         extractedDate: extractedDate.toISOString(),
         browser: navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'
@@ -264,7 +264,7 @@ export function FktSubmitForm({ routeId, submitterName, submitterEmail, preferre
       console.log('📝 Submitting FKT attempt data...');
 
       const submitData = {
-        routeId,
+        courseId,
         ...form,
         date: extractedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
         gpxS3Key,

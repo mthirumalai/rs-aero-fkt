@@ -5,6 +5,7 @@ import Link from "next/link";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/PageHeader";
 import {
   Table,
   TableBody,
@@ -17,7 +18,7 @@ import { RigIcon } from "@/components/RigIcon";
 
 type FailedAttempt = {
   id: string;
-  routeId: string;
+  courseId: string;
   rigSize: string;
   date: string;
   gpxS3Key: string;
@@ -25,7 +26,7 @@ type FailedAttempt = {
   sailorName: string | null;
   sailorEmail: string | null;
   submittedAt: string;
-  route: {
+  course: {
     name: string;
     country: string;
   };
@@ -48,12 +49,14 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-7xl">
-      <h1 className="font-display text-5xl uppercase tracking-wide mb-10">FKT Failures</h1>
+    <>
+      <PageHeader
+        title="Failed FKT Submissions"
+      />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
 
       <section className="mb-12">
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-xl font-semibold">Failed FKT Submissions</h2>
           <Badge variant="destructive">{failedAttempts.length}</Badge>
         </div>
 
@@ -67,7 +70,7 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
               <Table className="min-w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-48">Route</TableHead>
+                    <TableHead className="w-48">Course</TableHead>
                     <TableHead className="w-24">Country</TableHead>
                     <TableHead className="w-24">Rig Size</TableHead>
                     <TableHead className="w-32">Sailor</TableHead>
@@ -85,15 +88,15 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
                       onClick={() => setSelectedFailure(attempt)}
                     >
                       <TableCell className="w-48">
-                        <div className="font-medium truncate" title={attempt.route.name}>
-                          {attempt.route.name}
+                        <div className="font-medium truncate" title={attempt.course.name}>
+                          {attempt.course.name}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {new Date(attempt.submittedAt).toLocaleDateString()}
                         </div>
                       </TableCell>
-                      <TableCell className="w-24 truncate" title={COUNTRY_NAMES[attempt.route.country] ?? attempt.route.country}>
-                        {COUNTRY_NAMES[attempt.route.country] ?? attempt.route.country}
+                      <TableCell className="w-24 truncate" title={COUNTRY_NAMES[attempt.course.country] ?? attempt.course.country}>
+                        {COUNTRY_NAMES[attempt.course.country] ?? attempt.course.country}
                       </TableCell>
                       <TableCell className="w-24">
                         <div className="flex justify-center">
@@ -154,7 +157,7 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
                 Failed FKT Submission
               </p>
-              <h3 className="text-xl font-semibold">{selectedFailure.route.name}</h3>
+              <h3 className="text-xl font-semibold">{selectedFailure.course.name}</h3>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                 <RigIcon rigSize={selectedFailure.rigSize as "AERO_5" | "AERO_6" | "AERO_7" | "AERO_9"} size={18} />
                 <span>• {new Date(selectedFailure.date).toLocaleDateString()}</span>
@@ -192,8 +195,8 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href={`/routes/${selectedFailure.routeId}`}>
-                  View Route
+                <Link href={`/courses/${selectedFailure.courseId}`}>
+                  View Course
                 </Link>
               </Button>
               <Button variant="outline" onClick={() => setSelectedFailure(null)} className="ml-auto">
@@ -203,6 +206,7 @@ export function FktFailuresClient({ failedAttempts, isAdmin }: Props) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

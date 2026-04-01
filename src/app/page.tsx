@@ -15,14 +15,14 @@ export default async function HomePage() {
           <p className="text-lg text-white/80 mb-8 font-sans">
             The definitive record of the fastest passages made by an RS Aero.
             <br />
-            Got a route? Got a GPX track for that route? Let&apos;s put it in the books!
+            Got a course? Got a GPX track for that course? Let&apos;s put it in the books!
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">
-              <Link href="/routes/submit">Submit a Route</Link>
+              <Link href="/courses/submit">Submit a Course</Link>
             </Button>
             <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">
-              <Link href="/routes">Submit an FKT Attempt</Link>
+              <Link href="/courses">Submit an FKT Attempt</Link>
             </Button>
           </div>
         </div>

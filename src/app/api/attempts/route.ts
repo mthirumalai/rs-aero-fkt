@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const {
-    routeId,
+    courseId,
     rigSize,
     date,
     gpxS3Key,
@@ -63,16 +63,16 @@ export async function POST(req: NextRequest) {
   console.log('🏁 FKT Submission started:', {
     userId: session.user.id,
     userEmail: session.user.email,
-    routeId,
+    courseId,
     rigSize,
     gpxS3Key,
     sailorName,
     sailorEmail
   });
 
-  if (!routeId || !rigSize || !date || !gpxS3Key) {
+  if (!courseId || !rigSize || !date || !gpxS3Key) {
     const missingFields = [];
-    if (!routeId) missingFields.push('routeId');
+    if (!courseId) missingFields.push('courseId');
     if (!rigSize) missingFields.push('rigSize');
     if (!date) missingFields.push('date');
     if (!gpxS3Key) missingFields.push('gpxS3Key');
@@ -92,18 +92,18 @@ export async function POST(req: NextRequest) {
     }, { status: 400 });
   }
 
-  // Fetch route (allow both pending and approved routes)
-  console.log('🔍 Fetching route:', routeId);
-  const route = await prisma.route.findUnique({
-    where: { id: routeId },
+  // Fetch course (allow both pending and approved courses)
+  console.log('🔍 Fetching course:', courseId);
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
   });
-  if (!route || (route.status !== "PENDING" && route.status !== "APPROVED")) {
-    console.log('❌ FKT Submission: Route not found or invalid status:', routeId, route?.status);
+  if (!course || (course.status !== "PENDING" && course.status !== "APPROVED")) {
+    console.log('❌ FKT Submission: Route not found or invalid status:', courseId, course?.status);
     return NextResponse.json({
       error: "Route not found or not available for FKT submissions"
     }, { status: 404 });
   }
-  console.log('✅ Route found:', { id: route.id, name: route.name, status: route.status });
+  console.log('✅ Route found:', { id: course.id, name: course.name, status: course.status });
 
   // Fetch GPX from S3 (or local filesystem in dev)
   console.log('📁 Fetching GPX file:', { bucket: GPX_BUCKET, key: gpxS3Key });
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     try {
       await prisma.fktAttempt.create({
         data: {
-          routeId,
+          courseId,
           athleteId: session.user.id,
           rigSize: rigSize as RigSize,
           date: new Date(date),
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
     try {
       await prisma.fktAttempt.create({
         data: {
-          routeId,
+          courseId,
           athleteId: session.user.id,
           rigSize: rigSize as RigSize,
           date: new Date(date),
@@ -199,14 +199,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: errorMsg }, { status: 422 });
   }
 
-  console.log('🔍 Validating GPX track against route...');
+  console.log('🔍 Validating GPX track against course...');
   const normalizedParsed = normalizeToParseGpx(parsed);
   const validation = validateGpxTrack(
     normalizedParsed,
-    route.startLat,
-    route.startLng,
-    route.finishLat,
-    route.finishLng
+    course.startLat,
+    course.startLng,
+    course.finishLat,
+    course.finishLng
   );
 
   if (!validation.valid) {
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
       error: validation.error,
       nearestStartDistanceM: validation.nearestStartDistanceM,
       nearestFinishDistanceM: validation.nearestFinishDistanceM,
-      routeName: route.name
+      courseName: course.name
     });
 
     let detailedError = validation.error;
@@ -226,7 +226,7 @@ export async function POST(req: NextRequest) {
     try {
       await prisma.fktAttempt.create({
         data: {
-          routeId,
+          courseId,
           athleteId: session.user.id,
           rigSize: rigSize as RigSize,
           date: new Date(date),
@@ -271,14 +271,14 @@ export async function POST(req: NextRequest) {
   // Save attempt
   console.log('💾 Saving FKT attempt...');
 
-  // Set FKT status based on route status
-  const attemptStatus = route.status === "APPROVED" ? "APPROVED" : "PENDING";
-  console.log('📋 FKT status will be:', attemptStatus, 'based on route status:', route.status);
+  // Set FKT status based on course status
+  const attemptStatus = course.status === "APPROVED" ? "APPROVED" : "PENDING";
+  console.log('📋 FKT status will be:', attemptStatus, 'based on course status:', course.status);
 
   try {
     const attempt = await prisma.fktAttempt.create({
       data: {
-        routeId,
+        courseId,
         athleteId: session.user.id,
         rigSize: rigSize as RigSize,
         date: new Date(date),
@@ -300,7 +300,7 @@ export async function POST(req: NextRequest) {
 
     console.log('🎉 FKT Submission successful:', {
       attemptId: attempt.id,
-      routeName: route.name,
+      courseName: course.name,
       durationSec: validation.durationSec,
       sailorName: sailorName,
       status: attemptStatus

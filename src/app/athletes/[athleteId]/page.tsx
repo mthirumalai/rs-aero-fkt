@@ -34,7 +34,7 @@ export default async function AthleteProfilePage({ params }: Props) {
         attempts: {
           where: { status: "APPROVED" },
           orderBy: { date: "desc" },
-          include: { route: { select: { id: true, name: true } } },
+          include: { course: { select: { id: true, name: true } } },
         },
       },
     }),
@@ -117,10 +117,10 @@ export default async function AthleteProfilePage({ params }: Props) {
               >
                 <div>
                   <Link
-                    href={`/routes/${attempt.route.id}`}
+                    href={`/courses/${attempt.course.id}`}
                     className="font-medium text-primary underline hover:no-underline"
                   >
-                    {attempt.route.name}
+                    {attempt.course.name}
                   </Link>
                   <div className="flex items-center gap-2 mt-1">
                     <RigIcon rigSize={attempt.rigSize} size={18} />

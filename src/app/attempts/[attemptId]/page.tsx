@@ -17,11 +17,11 @@ interface Props {
 export async function generateMetadata({ params }: Props) {
   const attempt = await prisma.fktAttempt.findUnique({
     where: { id: params.attemptId },
-    include: { route: true, athlete: true },
+    include: { course: true, athlete: true },
   });
   if (!attempt) return {};
   return {
-    title: `${attempt.route.name} FKT by ${attempt.athlete.name} — RS Aero FKT`,
+    title: `${attempt.course.name} FKT by ${attempt.athlete.name} — RS Aero FKT`,
   };
 }
 
@@ -31,7 +31,7 @@ export default async function AttemptDetailPage({ params }: Props) {
     prisma.fktAttempt.findUnique({
       where: { id: params.attemptId, status: "APPROVED" },
       include: {
-        route: true,
+        course: true,
         athlete: { select: { id: true, name: true, image: true } },
         photos: true,
       },
@@ -49,7 +49,7 @@ export default async function AttemptDetailPage({ params }: Props) {
   // Get all approved attempts for this route and rig to determine ranking
   const allAttemptsForRouteRig = await prisma.fktAttempt.findMany({
     where: {
-      routeId: attempt.routeId,
+      courseId: attempt.courseId,
       rigSize: attempt.rigSize,
       status: "APPROVED",
     },
@@ -75,7 +75,7 @@ export default async function AttemptDetailPage({ params }: Props) {
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-4">FKT Attempt</h1>
         <p className="text-xl text-muted-foreground">
-          Route: <span className="text-foreground">{attempt.route.name}</span>, {new Date(attempt.date).toLocaleDateString("en-GB", {
+          Route: <span className="text-foreground">{attempt.course.name}</span>, {new Date(attempt.date).toLocaleDateString("en-GB", {
             day: "numeric", month: "long", year: "numeric",
           })} by <Link
             href={`/athletes/${attempt.athlete.id}`}
@@ -103,7 +103,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         <div className="bg-card border rounded-lg p-4 text-center">
           <p className="text-sm text-muted-foreground">Great Circle Distance</p>
           <p className="text-2xl">
-            {distanceNm(attempt.route.startLat, attempt.route.startLng, attempt.route.finishLat, attempt.route.finishLng)} nm
+            {distanceNm(attempt.course.startLat, attempt.course.startLng, attempt.course.finishLat, attempt.course.finishLng)} nm
           </p>
         </div>
         <div className="bg-card border rounded-lg p-4 text-center">

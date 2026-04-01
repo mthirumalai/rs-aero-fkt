@@ -52,7 +52,7 @@ interface Props {
   finishName: string;
 }
 
-export default function RouteMapInner({ startLat, startLng, finishLat, finishLng, startName, finishName }: Props) {
+export default function CourseMapInner({ startLat, startLng, finishLat, finishLng, startName, finishName }: Props) {
   const centerLat = (startLat + finishLat) / 2;
   const centerLng = (startLng + finishLng) / 2;
 

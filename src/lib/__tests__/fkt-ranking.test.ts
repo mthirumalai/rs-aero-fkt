@@ -3,7 +3,7 @@ import { prisma } from '../prisma';
 // Mock Prisma for testing
 jest.mock('../prisma', () => ({
   prisma: {
-    route: {
+    course: {
       create: jest.fn(),
       findUnique: jest.fn()
     },
@@ -21,14 +21,14 @@ jest.mock('../prisma', () => ({
 }));
 
 describe('FKT Ranking System Tests', () => {
-  let mockRoute: { id: string; name: string; status: string; startLat: number; startLng: number; finishLat: number; finishLng: number };
+  let mockCourse: { id: string; name: string; status: string; startLat: number; startLng: number; finishLat: number; finishLng: number };
   let mockAttempts: { id: string; durationSec: number; rigSize: string; rank?: number }[];
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock route
-    mockRoute = {
+    // Mock course
+    mockCourse = {
       id: 'route-123',
       name: 'Southport to Sneads Ferry',
       status: 'APPROVED',
@@ -41,7 +41,7 @@ describe('FKT Ranking System Tests', () => {
     mockAttempts = [];
 
     // Setup default mocks
-    (prisma.route.findUnique as jest.Mock).mockResolvedValue(mockRoute);
+    (prisma.course.findUnique as jest.Mock).mockResolvedValue(mockCourse);
     (prisma.user.create as jest.Mock).mockImplementation((data) =>
       Promise.resolve({ id: `user-${Date.now()}`, ...data.data })
     );

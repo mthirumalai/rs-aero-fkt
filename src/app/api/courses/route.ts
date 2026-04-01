@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { sendRouteApprovalEmail } from "@/lib/email/ses";
+import { sendCourseApprovalEmail } from "@/lib/email/ses";
 import { getCountriesForRegion, type Region } from "@/lib/regions";
 import { randomUUID } from "crypto";
-import { recordRouteStatusChange } from "@/lib/route-status-history";
+import { recordCourseStatusChange } from "@/lib/course-status-history";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     where.country = { in: countries };
   }
 
-  const routes = await prisma.route.findMany({
+  const courses = await prisma.course.findMany({
     where,
     orderBy: { approvedAt: "desc" },
     include: {
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  return NextResponse.json(routes);
+  return NextResponse.json(courses);
 }
 
 export async function POST(req: NextRequest) {
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   const approvalToken = randomUUID();
 
-  const route = await prisma.route.create({
+  const course = await prisma.course.create({
     data: {
       name,
       description,
@@ -62,11 +62,11 @@ export async function POST(req: NextRequest) {
   });
 
   // Record the initial submission in status history
-  await recordRouteStatusChange(
-    route.id,
-    null, // fromStatus (new route)
+  await recordCourseStatusChange(
+    course.id,
+    null, // fromStatus (new course)
     "PENDING", // toStatus
-    "Initial route submission",
+    "Initial course submission",
     session.user.id, // changedById
     approvalToken
   );
@@ -74,9 +74,9 @@ export async function POST(req: NextRequest) {
   // Send approval email
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
   try {
-    await sendRouteApprovalEmail({
-      routeId: route.id,
-      routeName: route.name,
+    await sendCourseApprovalEmail({
+      courseId: course.id,
+      courseName: course.name,
       submitterName: session.user.name ?? "Unknown",
       submitterEmail: session.user.email ?? "",
       approvalToken,
@@ -86,5 +86,5 @@ export async function POST(req: NextRequest) {
     console.error("Failed to send approval email:", err);
   }
 
-  return NextResponse.json(route, { status: 201 });
+  return NextResponse.json(course, { status: 201 });
 }
