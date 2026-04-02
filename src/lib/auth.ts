@@ -124,10 +124,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },
-  pages: {
+  // Temporarily disable custom pages for production stability
+  pages: process.env.NODE_ENV === "development" ? {
     signIn: "/auth/signin",
     verifyRequest: "/auth/verify",
-  },
+  } : {},
 });
 
 declare module "next-auth" {
