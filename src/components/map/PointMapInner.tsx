@@ -24,11 +24,17 @@ const endIcon = new L.Icon({
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
 });
 
+const turningMarkIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+});
+
 interface Props {
   lat: number;
   lng: number;
   name: string;
-  type: "start" | "end";
+  type: "start" | "end" | "turning";
 }
 
 export default function PointMapInner({ lat, lng, name, type }: Props) {
@@ -66,9 +72,17 @@ export default function PointMapInner({ lat, lng, name, type }: Props) {
           opacity={marine ? 1 : 0}
         />
 
-        <Marker position={[lat, lng]} icon={type === "start" ? startIcon : endIcon}>
+        <Marker position={[lat, lng]} icon={
+          type === "start" ? startIcon :
+          type === "end" ? endIcon :
+          turningMarkIcon
+        }>
           <Popup>
-            <strong>{type === "start" ? "Start" : "End"}:</strong> {name}<br />
+            <strong>{
+              type === "start" ? "Start" :
+              type === "end" ? "End" :
+              "Turning Mark"
+            }:</strong> {name}<br />
             {lat.toFixed(6)}, {lng.toFixed(6)}
           </Popup>
         </Marker>

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ApproveCourseForm } from "./ApproveCourseForm";
 import { ApprovalMap } from "@/components/map/ApprovalMap";
 import { PointMap } from "@/components/map/PointMap";
+import { PageHeader } from "@/components/PageHeader";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { distanceNm } from "@/lib/gpx/validator";
 import { getRejectionHistory } from "@/lib/course-status-history";
@@ -25,7 +26,25 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
   const [course, rejectionHistory] = await Promise.all([
     prisma.course.findFirst({
       where: { approvalToken: token },
-      include: { submittedBy: { select: { name: true, email: true } } },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        country: true,
+        courseType: true,
+        startName: true,
+        startLat: true,
+        startLng: true,
+        finishName: true,
+        finishLat: true,
+        finishLng: true,
+        turningMarkName: true,
+        turningMarkLat: true,
+        turningMarkLng: true,
+        submittedAt: true,
+        status: true,
+        submittedBy: { select: { name: true, email: true } },
+      },
     }),
     // Get rejection history to show admin context
     token ? getRejectionHistory(
@@ -60,6 +79,7 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
 
   return (
     <>
+      <PageHeader title="Course Approval Request" />
     <div className="container mx-auto px-4 py-12 max-w-5xl">
       <h1 className="font-display text-5xl uppercase tracking-wide mb-8">
         Approval Request for Course: <span className="text-primary">{course.name}</span>
@@ -81,7 +101,10 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Distance</p>
             <p className="text-base font-medium">
-              {distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng)} nm
+              {course.courseType === "OUT_AND_BACK" && course.turningMarkLat && course.turningMarkLng
+                ? distanceNm(course.startLat, course.startLng, course.turningMarkLat, course.turningMarkLng) + " nm"
+                : distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng) + " nm"
+              }
             </p>
           </div>
           <div>
@@ -125,10 +148,12 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
         )}
       </div>
 
-      {/* Start and Finish Point Maps */}
+      {/* Point Maps - different layout for out-and-back vs point-to-point */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div>
-          <h3 className="text-lg font-semibold mb-4">Start Point: {course.startName}</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            {course.courseType === "OUT_AND_BACK" ? "Start / Finish Point" : "Start Point"}: {course.startName}
+          </h3>
           <p className="text-sm text-muted-foreground mb-4 font-mono">
             {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
           </p>
@@ -142,18 +167,45 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
           </div>
         </div>
         <div>
-          <h3 className="text-lg font-semibold mb-4">Finish Point: {course.finishName}</h3>
-          <p className="text-sm text-muted-foreground mb-4 font-mono">
-            {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
-          </p>
-          <div className="h-[300px] rounded-lg overflow-hidden border">
-            <PointMap
-              lat={course.finishLat}
-              lng={course.finishLng}
-              name={course.finishName}
-              type="end"
-            />
-          </div>
+          {course.courseType === "OUT_AND_BACK" ? (
+            // For out-and-back: show turning mark
+            course.turningMarkLat && course.turningMarkLng && course.turningMarkName ? (
+              <>
+                <h3 className="text-lg font-semibold mb-4">Turning Mark: {course.turningMarkName}</h3>
+                <p className="text-sm text-muted-foreground mb-4 font-mono">
+                  {course.turningMarkLat.toFixed(6)}, {course.turningMarkLng.toFixed(6)}
+                </p>
+                <div className="h-[300px] rounded-lg overflow-hidden border">
+                  <PointMap
+                    lat={course.turningMarkLat}
+                    lng={course.turningMarkLng}
+                    name={course.turningMarkName}
+                    type="turning"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="h-[300px] rounded-lg overflow-hidden border bg-muted flex items-center justify-center">
+                <p className="text-muted-foreground">No turning mark defined</p>
+              </div>
+            )
+          ) : (
+            // For point-to-point: show finish point
+            <>
+              <h3 className="text-lg font-semibold mb-4">Finish Point: {course.finishName}</h3>
+              <p className="text-sm text-muted-foreground mb-4 font-mono">
+                {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
+              </p>
+              <div className="h-[300px] rounded-lg overflow-hidden border">
+                <PointMap
+                  lat={course.finishLat}
+                  lng={course.finishLng}
+                  name={course.finishName}
+                  type="end"
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -172,6 +224,10 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
             finishLng={course.finishLng}
             startName={course.startName}
             finishName={course.finishName}
+            courseType={course.courseType}
+            turningMarkLat={course.turningMarkLat}
+            turningMarkLng={course.turningMarkLng}
+            turningMarkName={course.turningMarkName}
           />
         </div>
       </div>

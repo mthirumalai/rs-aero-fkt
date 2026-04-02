@@ -15,7 +15,7 @@ interface Props {
   lat: number;
   lng: number;
   name: string;
-  type: "start" | "end";
+  type: "start" | "end" | "turning";
 }
 
 export function PointMap(props: Props) {

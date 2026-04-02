@@ -15,7 +15,7 @@ export const metadata = {
 export default async function SubmitFktPage({ params }: Props) {
   const session = await auth();
   if (!session) {
-    redirect(`/api/auth/signin?callbackUrl=/courses/${params.courseId}/submit-fkt`);
+    redirect(`/auth/signin?callbackUrl=/courses/${params.courseId}/submit-fkt`);
   }
 
   const [course, attemptCount, user] = await Promise.all([
@@ -38,7 +38,17 @@ export default async function SubmitFktPage({ params }: Props) {
       <div className="mb-6">
         <h1 className="text-3xl font-bold uppercase tracking-wide">Submit an FKT Attempt</h1>
         <p className="text-lg text-muted-foreground mt-2">
-          <span className="font-medium">Route:</span> <Link href={`/courses/${course.id}`} className="text-primary underline hover:no-underline">{course.name}</Link>. <span className="font-medium">Start:</span> {course.startName}, <span className="font-medium">Finish:</span> {course.finishName}. <span className="font-medium">Attempts so far:</span> {attemptCount}
+          <span className="font-medium">Route:</span> <Link href={`/courses/${course.id}`} className="text-primary underline hover:no-underline">{course.name}</Link>.{" "}
+          {course.courseType === "OUT_AND_BACK" ? (
+            <>
+              <span className="font-medium">Start/Finish:</span> {course.startName}, <span className="font-medium">Turning mark:</span> {course.turningMarkName}.
+            </>
+          ) : (
+            <>
+              <span className="font-medium">Start:</span> {course.startName}, <span className="font-medium">Finish:</span> {course.finishName}.
+            </>
+          )}{" "}
+          <span className="font-medium">Attempts so far:</span> {attemptCount}
         </p>
       </div>
       <FktSubmitForm

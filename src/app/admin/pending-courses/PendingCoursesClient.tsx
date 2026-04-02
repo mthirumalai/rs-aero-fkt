@@ -20,12 +20,16 @@ type CourseRow = {
   id: string;
   name: string;
   country: string;
+  courseType: "POINT_TO_POINT" | "OUT_AND_BACK";
   startName: string;
   startLat: number;
   startLng: number;
   finishName: string;
   finishLat: number;
   finishLng: number;
+  turningMarkName: string | null;
+  turningMarkLat: number | null;
+  turningMarkLng: number | null;
   submittedAt: string;
   submittedBy: { name: string | null; email: string | null };
   approvalToken?: string | null;
@@ -108,15 +112,25 @@ export function PendingCoursesClient({ pendingCourses, rejectedCourses, isAdmin 
                   >
                     <TableCell className="max-w-[200px]">
                       <div className="font-medium truncate" title={course.name}>{course.name}</div>
-                      <div className="text-xs text-muted-foreground truncate" title={`${course.startName} → ${course.finishName}`}>
-                        {course.startName} → {course.finishName}
+                      <div className="text-xs text-muted-foreground truncate" title={
+                        course.courseType === "OUT_AND_BACK"
+                          ? `Start/Finish: ${course.startName} • Turning Mark: ${course.turningMarkName || 'N/A'}`
+                          : `${course.startName} → ${course.finishName}`
+                      }>
+                        {course.courseType === "OUT_AND_BACK"
+                          ? `Start/Finish: ${course.startName} • Turning Mark: ${course.turningMarkName || 'N/A'}`
+                          : `${course.startName} → ${course.finishName}`
+                        }
                       </div>
                     </TableCell>
                     <TableCell className="w-24 truncate" title={COUNTRY_NAMES[course.country] ?? course.country}>
                       {COUNTRY_NAMES[course.country] ?? course.country}
                     </TableCell>
                     <TableCell className="w-20 font-mono text-sm tabular-nums">
-                      {distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng)} nm
+                      {course.courseType === "OUT_AND_BACK" && course.turningMarkLat && course.turningMarkLng
+                        ? distanceNm(course.startLat, course.startLng, course.turningMarkLat, course.turningMarkLng) + " nm"
+                        : distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng) + " nm"
+                      }
                     </TableCell>
                     <TableCell className="w-32">
                       <div className="text-sm truncate" title={course.submittedBy.name ?? ''}>{course.submittedBy.name}</div>
@@ -180,8 +194,15 @@ export function PendingCoursesClient({ pendingCourses, rejectedCourses, isAdmin 
                   >
                     <TableCell className="max-w-[200px]">
                       <div className="font-medium truncate" title={course.name}>{course.name}</div>
-                      <div className="text-xs text-muted-foreground truncate" title={`${course.startName} → ${course.finishName}`}>
-                        {course.startName} → {course.finishName}
+                      <div className="text-xs text-muted-foreground truncate" title={
+                        course.courseType === "OUT_AND_BACK"
+                          ? `Start/Finish: ${course.startName} • Turning Mark: ${course.turningMarkName || 'N/A'}`
+                          : `${course.startName} → ${course.finishName}`
+                      }>
+                        {course.courseType === "OUT_AND_BACK"
+                          ? `Start/Finish: ${course.startName} • Turning Mark: ${course.turningMarkName || 'N/A'}`
+                          : `${course.startName} → ${course.finishName}`
+                        }
                       </div>
                     </TableCell>
                     <TableCell className="w-24 truncate" title={COUNTRY_NAMES[course.country] ?? course.country}>
@@ -239,7 +260,10 @@ export function PendingCoursesClient({ pendingCourses, rejectedCourses, isAdmin 
               </p>
               <h3 className="text-xl font-semibold">{selectedRejected.name}</h3>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {selectedRejected.startName} → {selectedRejected.finishName}
+                {selectedRejected.courseType === "OUT_AND_BACK"
+                  ? `Start/Finish: ${selectedRejected.startName} • Turning Mark: ${selectedRejected.turningMarkName || 'N/A'}`
+                  : `${selectedRejected.startName} → ${selectedRejected.finishName}`
+                }
               </p>
             </div>
             <div>

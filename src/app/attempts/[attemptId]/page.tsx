@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props) {
   });
   if (!attempt) return {};
   return {
-    title: `${attempt.course.name} FKT by ${attempt.athlete.name} — RS Aero FKT`,
+    title: `${attempt.course.name} FKT by ${attempt.sailorName || attempt.athlete.name} — RS Aero FKT`,
   };
 }
 
@@ -77,12 +77,16 @@ export default async function AttemptDetailPage({ params }: Props) {
         <p className="text-xl text-muted-foreground">
           Route: <span className="text-foreground">{attempt.course.name}</span>, {new Date(attempt.date).toLocaleDateString("en-GB", {
             day: "numeric", month: "long", year: "numeric",
-          })} by <Link
-            href={`/athletes/${attempt.athlete.id}`}
-            className="text-primary hover:underline"
-          >
-            {attempt.athlete.name}
-          </Link>. Rig: <RigIcon rigSize={attempt.rigSize} size={24} className="inline-block" />
+          })} by {attempt.sailorName ? (
+            <span className="text-foreground">{attempt.sailorName}</span>
+          ) : (
+            <Link
+              href={`/athletes/${attempt.athlete.id}`}
+              className="text-primary hover:underline"
+            >
+              {attempt.athlete.name}
+            </Link>
+          )}. Rig: <RigIcon rigSize={attempt.rigSize} size={24} className="inline-block" />
         </p>
       </div>
 

@@ -5,10 +5,12 @@ export interface ValidationResult {
   durationSec?: number;
   startPoint?: GpxPoint;
   finishPoint?: GpxPoint;
+  turningPoint?: GpxPoint;
   /** Only the track points between (inclusive) the matched start and finish entries */
   racePoints?: GpxPoint[];
   nearestStartDistanceM?: number;
   nearestFinishDistanceM?: number;
+  nearestTurningMarkDistanceM?: number;
   error?: string;
 }
 
@@ -132,6 +134,177 @@ export function validateGpxTrack(
     racePoints: points.slice(matchedStartIdx, matchedFinishIdx + 1),
     nearestStartDistanceM: Math.round(nearestStartDist),
     nearestFinishDistanceM: Math.round(nearestFinishDist),
+  };
+}
+
+/**
+ * Calculate the cross product to determine which side of a line segment a point is on
+ * Returns positive if point is on the left side, negative if on the right side
+ */
+function crossProduct(
+  lineStart: { lat: number; lon: number },
+  lineEnd: { lat: number; lon: number },
+  point: { lat: number; lon: number }
+): number {
+  return (lineEnd.lon - lineStart.lon) * (point.lat - lineStart.lat) -
+         (lineEnd.lat - lineStart.lat) * (point.lon - lineStart.lon);
+}
+
+/**
+ * Determine which side of the turning mark the boat is approaching from
+ * relative to the line from start/finish to turning mark
+ */
+function determineSide(
+  startFinish: { lat: number; lon: number },
+  turningMark: { lat: number; lon: number },
+  trackPoint: { lat: number; lon: number }
+): 'port' | 'starboard' {
+  const cross = crossProduct(startFinish, turningMark, trackPoint);
+  return cross > 0 ? 'port' : 'starboard';
+}
+
+export function validateOutAndBackGpxTrack(
+  gpx: ParsedGpx,
+  routeStartLat: number,
+  routeStartLng: number,
+  turningMarkLat: number,
+  turningMarkLng: number,
+  toleranceM = 10
+): ValidationResult {
+  const { points } = gpx;
+
+  if (points.length < 3) {
+    return { valid: false, error: "GPX track has fewer than 3 points" };
+  }
+
+  const timedPoints = points.filter((p) => p.time !== null);
+  if (timedPoints.length < 3) {
+    return { valid: false, error: "GPX track must contain timestamps (<time> elements)" };
+  }
+
+  // Find all crossings of start/finish circle
+  const startFinishCrossings: number[] = [];
+  let nearestStartDist = Infinity;
+
+  for (let i = 0; i < points.length; i++) {
+    const dist = haversineMeters(points[i].lat, points[i].lon, routeStartLat, routeStartLng);
+    if (dist < nearestStartDist) nearestStartDist = dist;
+    if (dist <= toleranceM) {
+      startFinishCrossings.push(i);
+    }
+  }
+
+  if (startFinishCrossings.length < 2) {
+    return {
+      valid: false,
+      nearestStartDistanceM: Math.round(nearestStartDist),
+      error: `Track must cross start/finish point at least twice for out-and-back routes. Found ${startFinishCrossings.length} crossing(s). Nearest approach: ${Math.round(nearestStartDist)}m.`,
+    };
+  }
+
+  // Find turning mark approach
+  let turningMarkIdx = -1;
+  let nearestTurningDist = Infinity;
+
+  for (let i = 0; i < points.length; i++) {
+    const dist = haversineMeters(points[i].lat, points[i].lon, turningMarkLat, turningMarkLng);
+    if (dist < nearestTurningDist) nearestTurningDist = dist;
+    if (dist <= toleranceM && turningMarkIdx === -1) {
+      turningMarkIdx = i;
+    }
+  }
+
+  if (turningMarkIdx === -1) {
+    return {
+      valid: false,
+      nearestTurningMarkDistanceM: Math.round(nearestTurningDist),
+      error: `Track does not pass within ${toleranceM}m of turning mark. Nearest approach: ${Math.round(nearestTurningDist)}m.`,
+    };
+  }
+
+  // Find the start crossing before turning mark
+  const startCrossingBeforeTurn = startFinishCrossings.filter(idx => idx < turningMarkIdx);
+  if (startCrossingBeforeTurn.length === 0) {
+    return {
+      valid: false,
+      error: "Track must cross start/finish point before reaching the turning mark.",
+    };
+  }
+
+  // Find the finish crossing after turning mark
+  const finishCrossingAfterTurn = startFinishCrossings.filter(idx => idx > turningMarkIdx);
+  if (finishCrossingAfterTurn.length === 0) {
+    return {
+      valid: false,
+      error: "Track must return to start/finish point after rounding the turning mark.",
+    };
+  }
+
+  // Use the last start crossing before turning mark as start
+  const startIdx = startCrossingBeforeTurn[startCrossingBeforeTurn.length - 1];
+
+  // Use the first finish crossing after turning mark as finish
+  const finishIdx = finishCrossingAfterTurn[0];
+
+  // Validate turning mark rounding - check approach and exit sides
+  const startFinishPoint = { lat: routeStartLat, lon: routeStartLng };
+  const turningMarkPoint = { lat: turningMarkLat, lon: turningMarkLng };
+
+  // Find points approaching and leaving the turning mark - use smaller range for precision
+  const approachRange = 5; // Look at closer points for more accurate side determination
+  const approachStart = Math.max(0, turningMarkIdx - approachRange);
+  const exitEnd = Math.min(points.length - 1, turningMarkIdx + approachRange);
+
+  // Determine approach side (focus on points just before turning mark)
+  const approachSideCount = { port: 0, starboard: 0 };
+  for (let i = Math.max(approachStart, turningMarkIdx - 3); i < turningMarkIdx; i++) {
+    const side = determineSide(startFinishPoint, turningMarkPoint, points[i]);
+    approachSideCount[side]++;
+  }
+
+  // Determine exit side (focus on points just after turning mark)
+  const exitSideCount = { port: 0, starboard: 0 };
+  for (let i = turningMarkIdx + 1; i <= Math.min(exitEnd, turningMarkIdx + 3); i++) {
+    const side = determineSide(startFinishPoint, turningMarkPoint, points[i]);
+    exitSideCount[side]++;
+  }
+
+  const approachSide = approachSideCount.port > approachSideCount.starboard ? 'port' : 'starboard';
+  const exitSide = exitSideCount.port > exitSideCount.starboard ? 'port' : 'starboard';
+
+  // Validate that the boat rounded the mark (exited on opposite side from approach)
+  if (approachSide === exitSide) {
+    return {
+      valid: false,
+      error: `Invalid turning mark rounding: approached from ${approachSide} side but also exited on ${exitSide} side. The track must round the turning mark, not just approach and return.`,
+    };
+  }
+
+  const startPoint = points[startIdx];
+  const finishPoint = points[finishIdx];
+  const turningPoint = points[turningMarkIdx];
+
+  if (!startPoint.time || !finishPoint.time) {
+    return { valid: false, error: "Matched track points are missing timestamps" };
+  }
+
+  const durationSec = Math.round(
+    (finishPoint.time.getTime() - startPoint.time.getTime()) / 1000
+  );
+
+  if (durationSec <= 0) {
+    return { valid: false, error: "Calculated duration is zero or negative" };
+  }
+
+  return {
+    valid: true,
+    durationSec,
+    startPoint,
+    finishPoint,
+    turningPoint,
+    racePoints: points.slice(startIdx, finishIdx + 1),
+    nearestStartDistanceM: Math.round(nearestStartDist),
+    nearestTurningMarkDistanceM: Math.round(nearestTurningDist),
   };
 }
 

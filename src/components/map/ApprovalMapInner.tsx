@@ -24,25 +24,51 @@ const endIcon = new L.Icon({
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
 });
 
-function FitBounds({ startLat, startLng, finishLat, finishLng }: {
+const turningMarkIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+});
+
+function FitBounds({ startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng }: {
   startLat: number; startLng: number; finishLat: number; finishLng: number;
+  turningMarkLat?: number | null; turningMarkLng?: number | null;
 }) {
   const map = useMap();
   useEffect(() => {
-    map.fitBounds(L.latLngBounds([startLat, startLng], [finishLat, finishLng]), { padding: [60, 60] });
-  }, [map, startLat, startLng, finishLat, finishLng]);
+    const points = [[startLat, startLng], [finishLat, finishLng]] as [number, number][];
+    if (turningMarkLat !== undefined && turningMarkLat !== null && turningMarkLng !== undefined && turningMarkLng !== null) {
+      points.push([turningMarkLat, turningMarkLng]);
+    }
+    const bounds = L.latLngBounds(points);
+    map.fitBounds(bounds, { padding: [60, 60] });
+  }, [map, startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng]);
   return null;
 }
 
 interface Props {
   startLat: number; startLng: number; finishLat: number; finishLng: number;
   startName: string; finishName: string;
+  courseType?: "POINT_TO_POINT" | "OUT_AND_BACK";
+  turningMarkLat?: number | null;
+  turningMarkLng?: number | null;
+  turningMarkName?: string | null;
 }
 
-export default function ApprovalMapInner({ startLat, startLng, finishLat, finishLng, startName, finishName }: Props) {
+export default function ApprovalMapInner({
+  startLat, startLng, finishLat, finishLng, startName, finishName,
+  courseType, turningMarkLat, turningMarkLng, turningMarkName
+}: Props) {
   const [marine, setMarine] = useState(true); // Default to Marine
-  const center: [number, number] = [(startLat + finishLat) / 2, (startLng + finishLng) / 2];
-  const line: [number, number][] = [[startLat, startLng], [finishLat, finishLng]];
+
+  // Calculate center including turning mark if present
+  const centerLat = turningMarkLat && courseType === "OUT_AND_BACK"
+    ? (startLat + turningMarkLat) / 2
+    : (startLat + finishLat) / 2;
+  const centerLng = turningMarkLng && courseType === "OUT_AND_BACK"
+    ? (startLng + turningMarkLng) / 2
+    : (startLng + finishLng) / 2;
+  const center: [number, number] = [centerLat, centerLng];
 
   return (
     <div className="relative w-full h-full">
@@ -76,17 +102,53 @@ export default function ApprovalMapInner({ startLat, startLng, finishLat, finish
           opacity={marine ? 1 : 0}
         />
 
-        <FitBounds startLat={startLat} startLng={startLng} finishLat={finishLat} finishLng={finishLng} />
-
-        {/* Straight line between start and finish points */}
-        <Polyline positions={line} color="#ec008c" weight={2} dashArray="6 4" opacity={0.8} />
+        <FitBounds
+          startLat={startLat}
+          startLng={startLng}
+          finishLat={finishLat}
+          finishLng={finishLng}
+          turningMarkLat={turningMarkLat}
+          turningMarkLng={turningMarkLng}
+        />
 
         <Marker position={[startLat, startLng]} icon={startIcon}>
-          <Popup><strong>Start:</strong> {startName}<br />{startLat.toFixed(6)}, {startLng.toFixed(6)}</Popup>
+          <Popup>
+            <strong>{courseType === "OUT_AND_BACK" ? "Start/Finish:" : "Start:"}</strong> {startName}<br />
+            {startLat.toFixed(6)}, {startLng.toFixed(6)}
+          </Popup>
         </Marker>
-        <Marker position={[finishLat, finishLng]} icon={endIcon}>
-          <Popup><strong>Finish:</strong> {finishName}<br />{finishLat.toFixed(6)}, {finishLng.toFixed(6)}</Popup>
-        </Marker>
+
+        {courseType === "OUT_AND_BACK" ? (
+          turningMarkLat !== undefined && turningMarkLat !== null &&
+          turningMarkLng !== undefined && turningMarkLng !== null &&
+          turningMarkName && (
+            <>
+              <Marker position={[turningMarkLat, turningMarkLng]} icon={turningMarkIcon}>
+                <Popup><strong>Turning Mark:</strong> {turningMarkName}<br />{turningMarkLat.toFixed(6)}, {turningMarkLng.toFixed(6)}</Popup>
+              </Marker>
+              <Polyline
+                positions={[[startLat, startLng], [turningMarkLat, turningMarkLng]]}
+                color="#ec008c"
+                weight={2}
+                dashArray="6 4"
+                opacity={0.8}
+              />
+            </>
+          )
+        ) : (
+          <>
+            <Marker position={[finishLat, finishLng]} icon={endIcon}>
+              <Popup><strong>Finish:</strong> {finishName}<br />{finishLat.toFixed(6)}, {finishLng.toFixed(6)}</Popup>
+            </Marker>
+            <Polyline
+              positions={[[startLat, startLng], [finishLat, finishLng]]}
+              color="#ec008c"
+              weight={2}
+              dashArray="6 4"
+              opacity={0.8}
+            />
+          </>
+        )}
       </MapContainer>
     </div>
   );

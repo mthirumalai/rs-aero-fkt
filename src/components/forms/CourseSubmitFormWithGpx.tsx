@@ -14,7 +14,7 @@ import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import CourseCreationMap from "@/components/map/CourseCreationMap";
 
-type SubmissionMode = "manual" | "track_file";
+type SubmissionMode = "manual" | "track_file" | "out_and_back";
 
 const RIG_SIZES = [
   { value: "AERO_5", label: "Aero 5" },
@@ -46,6 +46,9 @@ export function CourseSubmitFormWithGpx() {
     finishName: "",
     finishLat: "",
     finishLng: "",
+    turningMarkName: "",
+    turningMarkLat: "",
+    turningMarkLng: "",
   });
 
   // FKT form data
@@ -249,7 +252,9 @@ export function CourseSubmitFormWithGpx() {
   function switchMode(newMode: SubmissionMode) {
     setMode(newMode);
     setError(null);
+
     if (newMode === "manual") {
+      // Clear track-related state when switching to manual mode
       setTrackPoints([]);
       setSelectedStartIndex(null);
       setSelectedEndIndex(null);
@@ -259,14 +264,43 @@ export function CourseSubmitFormWithGpx() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      // Clear turning mark fields
+      setForm(f => ({
+        ...f,
+        turningMarkName: "",
+        turningMarkLat: "",
+        turningMarkLng: "",
+      }));
+    } else if (newMode === "out_and_back") {
+      // Clear track-related state when switching to out-and-back mode
+      setTrackPoints([]);
+      setSelectedStartIndex(null);
+      setSelectedEndIndex(null);
+      setSelectionMode(null);
+      setTrackFile(null);
+      setExtractedDate(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      // For out-and-back, copy start coordinates to finish coordinates
+      if (form.startLat && form.startLng) {
+        setForm(f => ({
+          ...f,
+          finishLat: f.startLat,
+          finishLng: f.startLng,
+        }));
+      }
     } else {
-      // Clear manual coordinates when switching to GPX mode
+      // Clear manual coordinates when switching to track file mode
       setForm(f => ({
         ...f,
         startLat: "",
         startLng: "",
         finishLat: "",
         finishLng: "",
+        turningMarkName: "",
+        turningMarkLat: "",
+        turningMarkLng: "",
       }));
     }
   }
@@ -355,6 +389,10 @@ export function CourseSubmitFormWithGpx() {
         setError("FKT submission requires a track file. Please switch to 'Upload Track File' mode.");
         return;
       }
+      if (mode === "out_and_back") {
+        setError("FKT submission requires a track file. Please submit the route first and then add FKT attempts from the course detail page.");
+        return;
+      }
       if (!trackFile) {
         setError("Please select a track file for FKT submission.");
         return;
@@ -377,7 +415,7 @@ export function CourseSubmitFormWithGpx() {
       }
     }
 
-    let startLat, startLng, finishLat, finishLng;
+    let startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng;
 
     if (mode === "manual") {
       startLat = validateCoord("startLat", form.startLat, "lat");
@@ -386,6 +424,17 @@ export function CourseSubmitFormWithGpx() {
       finishLng = validateCoord("finishLng", form.finishLng, "lng");
 
       if (startLat === null || startLng === null || finishLat === null || finishLng === null) return;
+    } else if (mode === "out_and_back") {
+      startLat = validateCoord("startLat", form.startLat, "lat");
+      startLng = validateCoord("startLng", form.startLng, "lng");
+      turningMarkLat = validateCoord("turningMarkLat", form.turningMarkLat, "lat");
+      turningMarkLng = validateCoord("turningMarkLng", form.turningMarkLng, "lng");
+
+      if (startLat === null || startLng === null || turningMarkLat === null || turningMarkLng === null) return;
+
+      // For out-and-back routes, finish point is the same as start point
+      finishLat = startLat;
+      finishLng = startLng;
     } else {
       // GPX mode - points should be auto-selected, but validate just in case
       if (selectedStartIndex === null || selectedEndIndex === null) {
@@ -404,10 +453,38 @@ export function CourseSubmitFormWithGpx() {
     setLoading(true);
     try {
       // Step 1: Submit route
+      const courseData = {
+        name: form.name,
+        description: form.description,
+        country: form.country,
+        startName: form.startName,
+        finishName: "", // Will be set below
+        startLat,
+        startLng,
+        finishLat,
+        finishLng,
+        courseType: mode === "out_and_back" ? "OUT_AND_BACK" : "POINT_TO_POINT",
+        turningMarkName: undefined as string | undefined,
+        turningMarkLat: undefined as number | undefined,
+        turningMarkLng: undefined as number | undefined,
+      };
+
+      // For out-and-back routes, ensure finish name matches start name and add turning mark coordinates
+      if (mode === "out_and_back") {
+        courseData.finishName = form.startName;
+        courseData.turningMarkName = form.turningMarkName;
+        if (turningMarkLat !== undefined && turningMarkLng !== undefined) {
+          courseData.turningMarkLat = turningMarkLat;
+          courseData.turningMarkLng = turningMarkLng;
+        }
+      } else {
+        courseData.finishName = form.finishName;
+      }
+
       const courseRes = await fetch("/api/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, startLat, startLng, finishLat, finishLng }),
+        body: JSON.stringify(courseData),
       });
 
       if (!courseRes.ok) {
@@ -568,18 +645,29 @@ export function CourseSubmitFormWithGpx() {
                 : "border-transparent border-t-transparent border-l-transparent text-muted-foreground hover:text-foreground hover:border-border hover:border-t-border hover:border-l-border"
             }`}
           >
-            📍 Manual Entry
+            📍 Point to Point
           </button>
           <button
             type="button"
             onClick={() => switchMode("track_file")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 border-r border-t border-l-0 rounded-tr-md transition-colors ${
+            className={`px-4 py-2 text-sm font-medium border-b-2 border-t border-l-0 border-r-0 transition-colors ${
               mode === "track_file"
+                ? "border-primary border-t-border text-primary bg-background"
+                : "border-transparent border-t-transparent text-muted-foreground hover:text-foreground hover:border-border hover:border-t-border"
+            }`}
+          >
+            📂 Upload Track File
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode("out_and_back")}
+            className={`px-4 py-2 text-sm font-medium border-b-2 border-r border-t border-l-0 rounded-tr-md transition-colors ${
+              mode === "out_and_back"
                 ? "border-primary border-t-border border-r-border text-primary bg-background"
                 : "border-transparent border-t-transparent border-r-transparent text-muted-foreground hover:text-foreground hover:border-border hover:border-t-border hover:border-r-border"
             }`}
           >
-            📂 Upload Track File
+            🔄 Out and Back
           </button>
         </div>
         {mode === "track_file" && (
@@ -587,6 +675,14 @@ export function CourseSubmitFormWithGpx() {
             <p className="text-sm text-blue-700">
               📁 Upload your GPX or Velocitek file (.csv/.vcc) below. Start and finish points will be set automatically to the first and last track points.
               Use the buttons above the map to adjust them if needed.
+            </p>
+          </div>
+        )}
+        {mode === "out_and_back" && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-sm text-green-700">
+              🔄 Create an out-and-back course by specifying a start/finish point and a turning mark.
+              The start and finish coordinates should be the same location where the route begins and ends.
             </p>
           </div>
         )}
@@ -923,7 +1019,7 @@ export function CourseSubmitFormWithGpx() {
         {/* Start Point */}
         <div className="border rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            Start Point
+            {mode === "out_and_back" ? "Start / Finish Point" : "Start Point"}
           </h3>
           <div className="space-y-2">
             <Label htmlFor="startName">Name *</Label>
@@ -944,23 +1040,54 @@ export function CourseSubmitFormWithGpx() {
         {/* Finish Point */}
         <div className="border rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            Finish Point
+            {mode === "out_and_back" ? "Start/Finish Point" : "Finish Point"}
           </h3>
-          <div className="space-y-2">
-            <Label htmlFor="finishName">Name *</Label>
-            <Input
-              id="finishName"
-              value={form.finishName}
-              onChange={(e) => update("finishName", e.target.value)}
-              placeholder="e.g., Weymouth Harbour Entrance"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <CoordField id="finishLat" label="Latitude" value={form.finishLat} type="lat" disabled={mode === "track_file"} />
-            <CoordField id="finishLng" label="Longitude" value={form.finishLng} type="lng" disabled={mode === "track_file"} />
-          </div>
+          {mode === "out_and_back" ? (
+            <div className="space-y-2">
+              {/* No content for out-and-back finish point section */}
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="finishName">Name *</Label>
+                <Input
+                  id="finishName"
+                  value={form.finishName}
+                  onChange={(e) => update("finishName", e.target.value)}
+                  placeholder="e.g., Weymouth Harbour Entrance"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <CoordField id="finishLat" label="Latitude" value={form.finishLat} type="lat" disabled={mode === "track_file"} />
+                <CoordField id="finishLng" label="Longitude" value={form.finishLng} type="lng" disabled={mode === "track_file"} />
+              </div>
+            </>
+          )}
         </div>
+
+        {/* Turning Mark (for out-and-back only) */}
+        {mode === "out_and_back" && (
+          <div className="border rounded-lg p-4 space-y-4">
+            <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Turning Mark
+            </h3>
+            <div className="space-y-2">
+              <Label htmlFor="turningMarkName">Name *</Label>
+              <Input
+                id="turningMarkName"
+                value={form.turningMarkName}
+                onChange={(e) => update("turningMarkName", e.target.value)}
+                placeholder="e.g., Shambles Bank Buoy"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <CoordField id="turningMarkLat" label="Latitude" value={form.turningMarkLat} type="lat" disabled={false} />
+              <CoordField id="turningMarkLng" label="Longitude" value={form.turningMarkLng} type="lng" disabled={false} />
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="description">Notes to sailors <span className="text-muted-foreground font-normal">(optional)</span></Label>

@@ -21,6 +21,7 @@ interface Attempt {
   durationSec: number;
   avgSogKnots: number | null;
   maxSogKnots: number | null;
+  sailorName: string | null;
   athlete: { id: string; name: string | null };
 }
 
@@ -50,7 +51,9 @@ export function FktAttemptsTable({ attempts }: { attempts: Attempt[] }) {
     } else if (sortKey === "rigSize") {
       cmp = a.rigSize.localeCompare(b.rigSize);
     } else if (sortKey === "athlete") {
-      cmp = (a.athlete.name ?? "").localeCompare(b.athlete.name ?? "");
+      const aName = a.sailorName || a.athlete.name || "";
+      const bName = b.sailorName || b.athlete.name || "";
+      cmp = aName.localeCompare(bName);
     }
     return sortDir === "asc" ? cmp : -cmp;
   });
@@ -112,12 +115,16 @@ export function FktAttemptsTable({ attempts }: { attempts: Attempt[] }) {
                 {formatDuration(attempt.durationSec)}
               </TableCell>
               <TableCell>
-                <Link
-                  href={`/athletes/${attempt.athlete.id}`}
-                  className="text-primary underline hover:no-underline"
-                >
-                  {attempt.athlete.name ?? "Unknown"}
-                </Link>
+                {attempt.sailorName ? (
+                  <span className="text-foreground">{attempt.sailorName}</span>
+                ) : (
+                  <Link
+                    href={`/athletes/${attempt.athlete.id}`}
+                    className="text-primary underline hover:no-underline"
+                  >
+                    {attempt.athlete.name ?? "Unknown"}
+                  </Link>
+                )}
               </TableCell>
               <TableCell>
                 {attempt.avgSogKnots != null

@@ -18,6 +18,10 @@ interface Props {
   finishLng: number;
   startName: string;
   finishName: string;
+  turningMarkLat?: number;
+  turningMarkLng?: number;
+  turningMarkName?: string;
+  courseType?: "POINT_TO_POINT" | "OUT_AND_BACK";
 }
 
 export function CourseMap(props: Props) {

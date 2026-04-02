@@ -28,7 +28,16 @@ export default async function CourseDetailPage({ params }: Props) {
       attempts: {
         where: { status: "APPROVED" },
         orderBy: { durationSec: "asc" },
-        include: { athlete: { select: { id: true, name: true } } },
+        select: {
+          id: true,
+          rigSize: true,
+          date: true,
+          durationSec: true,
+          avgSogKnots: true,
+          maxSogKnots: true,
+          sailorName: true,
+          athlete: { select: { id: true, name: true } },
+        },
       },
     },
   });
@@ -89,26 +98,55 @@ export default async function CourseDetailPage({ params }: Props) {
         <div className="space-y-4">
           <div className="border rounded-lg p-4 space-y-3">
             <h2 className="font-semibold">Course Details</h2>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Start</p>
-                <p className="font-medium">{course.startName}</p>
-                <p className="font-mono text-xs text-muted-foreground">
-                  {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
-                </p>
+            {course.courseType === "OUT_AND_BACK" ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Start/Finish</p>
+                    <p className="font-medium">{course.startName}</p>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Turning Mark</p>
+                    <p className="font-medium">{course.turningMarkName}</p>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {course.turningMarkLat?.toFixed(6)}, {course.turningMarkLng?.toFixed(6)}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                  🔄 Out-and-back route: Start and finish at {course.startName}, round the turning mark at {course.turningMarkName}
+                </div>
               </div>
-              <div>
-                <p className="text-muted-foreground">Finish</p>
-                <p className="font-medium">{course.finishName}</p>
-                <p className="font-mono text-xs text-muted-foreground">
-                  {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
-                </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Start</p>
+                  <p className="font-medium">{course.startName}</p>
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Finish</p>
+                  <p className="font-medium">{course.finishName}</p>
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
             <div className="text-sm">
-              <span className="text-muted-foreground">Great-circle distance: </span>
+              <span className="text-muted-foreground">
+                {course.courseType === "OUT_AND_BACK" ? "Total distance: " : "Great-circle distance: "}
+              </span>
               <span className="font-medium">
-                {distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng)} nm
+                {course.courseType === "OUT_AND_BACK" && course.turningMarkLat && course.turningMarkLng
+                  ? (2 * distanceNm(course.startLat, course.startLng, course.turningMarkLat, course.turningMarkLng)).toFixed(1) + " nm"
+                  : distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng) + " nm"
+                }
               </span>
             </div>
             <div className="text-sm">
@@ -131,6 +169,10 @@ export default async function CourseDetailPage({ params }: Props) {
             finishLng={course.finishLng}
             startName={course.startName}
             finishName={course.finishName}
+            courseType={course.courseType}
+            turningMarkLat={course.turningMarkLat || undefined}
+            turningMarkLng={course.turningMarkLng || undefined}
+            turningMarkName={course.turningMarkName || undefined}
           />
         </div>
       </div>

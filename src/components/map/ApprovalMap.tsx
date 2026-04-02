@@ -14,6 +14,10 @@ const ApprovalMapInner = dynamic(() => import("./ApprovalMapInner"), {
 interface Props {
   startLat: number; startLng: number; finishLat: number; finishLng: number;
   startName: string; finishName: string;
+  courseType?: "POINT_TO_POINT" | "OUT_AND_BACK";
+  turningMarkLat?: number | null;
+  turningMarkLng?: number | null;
+  turningMarkName?: string | null;
 }
 
 export function ApprovalMap(props: Props) {

@@ -9,7 +9,7 @@ export const metadata = {
 export default async function SubmitCoursePage() {
   const session = await auth();
   if (!session) {
-    redirect("/api/auth/signin?callbackUrl=/courses/submit");
+    redirect("/auth/signin?callbackUrl=/courses/submit");
   }
 
   return (

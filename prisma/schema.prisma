@@ -26,6 +26,11 @@ enum AttemptStatus {
   REJECTED
 }
 
+enum CourseType {
+  POINT_TO_POINT
+  OUT_AND_BACK
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -84,12 +89,16 @@ model Course {
   name          String
   description   String?
   country       String
+  courseType    CourseType   @default(POINT_TO_POINT)
   startName     String
   finishName    String
   startLat      Float
   startLng      Float
   finishLat     Float
   finishLng     Float
+  turningMarkName String?
+  turningMarkLat  Float?
+  turningMarkLng  Float?
   distanceKm    Float?
   status        CourseStatus @default(PENDING)
   submittedById String

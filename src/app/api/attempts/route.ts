@@ -6,7 +6,7 @@ import { readFileContent } from "@/lib/storage";
 import { parseGpxXml } from "@/lib/gpx/parser";
 import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import { parseVelocitkCsv } from "@/lib/velocitek/parser";
-import { validateGpxTrack } from "@/lib/gpx/validator";
+import { validateGpxTrack, validateOutAndBackGpxTrack } from "@/lib/gpx/validator";
 import { computeSog, computeAvgMaxSog } from "@/lib/gpx/sog";
 import type { RigSize } from "@prisma/client";
 import type { ParsedGpx } from "@/lib/gpx/parser";
@@ -201,25 +201,55 @@ export async function POST(req: NextRequest) {
 
   console.log('🔍 Validating GPX track against course...');
   const normalizedParsed = normalizeToParseGpx(parsed);
-  const validation = validateGpxTrack(
-    normalizedParsed,
-    course.startLat,
-    course.startLng,
-    course.finishLat,
-    course.finishLng
-  );
+
+  let validation;
+  if (course.courseType === "OUT_AND_BACK") {
+    if (!course.turningMarkLat || !course.turningMarkLng) {
+      console.log('❌ FKT Submission: Out-and-back course missing turning mark coordinates');
+      return NextResponse.json({
+        error: "This out-and-back course is missing turning mark coordinates. Please contact an administrator."
+      }, { status: 500 });
+    }
+
+    validation = validateOutAndBackGpxTrack(
+      normalizedParsed,
+      course.startLat,
+      course.startLng,
+      course.turningMarkLat,
+      course.turningMarkLng
+    );
+  } else {
+    validation = validateGpxTrack(
+      normalizedParsed,
+      course.startLat,
+      course.startLng,
+      course.finishLat,
+      course.finishLng
+    );
+  }
 
   if (!validation.valid) {
     console.log('❌ FKT Submission: GPX validation failed:', {
       error: validation.error,
       nearestStartDistanceM: validation.nearestStartDistanceM,
       nearestFinishDistanceM: validation.nearestFinishDistanceM,
-      courseName: course.name
+      nearestTurningMarkDistanceM: validation.nearestTurningMarkDistanceM,
+      courseName: course.name,
+      courseType: course.courseType
     });
 
     let detailedError = validation.error;
-    if (validation.nearestStartDistanceM !== undefined && validation.nearestFinishDistanceM !== undefined) {
-      detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start and ${validation.nearestFinishDistanceM.toFixed(1)}m of the finish. Tracks must pass within 10m of both points.`;
+    if (course.courseType === "OUT_AND_BACK") {
+      if (validation.nearestStartDistanceM !== undefined) {
+        detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start/finish point.`;
+      }
+      if (validation.nearestTurningMarkDistanceM !== undefined) {
+        detailedError += ` Your track came within ${validation.nearestTurningMarkDistanceM.toFixed(1)}m of the turning mark.`;
+      }
+    } else {
+      if (validation.nearestStartDistanceM !== undefined && validation.nearestFinishDistanceM !== undefined) {
+        detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start and ${validation.nearestFinishDistanceM.toFixed(1)}m of the finish. Tracks must pass within 10m of both points.`;
+      }
     }
 
     // Save failed attempt for admin tracking
@@ -251,14 +281,17 @@ export async function POST(req: NextRequest) {
       // Don't fail the response if we can't save the tracking record
     }
 
-    return NextResponse.json(
-      {
-        error: detailedError,
-        nearestStartDistanceM: validation.nearestStartDistanceM,
-        nearestFinishDistanceM: validation.nearestFinishDistanceM,
-      },
-      { status: 422 }
-    );
+    const errorResponse: Record<string, unknown> = {
+      error: detailedError,
+      nearestStartDistanceM: validation.nearestStartDistanceM,
+      nearestFinishDistanceM: validation.nearestFinishDistanceM,
+    };
+
+    if (course.courseType === "OUT_AND_BACK" && validation.nearestTurningMarkDistanceM !== undefined) {
+      errorResponse.nearestTurningMarkDistanceM = validation.nearestTurningMarkDistanceM;
+    }
+
+    return NextResponse.json(errorResponse, { status: 422 });
   }
 
   // Compute SOG only over the race segment (start entry → end entry),

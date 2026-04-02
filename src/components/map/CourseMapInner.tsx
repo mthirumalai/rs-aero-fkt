@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -29,17 +29,27 @@ const endIcon = new L.Icon({
   popupAnchor: [1, -34],
 });
 
-function FitBounds({ startLat, startLng, finishLat, finishLng }: {
+const turningMarkIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+});
+
+function FitBounds({ startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng }: {
   startLat: number; startLng: number; finishLat: number; finishLng: number;
+  turningMarkLat?: number; turningMarkLng?: number;
 }) {
   const map = useMap();
   useEffect(() => {
-    const bounds = L.latLngBounds(
-      [startLat, startLng],
-      [finishLat, finishLng]
-    );
+    const points = [[startLat, startLng], [finishLat, finishLng]] as [number, number][];
+    if (turningMarkLat !== undefined && turningMarkLng !== undefined) {
+      points.push([turningMarkLat, turningMarkLng]);
+    }
+    const bounds = L.latLngBounds(points);
     map.fitBounds(bounds, { padding: [40, 40] });
-  }, [map, startLat, startLng, finishLat, finishLng]);
+  }, [map, startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng]);
   return null;
 }
 
@@ -50,9 +60,24 @@ interface Props {
   finishLng: number;
   startName: string;
   finishName: string;
+  turningMarkLat?: number;
+  turningMarkLng?: number;
+  turningMarkName?: string;
+  courseType?: "POINT_TO_POINT" | "OUT_AND_BACK";
 }
 
-export default function CourseMapInner({ startLat, startLng, finishLat, finishLng, startName, finishName }: Props) {
+export default function CourseMapInner({
+  startLat,
+  startLng,
+  finishLat,
+  finishLng,
+  startName,
+  finishName,
+  turningMarkLat,
+  turningMarkLng,
+  turningMarkName,
+  courseType
+}: Props) {
   const centerLat = (startLat + finishLat) / 2;
   const centerLng = (startLng + finishLng) / 2;
 
@@ -66,13 +91,46 @@ export default function CourseMapInner({ startLat, startLng, finishLat, finishLn
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds startLat={startLat} startLng={startLng} finishLat={finishLat} finishLng={finishLng} />
+      <FitBounds
+        startLat={startLat}
+        startLng={startLng}
+        finishLat={finishLat}
+        finishLng={finishLng}
+        turningMarkLat={turningMarkLat}
+        turningMarkLng={turningMarkLng}
+      />
       <Marker position={[startLat, startLng]} icon={startIcon}>
-        <Popup><strong>Start:</strong> {startName}</Popup>
+        <Popup>
+          <strong>{courseType === "OUT_AND_BACK" ? "Start/Finish:" : "Start:"}</strong> {startName}
+        </Popup>
       </Marker>
-      <Marker position={[finishLat, finishLng]} icon={endIcon}>
-        <Popup><strong>Finish:</strong> {finishName}</Popup>
-      </Marker>
+      {courseType === "OUT_AND_BACK" ? (
+        turningMarkLat !== undefined && turningMarkLng !== undefined && turningMarkName && (
+          <>
+            <Marker position={[turningMarkLat, turningMarkLng]} icon={turningMarkIcon}>
+              <Popup><strong>Turning Mark:</strong> {turningMarkName}</Popup>
+            </Marker>
+            <Polyline
+              positions={[[startLat, startLng], [turningMarkLat, turningMarkLng]]}
+              color="#3b82f6"
+              weight={3}
+              opacity={0.7}
+            />
+          </>
+        )
+      ) : (
+        <>
+          <Marker position={[finishLat, finishLng]} icon={endIcon}>
+            <Popup><strong>Finish:</strong> {finishName}</Popup>
+          </Marker>
+          <Polyline
+            positions={[[startLat, startLng], [finishLat, finishLng]]}
+            color="#3b82f6"
+            weight={3}
+            opacity={0.7}
+          />
+        </>
+      )}
     </MapContainer>
   );
 }

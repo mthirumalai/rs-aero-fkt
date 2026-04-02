@@ -36,29 +36,62 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, description, country, startName, finishName, startLat, startLng, finishLat, finishLng } = body;
+  const {
+    name,
+    description,
+    country,
+    startName,
+    finishName,
+    startLat,
+    startLng,
+    finishLat,
+    finishLng,
+    courseType = "POINT_TO_POINT",
+    turningMarkName,
+    turningMarkLat,
+    turningMarkLng
+  } = body;
 
   if (!name || !country || !startName || !finishName || startLat == null || startLng == null || finishLat == null || finishLng == null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
+  // Additional validation for out-and-back routes
+  if (courseType === "OUT_AND_BACK") {
+    if (!turningMarkName || turningMarkLat == null || turningMarkLng == null) {
+      return NextResponse.json({ error: "Out-and-back routes require turning mark name and coordinates" }, { status: 400 });
+    }
+  }
+
   const approvalToken = randomUUID();
 
+  const courseData = {
+    name,
+    description,
+    country,
+    startName,
+    finishName,
+    startLat: parseFloat(startLat),
+    startLng: parseFloat(startLng),
+    finishLat: parseFloat(finishLat),
+    finishLng: parseFloat(finishLng),
+    courseType: courseType as "POINT_TO_POINT" | "OUT_AND_BACK",
+    submittedById: session.user.id,
+    approvalToken,
+    status: "PENDING" as const,
+  };
+
+  // Add turning mark data for out-and-back routes
+  if (courseType === "OUT_AND_BACK") {
+    Object.assign(courseData, {
+      turningMarkName,
+      turningMarkLat: parseFloat(turningMarkLat),
+      turningMarkLng: parseFloat(turningMarkLng),
+    });
+  }
+
   const course = await prisma.course.create({
-    data: {
-      name,
-      description,
-      country,
-      startName,
-      finishName,
-      startLat: parseFloat(startLat),
-      startLng: parseFloat(startLng),
-      finishLat: parseFloat(finishLat),
-      finishLng: parseFloat(finishLng),
-      submittedById: session.user.id,
-      approvalToken,
-      status: "PENDING",
-    },
+    data: courseData,
   });
 
   // Record the initial submission in status history

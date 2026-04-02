@@ -35,7 +35,7 @@ export function ApproveCourseForm({ courseId, token }: Props) {
       }
       setResult(action === "approve" ? "approved" : "rejected");
       if (action === "approve") {
-        setTimeout(() => router.push(`/routes/${courseId}`), 2000);
+        setTimeout(() => router.push(`/courses/${courseId}`), 2000);
       }
     } catch {
       setError("Network error. Please try again.");

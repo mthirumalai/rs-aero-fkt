@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -104,7 +104,7 @@ export function Nav() {
               </DropdownMenu>
             ) : (
               <button
-                onClick={() => signIn()}
+                onClick={() => router.push('/auth/signin')}
                 className="text-gray-100 hover:text-white transition-colors text-sm"
               >
                 Sign In
