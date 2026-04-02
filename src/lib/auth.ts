@@ -138,9 +138,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async redirect({ url, baseUrl }) {
       // Enhanced redirect handling for production OAuth stability
-      console.log('🔄 Auth redirect:', { url, baseUrl, env: process.env.NODE_ENV });
-
-      // Get the correct base URL for the environment
       const correctBaseUrl = process.env.NEXTAUTH_URL || baseUrl;
 
       // If the URL already starts with correct base URL, use it
