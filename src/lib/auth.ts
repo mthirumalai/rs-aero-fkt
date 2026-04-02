@@ -23,6 +23,17 @@ const providers = [
   Google({
     clientId: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    // Enhanced OAuth configuration for production stability
+    authorization: {
+      params: {
+        scope: "openid email profile",
+        prompt: "consent", // Force fresh consent to avoid cached auth issues
+        access_type: "offline",
+        response_type: "code",
+      },
+    },
+    // Ensure proper PKCE verification
+    checks: ["pkce", "state"],
   }),
   // Apple is optional — omit if env vars are not set (e.g. local dev)
   ...(process.env.APPLE_CLIENT_ID
@@ -39,8 +50,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   trustHost: true,
+
+  // Explicit URL configuration for production
+  basePath: "/api/auth",
+
   session: {
     strategy: "database",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
     session({ session, user }) {
@@ -120,15 +137,54 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
     async redirect({ url, baseUrl }) {
-      // For all redirects, use the URL if it's internal, otherwise go to base
-      return url.startsWith(baseUrl) ? url : baseUrl;
+      // Enhanced redirect handling for production OAuth stability
+      console.log('🔄 Auth redirect:', { url, baseUrl, env: process.env.NODE_ENV });
+
+      // Get the correct base URL for the environment
+      const correctBaseUrl = process.env.NEXTAUTH_URL || baseUrl;
+
+      // If the URL already starts with correct base URL, use it
+      if (url.startsWith(correctBaseUrl)) {
+        return url;
+      }
+
+      // If the URL starts with the provided baseUrl (but not correct one), fix it
+      if (url.startsWith(baseUrl)) {
+        return url.replace(baseUrl, correctBaseUrl);
+      }
+
+      // If it's a relative path, prepend correct base URL
+      if (url.startsWith('/')) {
+        return `${correctBaseUrl}${url}`;
+      }
+
+      // Default to correct base URL
+      return correctBaseUrl;
     },
   },
-  // Temporarily disable custom pages for production stability
-  pages: process.env.NODE_ENV === "development" ? {
+  pages: {
     signIn: "/auth/signin",
     verifyRequest: "/auth/verify",
-  } : {},
+    error: "/auth/error", // Add error page for better debugging
+  },
+
+  // Enhanced configuration for PKCE stability
+  experimental: {
+    enableWebAuthn: false, // Disable if not using WebAuthn to reduce complexity
+  },
+
+  // Add explicit cookie configuration for production
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
 });
 
 declare module "next-auth" {

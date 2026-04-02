@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Test Generator">
+  <trk>
+    <name>Out and Back - Misses Start Point</name>
+    <trkseg>
+      <!-- Start point should be 50.5000, -2.0000 but track starts 20m away -->
+      <trkpt lat="50.4998" lon="-2.0000">
+        <time>2024-04-01T10:00:00Z</time>
+      </trkpt>
+      <!-- Heading north toward turning mark, staying 20m east of course line -->
+      <trkpt lat="50.5008" lon="-2.0000">
+        <time>2024-04-01T10:00:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5018" lon="-2.0000">
+        <time>2024-04-01T10:01:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5028" lon="-2.0000">
+        <time>2024-04-01T10:01:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5038" lon="-2.0000">
+        <time>2024-04-01T10:02:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5048" lon="-2.0000">
+        <time>2024-04-01T10:02:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5058" lon="-2.0000">
+        <time>2024-04-01T10:03:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5068" lon="-2.0000">
+        <time>2024-04-01T10:03:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5078" lon="-2.0000">
+        <time>2024-04-01T10:04:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5088" lon="-2.0000">
+        <time>2024-04-01T10:04:30Z</time>
+      </trkpt>
+
+      <!-- Approaching turning mark -->
+      <trkpt lat="50.5095" lon="-1.9999">
+        <time>2024-04-01T10:05:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5098" lon="-1.9998">
+        <time>2024-04-01T10:05:15Z</time>
+      </trkpt>
+
+      <!-- At turning mark: 50.5100, -2.0000 -->
+      <trkpt lat="50.5100" lon="-1.9997">
+        <time>2024-04-01T10:05:30Z</time>
+      </trkpt>
+
+      <!-- Round the mark correctly -->
+      <trkpt lat="50.5102" lon="-1.9998">
+        <time>2024-04-01T10:05:45Z</time>
+      </trkpt>
+      <trkpt lat="50.5102" lon="-2.0000">
+        <time>2024-04-01T10:06:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5102" lon="-2.0002">
+        <time>2024-04-01T10:06:15Z</time>
+      </trkpt>
+      <trkpt lat="50.5100" lon="-2.0003">
+        <time>2024-04-01T10:06:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5098" lon="-2.0002">
+        <time>2024-04-01T10:06:45Z</time>
+      </trkpt>
+
+      <!-- Heading back south, again staying away from start point -->
+      <trkpt lat="50.5088" lon="-2.0000">
+        <time>2024-04-01T10:07:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5078" lon="-2.0000">
+        <time>2024-04-01T10:07:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5068" lon="-2.0000">
+        <time>2024-04-01T10:08:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5058" lon="-2.0000">
+        <time>2024-04-01T10:08:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5048" lon="-2.0000">
+        <time>2024-04-01T10:09:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5038" lon="-2.0000">
+        <time>2024-04-01T10:09:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5028" lon="-2.0000">
+        <time>2024-04-01T10:10:00Z</time>
+      </trkpt>
+      <trkpt lat="50.5018" lon="-2.0000">
+        <time>2024-04-01T10:10:30Z</time>
+      </trkpt>
+      <trkpt lat="50.5008" lon="-2.0000">
+        <time>2024-04-01T10:11:00Z</time>
+      </trkpt>
+
+      <!-- End 20m away from finish point (which is same as start: 50.5000, -2.0000) -->
+      <trkpt lat="50.4998" lon="-2.0000">
+        <time>2024-04-01T10:11:30Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
