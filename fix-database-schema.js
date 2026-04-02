@@ -61,24 +61,35 @@ async function fixDatabaseSchema() {
 
       console.log('✅ Database schema fixed successfully!');
 
-      // Now mark the migration as applied
-      await prisma.$executeRaw`
-        INSERT INTO "_prisma_migrations" (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count)
-        VALUES (
-          gen_random_uuid(),
-          '4a9e85d42a81c7de4c91b06d8f1b7b4bb8b8b8e2b0e3a2b1c7d5e8f2a4b7c9d3',
-          now(),
-          '20260401234100_add_out_and_back_routes',
-          'Applied via schema fix script',
-          NULL,
-          now() - INTERVAL '1 second',
-          4
-        )
-        ON CONFLICT (migration_name) DO UPDATE SET
-          finished_at = now(),
-          logs = 'Applied via schema fix script - resolved P3009 error',
-          applied_steps_count = 4;
+      // Now mark the migration as applied (handle existing entries)
+      const existingMigration = await prisma.$queryRaw`
+        SELECT migration_name FROM "_prisma_migrations"
+        WHERE migration_name = '20260401234100_add_out_and_back_routes'
       `;
+
+      if (existingMigration.length === 0) {
+        await prisma.$executeRaw`
+          INSERT INTO "_prisma_migrations" (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count)
+          VALUES (
+            gen_random_uuid(),
+            '4a9e85d42a81c7de4c91b06d8f1b7b4bb8b8b8e2b0e3a2b1c7d5e8f2a4b7c9d3',
+            now(),
+            '20260401234100_add_out_and_back_routes',
+            'Applied via schema fix script',
+            NULL,
+            now() - INTERVAL '1 second',
+            4
+          );
+        `;
+      } else {
+        await prisma.$executeRaw`
+          UPDATE "_prisma_migrations" SET
+            finished_at = now(),
+            logs = 'Applied via schema fix script - resolved P3009 error',
+            applied_steps_count = 4
+          WHERE migration_name = '20260401234100_add_out_and_back_routes';
+        `;
+      }
 
       console.log('✅ Migration marked as applied!');
 
