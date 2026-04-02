@@ -6,7 +6,7 @@
     "dev": "next dev",
     "dev:local": "DATABASE_URL=\"postgresql://mthirumalai@localhost:5432/rsaerofkt\" next dev -p 3000",
     "build": "next build",
-    "start": "npx prisma generate && node mark-migration-resolved.js && npx prisma migrate deploy && next start",
+    "start": "npx prisma generate && node fix-database-schema.js && next start",
     "start:production": "npx prisma migrate deploy && next start",
     "migrate": "npx prisma migrate deploy",
     "lint": "next lint",
