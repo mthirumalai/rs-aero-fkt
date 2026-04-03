@@ -21,18 +21,32 @@ report them clearly so the developer can act on findings immediately.
 
 When asked to do a full site check with no specific URL, verify all of these:
 
+**Main Public Pages:**
 | Page | URL |
 |------|-----|
 | Landing | http://localhost:3000/ |
 | All FKTs | http://localhost:3000/fkts |
-| All Routes | http://localhost:3000/routes |
+| All Courses | http://localhost:3000/courses |
 | Stats | http://localhost:3000/stats |
 | Guidelines | http://localhost:3000/guidelines |
 | Contact | http://localhost:3000/contact |
-| Admin – Pending Routes | http://localhost:3000/admin/pending-routes |
+| Submit Course | http://localhost:3000/courses/submit |
 
-For the admin page, note whether it redirects to a login/auth wall — that's expected behaviour,
-not a bug. Report what you land on.
+**Admin Pages (require admin auth):**
+| Page | URL |
+|------|-----|
+| Manage Courses | http://localhost:3000/admin/manage-courses |
+| Approve Course | http://localhost:3000/admin/approve-course |
+| FKT Failures | http://localhost:3000/admin/fkt-failures |
+
+**Auth Pages:**
+| Page | URL |
+|------|-----|
+| Sign In | http://localhost:3000/auth/signin |
+| Profile Complete | http://localhost:3000/profile/complete |
+
+For admin pages, note whether they redirect to a login/auth wall — that's expected behavior
+for non-admin users, not a bug. Report what you land on.
 
 ---
 
@@ -68,6 +82,15 @@ Flag anything that looks like it would affect appearance or functionality.
 Use `resize_window` to set a standard desktop viewport (e.g. 1440 × 900).
 Take a screenshot with `computer` and carefully inspect:
 
+**Header and Navigation (critical for every page)**
+- Is the RS Aero FKT logo visible in the upper left corner?
+- Does the logo link to the landing page (http://localhost:3000/)?
+- Is the grey navigation bar present with these items: FKTs, Courses, Guidelines, Contact, Admin, User?
+- Are the navigation menu items right-aligned in the grey bar?
+- Are all navigation links functional and pointing to the correct URLs?
+- Does the Admin menu item appear only for admin users?
+- Does the User menu show the appropriate sign-in/profile state?
+
 **Layout**
 - Are elements positioned correctly (no overlapping, no unexpected gaps)?
 - Is the page overflowing horizontally (horizontal scrollbar where there shouldn't be one)?
@@ -98,11 +121,18 @@ Take a screenshot with `computer` and carefully inspect:
 Use `resize_window` to simulate a tablet (768 × 1024) and mobile (390 × 844) viewport.
 Take a screenshot at each size. Focus on:
 
+**Mobile Navigation (critical)**
 - Does the responsive layout kick in correctly?
-- Is the navigation usable (hamburger menu, etc.)?
+- Is the RS Aero FKT logo still visible and functional on small screens?
+- How does the navigation menu adapt (hamburger menu, collapsed menu, etc.)?
+- Are all navigation items (FKTs, Courses, Guidelines, Contact, Admin, User) still accessible?
+- Is the navigation usable with touch interactions?
+
+**General Mobile Layout**
 - Is text readable without zooming?
-- Are touch targets (buttons, links) large enough?
+- Are touch targets (buttons, links) large enough (minimum 44px)?
 - Is anything clipped or hidden that shouldn't be?
+- Do tables or wide content scroll horizontally appropriately?
 
 ---
 
@@ -125,6 +155,12 @@ Write a clear, structured report. Use this format:
 ### Visual Verification Report: [URL]
 **Checked at:** [timestamp]
 **Viewports:** Desktop (1440×900), Tablet (768×1024), Mobile (390×844)
+
+#### 🧭 Navigation & Header Verification
+- **Logo:** RS Aero FKT logo present in upper left? Links to home?
+- **Menu Items:** FKTs, Courses, Guidelines, Contact, Admin, User present and right-aligned?
+- **Responsive:** Navigation adapts properly on mobile/tablet?
+- **Access Control:** Admin menu shows only for admin users?
 
 #### ✅ Passed
 - [List things that look correct]

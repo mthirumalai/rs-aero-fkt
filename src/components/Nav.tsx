@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,7 +21,21 @@ export function Nav() {
     <header className="sticky top-0 z-50">
       {/* Dark grey top bar with navigation — #616161, matches rsaerosailing.org */}
       <div style={{ backgroundColor: "#616161" }} className="text-white text-sm py-2 px-8">
-        <div className="flex items-center justify-end gap-6">
+        <div className="flex items-center justify-between gap-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/logo.png"
+              alt="RS Aero FKT"
+              width={162}
+              height={28}
+              className="h-6 w-auto"
+              priority
+            />
+          </Link>
+
+          {/* Right side container */}
+          <div className="flex items-center gap-6">
           {/* Navigation links */}
           <nav className="hidden md:flex items-center gap-6">
             <Link
@@ -110,6 +125,7 @@ export function Nav() {
                 Sign In
               </button>
             )}
+          </div>
           </div>
         </div>
       </div>
