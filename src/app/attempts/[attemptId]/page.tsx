@@ -40,8 +40,12 @@ export default async function AttemptDetailPage({ params }: Props) {
 
   if (!attempt) notFound();
 
-  // Check if user can upload photos (athlete or sailor)
+  // Check if current user is admin
+  const isAdmin = !!session?.user?.email && session.user.email === process.env.ADMIN_EMAIL;
+
+  // Check if user can upload photos (admin, athlete, or sailor)
   const canUploadPhotos = session?.user?.id && (
+    isAdmin ||
     session.user.id === attempt.athleteId ||
     (session.user.email && attempt.sailorEmail && session.user.email === attempt.sailorEmail)
   );
