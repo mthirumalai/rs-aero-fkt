@@ -18,12 +18,14 @@ enum CourseStatus {
   PENDING
   APPROVED
   REJECTED
+  REVOKED
 }
 
 enum AttemptStatus {
   PENDING
   APPROVED
   REJECTED
+  REVOKED
 }
 
 enum CourseType {

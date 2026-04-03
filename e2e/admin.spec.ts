@@ -20,7 +20,7 @@ test.describe('Admin Functionality', () => {
   });
 
   test('should list courses pending approval', async ({ page }) => {
-    await page.goto('/admin/courses');
+    await page.goto('/admin/manage-courses');
 
     // Look for list of courses awaiting approval
     const pendingList = page.locator('.pending-courses-list, [data-testid="pending-courses"]');
@@ -36,7 +36,7 @@ test.describe('Admin Functionality', () => {
   });
 
   test('should show course details for approval', async ({ page }) => {
-    await page.goto('/admin/courses');
+    await page.goto('/admin/manage-courses');
 
     // Click on a pending course
     const courseItem = page.locator('.pending-course, [data-testid="pending-course"]').first();
@@ -58,7 +58,7 @@ test.describe('Admin Functionality', () => {
   });
 
   test('should handle course approval workflow', async ({ page }) => {
-    await page.goto('/admin/courses');
+    await page.goto('/admin/manage-courses');
 
     const approveButton = page.locator('button:has-text("Approve")').first();
     if (await approveButton.count() > 0) {
@@ -71,7 +71,7 @@ test.describe('Admin Functionality', () => {
   });
 
   test('should handle course rejection', async ({ page }) => {
-    await page.goto('/admin/courses');
+    await page.goto('/admin/manage-courses');
 
     const rejectButton = page.locator('button:has-text("Reject"), button:has-text("Decline")').first();
     if (await rejectButton.count() > 0) {
@@ -123,7 +123,7 @@ test.describe('Admin Functionality', () => {
   });
 
   test('should handle bulk operations', async ({ page }) => {
-    await page.goto('/admin/courses');
+    await page.goto('/admin/manage-courses');
 
     // Look for bulk selection checkboxes
     const checkboxes = page.locator('input[type="checkbox"]');

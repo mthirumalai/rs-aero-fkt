@@ -36,13 +36,19 @@ type CourseRow = {
   rejectionReason?: string | null;
 };
 
+type RevokedCourseRow = CourseRow & {
+  approvedAt: string | null;
+  revokedAttemptsCount: number;
+};
+
 interface Props {
   pendingCourses: CourseRow[];
   rejectedCourses: CourseRow[];
+  revokedCourses: RevokedCourseRow[];
   isAdmin: boolean;
 }
 
-export function PendingCoursesClient({ pendingCourses, rejectedCourses, isAdmin }: Props) {
+export function ManageCoursesClient({ pendingCourses, rejectedCourses, revokedCourses, isAdmin }: Props) {
   const [selectedRejected, setSelectedRejected] = useState<CourseRow | null>(null);
   const [reopeningCourse, setReopeningCourse] = useState<string | null>(null);
 
@@ -71,7 +77,7 @@ export function PendingCoursesClient({ pendingCourses, rejectedCourses, isAdmin 
   return (
     <>
       <PageHeader
-        title="Course Submissions"
+        title="Manage Courses"
       />
       <div className="container mx-auto px-4 py-8 max-w-5xl">
 
@@ -243,6 +249,70 @@ export function PendingCoursesClient({ pendingCourses, rejectedCourses, isAdmin 
           </div>
         )}
       </section>
+
+      {/* REVOKED TABLE - Admin Only */}
+      {isAdmin && (
+        <section className="mt-12">
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-xl font-semibold">Revoked</h2>
+            <Badge variant="destructive">{revokedCourses.length}</Badge>
+            <p className="text-xs text-muted-foreground ml-2">Admin only</p>
+          </div>
+          {revokedCourses.length === 0 ? (
+            <p className="text-muted-foreground text-sm py-8 text-center border rounded-lg">
+              No revoked courses.
+            </p>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table className="min-w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="max-w-[200px]">Course</TableHead>
+                    <TableHead className="w-24">Country</TableHead>
+                    <TableHead className="w-32">Submitted By</TableHead>
+                    <TableHead className="w-24">Approved</TableHead>
+                    <TableHead className="w-20">FKTs</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {revokedCourses.map((course) => (
+                    <TableRow key={course.id}>
+                      <TableCell className="max-w-[200px]">
+                        <div className="font-medium truncate" title={course.name}>{course.name}</div>
+                        <div className="text-xs text-muted-foreground truncate" title={
+                          course.courseType === "OUT_AND_BACK"
+                            ? `Start/Finish: ${course.startName} • Turning Mark: ${course.turningMarkName || 'N/A'}`
+                            : `${course.startName} → ${course.finishName}`
+                        }>
+                          {course.courseType === "OUT_AND_BACK"
+                            ? `Start/Finish: ${course.startName} • Turning Mark: ${course.turningMarkName || 'N/A'}`
+                            : `${course.startName} → ${course.finishName}`
+                          }
+                        </div>
+                      </TableCell>
+                      <TableCell className="w-24 truncate" title={COUNTRY_NAMES[course.country] ?? course.country}>
+                        {COUNTRY_NAMES[course.country] ?? course.country}
+                      </TableCell>
+                      <TableCell className="w-32">
+                        <div className="text-sm truncate" title={course.submittedBy.name ?? ''}>{course.submittedBy.name}</div>
+                        <div className="text-xs text-muted-foreground truncate" title={course.submittedBy.email ?? ''}>{course.submittedBy.email}</div>
+                      </TableCell>
+                      <TableCell className="w-24 text-sm text-muted-foreground whitespace-nowrap">
+                        {course.approvedAt ? new Date(course.approvedAt).toLocaleDateString() : '—'}
+                      </TableCell>
+                      <TableCell className="w-20 text-sm text-muted-foreground">
+                        {course.revokedAttemptsCount} revoked
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* REJECTION DETAIL MODAL */}
       {selectedRejected && (

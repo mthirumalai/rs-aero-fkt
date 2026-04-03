@@ -57,8 +57,8 @@ export function Nav() {
                 <DropdownMenuItem onClick={() => router.push("/stats")}>
                   Stats
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/admin/pending-courses")}>
-                  Pending Courses
+                <DropdownMenuItem onClick={() => router.push("/admin/manage-courses")}>
+                  Manage Courses
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/admin/fkt-failures")}>
                   FKT Failures

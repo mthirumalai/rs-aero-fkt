@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { PendingCoursesClient } from "./PendingCoursesClient";
+import { ManageCoursesClient } from "./ManageCoursesClient";
 
-export const metadata = { title: "Course Submissions — RS Aero FKT" };
+export const metadata = { title: "Manage Courses — RS Aero FKT" };
 
-export default async function PendingCoursesPage() {
+export default async function ManageCoursesPage() {
   const session = await auth();
 
   const isAdmin = !!session?.user?.email && session.user.email === process.env.ADMIN_EMAIL;
@@ -19,7 +19,7 @@ export default async function PendingCoursesPage() {
     finalIsAdmin: isAdmin
   });
 
-  const [pendingCourses, rejectedCourses] = await Promise.all([
+  const [pendingCourses, rejectedCourses, revokedCourses] = await Promise.all([
     prisma.course.findMany({
       where: { status: "PENDING" },
       select: {
@@ -64,6 +64,32 @@ export default async function PendingCoursesPage() {
       },
       orderBy: { submittedAt: "desc" },
     }),
+    prisma.course.findMany({
+      where: { status: "REVOKED" },
+      select: {
+        id: true,
+        name: true,
+        country: true,
+        courseType: true,
+        startName: true,
+        startLat: true,
+        startLng: true,
+        finishName: true,
+        finishLat: true,
+        finishLng: true,
+        turningMarkName: true,
+        turningMarkLat: true,
+        turningMarkLng: true,
+        submittedAt: true,
+        approvedAt: true,
+        submittedBy: { select: { name: true, email: true } },
+        attempts: {
+          where: { status: "REVOKED" },
+          select: { id: true },
+        },
+      },
+      orderBy: { submittedAt: "desc" },
+    }),
   ]);
 
   const serializePending = (r: (typeof pendingCourses)[number]) => ({
@@ -78,10 +104,18 @@ export default async function PendingCoursesPage() {
     submittedAt: r.submittedAt.toISOString(),
   });
 
+  const serializeRevoked = (r: (typeof revokedCourses)[number]) => ({
+    ...r,
+    submittedAt: r.submittedAt.toISOString(),
+    approvedAt: r.approvedAt?.toISOString() || null,
+    revokedAttemptsCount: r.attempts.length,
+  });
+
   return (
-    <PendingCoursesClient
+    <ManageCoursesClient
       pendingCourses={pendingCourses.map(serializePending)}
       rejectedCourses={rejectedCourses.map(serializeRejected)}
+      revokedCourses={revokedCourses.map(serializeRevoked)}
       isAdmin={isAdmin}
     />
   );

@@ -13,6 +13,8 @@ import { RegionFilter } from "@/components/RegionFilter";
 import { getCountriesForRegion, REGION_LABELS, type Region } from "@/lib/regions";
 import { RigIcon } from "@/components/RigIcon";
 import { PageHeader } from "@/components/PageHeader";
+import { auth } from "@/lib/auth";
+import { RevokeButton } from "@/components/RevokeButton";
 
 // Utility function to format duration in seconds to readable time
 function formatDuration(durationSec: number): string {
@@ -36,6 +38,9 @@ interface Props {
 }
 
 export default async function CoursesPage({ searchParams }: Props) {
+  const session = await auth();
+  const isAdmin = !!session?.user?.email && session.user.email === process.env.ADMIN_EMAIL;
+
   const regionParam = searchParams.region;
   const region = (regionParam && regionParam !== "all") ? regionParam as Region : undefined;
 
@@ -50,7 +55,11 @@ export default async function CoursesPage({ searchParams }: Props) {
     orderBy: { approvedAt: "desc" },
     include: {
       attempts: {
-        where: { status: "APPROVED" },
+        where: {
+          status: "APPROVED",
+          // Ensure we don't show attempts from revoked courses
+          course: { status: "APPROVED" }
+        },
         orderBy: { durationSec: "asc" },
         distinct: ["rigSize"],
         select: {
@@ -114,6 +123,7 @@ export default async function CoursesPage({ searchParams }: Props) {
                   </div>
                 </TableHead>
                 <TableHead>Submit</TableHead>
+                {isAdmin && <TableHead>Admin</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -188,6 +198,11 @@ export default async function CoursesPage({ searchParams }: Props) {
                       </Link>
                     </Button>
                   </TableCell>
+                  {isAdmin && (
+                    <TableCell className="py-1">
+                      <RevokeButton courseId={course.id} courseName={course.name} />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
