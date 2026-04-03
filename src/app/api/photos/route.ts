@@ -30,9 +30,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
   }
 
-  // Check if user has permission (is the athlete or sailor)
+  // Check if user has permission (admin, athlete, or sailor)
   const userEmail = session.user.email;
+  const isAdmin = !!userEmail && userEmail === process.env.ADMIN_EMAIL;
   const canUpload =
+    isAdmin || // Admin can upload to any attempt
     attempt.athleteId === session.user.id || // User is the athlete who submitted
     (attempt.sailorEmail && attempt.sailorEmail === userEmail); // User is the sailor
 
