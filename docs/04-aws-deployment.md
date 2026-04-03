@@ -54,6 +54,58 @@ Configure bucket policies:
 }
 ```
 
+**S3 CORS Configuration**:
+
+Both buckets need CORS policies to allow browser uploads from your application domain:
+
+```bash
+# Configure CORS for photos bucket
+aws s3api put-bucket-cors \
+  --bucket rs-aero-fkt-photos-prod \
+  --cors-configuration '{
+    "CORSRules": [
+      {
+        "AllowedOrigins": ["https://yourdomain.com"],
+        "AllowedMethods": ["PUT", "POST"],
+        "AllowedHeaders": ["*"],
+        "ExposeHeaders": ["ETag"]
+      }
+    ]
+  }' \
+  --region us-east-1
+
+# Configure CORS for GPX bucket  
+aws s3api put-bucket-cors \
+  --bucket rs-aero-fkt-gpx-prod \
+  --cors-configuration '{
+    "CORSRules": [
+      {
+        "AllowedOrigins": ["https://yourdomain.com"],
+        "AllowedMethods": ["PUT", "POST"],
+        "AllowedHeaders": ["*"],
+        "ExposeHeaders": ["ETag"]
+      }
+    ]
+  }' \
+  --region us-east-1
+```
+
+Or configure via AWS Console:
+1. Go to S3 Console → Select bucket → Permissions tab
+2. Scroll to "Cross-origin resource sharing (CORS)"
+3. Add this configuration:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://yourdomain.com"],
+    "AllowedMethods": ["PUT", "POST"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"]
+  }
+]
+```
+
 #### SES (Email Service)
 ```bash
 # Verify sender email domain
@@ -67,6 +119,49 @@ aws ses verify-domain-identity --domain yourdomain.com
 Create IAM role with these policies:
 - `AmazonS3FullAccess` (or custom policy for your buckets only)
 - `AmazonSESFullAccess` (or custom policy for sending only)
+
+**Custom S3 Policy (Recommended)**:
+Instead of using `AmazonS3FullAccess`, create a custom policy with minimal required permissions:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::rs-aero-fkt-gpx-prod/*",
+                "arn:aws:s3:::rs-aero-fkt-photos-prod/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::rs-aero-fkt-gpx-prod",
+                "arn:aws:s3:::rs-aero-fkt-photos-prod"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ses:SendEmail",
+                "ses:SendRawEmail"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+**Important**: The `s3:ListBucket` permission is required for presigned URL generation and bucket operations. Without it, photo uploads will fail with permissions errors.
 
 Attach role to your EC2 instance.
 
@@ -672,6 +767,50 @@ aws s3 ls s3://rs-aero-fkt-photos-prod
 
 # Check application logs for S3 errors
 pm2 logs | grep -i s3
+```
+
+**Common Photo Upload Issues**:
+
+**CORS Errors**: If browser shows CORS policy errors:
+```
+Access to fetch at 'https://bucket.s3.region.amazonaws.com/...' 
+from origin 'https://yourdomain.com' has been blocked by CORS policy
+```
+
+**Solution**: Configure S3 CORS policy as described in S3 setup section.
+
+**Permission Denied (403 Errors)**:
+```
+"You can only upload photos for your own attempts"
+```
+
+**Root Causes**:
+- Missing `s3:ListBucket` permission in IAM policy
+- IAM user doesn't have `s3:PutObject` permission
+- Bucket doesn't exist or wrong bucket name in environment variables
+
+**Solution**: Verify IAM policy includes all required S3 permissions.
+
+**Undefined URL Errors**:
+```
+undefined.s3.undefined.amazonaws.com/photo.jpg
+```
+
+**Root Cause**: Environment variables not available client-side.
+**Solution**: Photo URLs should be generated server-side only.
+
+**Testing S3 Upload Flow**:
+```bash
+# Test IAM permissions
+aws s3 ls s3://rs-aero-fkt-photos-prod/
+
+# Test upload with AWS CLI
+echo "test" > test.txt
+aws s3 cp test.txt s3://rs-aero-fkt-photos-prod/test.txt
+aws s3 rm s3://rs-aero-fkt-photos-prod/test.txt
+
+# Check CORS configuration
+aws s3api get-bucket-cors --bucket rs-aero-fkt-photos-prod
 ```
 
 This completes the comprehensive deployment and operations guide for running RS Aero FKT on AWS EC2.
