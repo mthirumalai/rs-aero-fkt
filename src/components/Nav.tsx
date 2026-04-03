@@ -24,14 +24,16 @@ export function Nav() {
         <div className="flex items-center justify-between gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <Image
-              src="/logo.png"
-              alt="RS Aero FKT"
-              width={162}
-              height={28}
-              className="h-6 w-auto"
-              priority
-            />
+            <div className="bg-white px-2 py-1 rounded-sm">
+              <Image
+                src="/logo.png"
+                alt="RS Aero FKT"
+                width={162}
+                height={28}
+                className="h-6 w-auto"
+                priority
+              />
+            </div>
           </Link>
 
           {/* Right side container */}
