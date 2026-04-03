@@ -46,7 +46,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid upload type" }, { status: 400 });
   }
 
-  const uploadUrl = await getUploadUrl(bucket, key, contentType);
+  try {
+    console.log(`📤 [S3_UPLOAD_REQUEST] Generating upload URL:`, {
+      userId: session.user.id,
+      type,
+      filename,
+      contentType,
+      bucket,
+      key,
+      timestamp: new Date().toISOString()
+    });
 
-  return NextResponse.json({ uploadUrl, key, maxSize });
+    const uploadUrl = await getUploadUrl(bucket, key, contentType);
+
+    console.log(`✅ [S3_UPLOAD_URL_GENERATED] Upload URL created for ${type}:`, {
+      userId: session.user.id,
+      key,
+      bucket
+    });
+
+    return NextResponse.json({ uploadUrl, key, maxSize });
+  } catch (error) {
+    console.error(`❌ [S3_UPLOAD_ERROR] Failed to generate upload URL:`, {
+      userId: session.user.id,
+      type,
+      filename,
+      bucket,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString()
+    });
+
+    return NextResponse.json({
+      error: "Failed to generate upload URL. Please check S3 configuration."
+    }, { status: 500 });
+  }
 }

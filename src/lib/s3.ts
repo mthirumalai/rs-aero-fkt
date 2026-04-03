@@ -18,12 +18,36 @@ export async function getPresignedUploadUrl(
   contentType: string,
   expiresIn = 3600
 ): Promise<string> {
-  const command = new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    ContentType: contentType,
-  });
-  return getSignedUrl(s3Client, command, { expiresIn });
+  try {
+    console.log(`🔗 [S3_PRESIGN] Generating presigned URL:`, {
+      bucket,
+      key,
+      contentType,
+      expiresIn,
+      region: process.env.AWS_REGION
+    });
+
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ContentType: contentType,
+    });
+
+    const url = await getSignedUrl(s3Client, command, { expiresIn });
+
+    console.log(`✅ [S3_PRESIGN_SUCCESS] Presigned URL generated for bucket: ${bucket}`);
+    return url;
+  } catch (error) {
+    console.error(`❌ [S3_PRESIGN_ERROR] Failed to generate presigned URL:`, {
+      bucket,
+      key,
+      contentType,
+      region: process.env.AWS_REGION,
+      error: error instanceof Error ? error.message : String(error),
+      errorCode: error instanceof Error && 'code' in error ? (error as Error & { code: string }).code : 'Unknown'
+    });
+    throw error;
+  }
 }
 
 export async function getPresignedDownloadUrl(

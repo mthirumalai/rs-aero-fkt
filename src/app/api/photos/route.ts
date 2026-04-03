@@ -43,6 +43,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    console.log(`📸 [PHOTO_DB_CREATE] Creating photo record:`, {
+      userId: session.user.id,
+      userEmail: session.user.email,
+      attemptId,
+      s3Key,
+      hasCaption: !!caption,
+      timestamp: new Date().toISOString()
+    });
+
     const photo = await prisma.attemptPhoto.create({
       data: {
         attemptId,
@@ -51,9 +60,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log(`✅ [PHOTO_DB_SUCCESS] Photo record created:`, {
+      photoId: photo.id,
+      attemptId,
+      s3Key
+    });
+
     return NextResponse.json(photo, { status: 201 });
   } catch (error) {
-    console.error("Failed to create photo record:", error);
+    console.error("❌ [PHOTO_DB_ERROR] Failed to create photo record:", {
+      userId: session.user.id,
+      userEmail: session.user.email,
+      attemptId,
+      s3Key,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString()
+    });
+
     return NextResponse.json({
       error: "Failed to save photo"
     }, { status: 500 });

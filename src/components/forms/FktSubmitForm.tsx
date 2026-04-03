@@ -31,6 +31,7 @@ export function FktSubmitForm({ courseId, submitterName, submitterEmail, preferr
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [photoUploadWarning, setPhotoUploadWarning] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     rigSize: preferredRigSize || "",
@@ -310,10 +311,12 @@ export function FktSubmitForm({ courseId, submitterName, submitterEmail, preferr
         setUploadProgress("Uploading photos...");
         try {
           for (const photoFile of photoFiles) {
+            console.log(`📤 [PHOTO_UPLOAD] Starting upload for ${photoFile.name} (${photoFile.size} bytes)`);
             const s3Key = await uploadPhotoFile(photoFile);
+            console.log(`✅ [PHOTO_UPLOAD] S3 upload successful: ${s3Key}`);
 
             // Create photo record
-            await fetch("/api/photos", {
+            const photoRes = await fetch("/api/photos", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -322,11 +325,25 @@ export function FktSubmitForm({ courseId, submitterName, submitterEmail, preferr
                 caption: null, // No caption during submission, can be added later
               }),
             });
+
+            if (!photoRes.ok) {
+              const photoError = await photoRes.json();
+              throw new Error(`Photo database save failed: ${photoError.error || 'Unknown error'}`);
+            }
+            console.log(`✅ [PHOTO_UPLOAD] Database record created for: ${photoFile.name}`);
           }
-          console.log('📸 Photos uploaded successfully');
+          console.log('📸 [PHOTO_UPLOAD] All photos uploaded successfully');
         } catch (photoError) {
-          console.error('Photo upload failed:', photoError);
-          // Don't fail the whole submission for photo errors
+          const errorMsg = photoError instanceof Error ? photoError.message : String(photoError);
+          console.error('❌ [PHOTO_UPLOAD_FAILED] Photo upload failed:', {
+            error: errorMsg,
+            attemptId: attempt.id,
+            photoCount: photoFiles.length,
+            timestamp: new Date().toISOString()
+          });
+
+          // Set warning for user feedback
+          setPhotoUploadWarning(`Photos could not be uploaded: ${errorMsg}. Your FKT attempt was saved successfully. You can add photos later from the attempt page.`);
         }
       }
 
@@ -356,11 +373,27 @@ export function FktSubmitForm({ courseId, submitterName, submitterEmail, preferr
 
   if (success) {
     return (
-      <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
-        <p className="text-2xl font-bold text-green-800 mb-2">FKT Submitted!</p>
-        <p className="text-green-700">
-          Your GPX track has been validated. Redirecting to your attempt page...
-        </p>
+      <div className="space-y-4">
+        <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
+          <p className="text-2xl font-bold text-green-800 mb-2">FKT Submitted!</p>
+          <p className="text-green-700">
+            Your GPX track has been validated. Redirecting to your attempt page...
+          </p>
+        </div>
+
+        {photoUploadWarning && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md text-sm">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-yellow-400">⚠️</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Photo Upload Issue</h3>
+                <p className="mt-1 text-sm text-yellow-700">{photoUploadWarning}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
