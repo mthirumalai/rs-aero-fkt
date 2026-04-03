@@ -2,13 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { PhotoUploadForm } from "@/components/forms/PhotoUploadForm";
-import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
 
 interface Photo {
   id: string;
   s3Key: string;
   caption: string | null;
   createdAt: Date;
+  url?: string; // URL will be provided by the API
 }
 
 interface Props {
@@ -45,7 +45,7 @@ export function AttemptPhotosSection({ initialPhotos, attemptId, canUploadPhotos
             <div key={photo.id} className="space-y-2">
               <div className="aspect-video rounded-lg overflow-hidden bg-muted">
                 <img
-                  src={getPhotoUrl(photo.s3Key)}
+                  src={photo.url || `https://rs-aero-fkt-photos-test.s3.us-east-1.amazonaws.com/${photo.s3Key}`}
                   alt={photo.caption ?? "Attempt photo"}
                   className="w-full h-full object-cover"
                 />

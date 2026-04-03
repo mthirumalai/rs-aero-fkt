@@ -8,6 +8,7 @@ import { TrackPlayback } from "@/components/playback/TrackPlayback";
 import { RigIcon } from "@/components/RigIcon";
 import { AttemptPhotosSection } from "@/components/AttemptPhotosSection";
 import { auth } from "@/lib/auth";
+import { getPublicPhotoUrl } from "@/lib/storage";
 
 interface Props {
   params: { attemptId: string };
@@ -71,6 +72,12 @@ export default async function AttemptDetailPage({ params }: Props) {
     if (rank === 3) return "3rd fastest time";
     return `${rank}th fastest time`;
   };
+
+  // Generate URLs for initial photos
+  const photosWithUrls = attempt.photos.map(photo => ({
+    ...photo,
+    url: getPublicPhotoUrl(photo.s3Key)
+  }));
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -210,7 +217,7 @@ export default async function AttemptDetailPage({ params }: Props) {
 
       {/* Photos */}
       <AttemptPhotosSection
-        initialPhotos={attempt.photos}
+        initialPhotos={photosWithUrls}
         attemptId={attempt.id}
         canUploadPhotos={!!canUploadPhotos}
       />

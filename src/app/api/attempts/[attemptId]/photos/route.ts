@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getPublicPhotoUrl } from "@/lib/storage";
 
 export async function GET(
   _req: NextRequest,
@@ -28,5 +29,11 @@ export async function GET(
     return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
   }
 
-  return NextResponse.json(attempt.photos);
+  // Generate full URLs for photos server-side
+  const photosWithUrls = attempt.photos.map(photo => ({
+    ...photo,
+    url: getPublicPhotoUrl(photo.s3Key)
+  }));
+
+  return NextResponse.json(photosWithUrls);
 }
