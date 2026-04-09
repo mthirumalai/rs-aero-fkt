@@ -2,6 +2,7 @@ import { parseGpxXml } from '../gpx/parser';
 import { parseVccXml } from '../velocitek/vcc-parser';
 import { validateGpxTrack } from '../gpx/validator';
 import { computeSog, computeAvgMaxSog } from '../gpx/sog';
+import { VALIDATION_TOLERANCE_METERS } from '../gpx/constants';
 
 describe('File Processing Integration Tests', () => {
 
@@ -10,7 +11,6 @@ describe('File Processing Integration Tests', () => {
   const ROUTE_START_LNG = -78.011667;
   const ROUTE_END_LAT = 34.518056;
   const ROUTE_END_LNG = -77.448056;
-  const TOLERANCE_M = 10;
 
   describe('GPX File Processing Pipeline', () => {
     test('should process valid GPX file from upload to SOG calculation', () => {
@@ -54,7 +54,7 @@ describe('File Processing Integration Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(validation.valid).toBe(true);
@@ -101,12 +101,12 @@ describe('File Processing Integration Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(validation.valid).toBe(false);
       expect(validation.error).toContain('does not pass within 10m');
-      expect(validation.nearestStartDistanceM).toBeGreaterThan(TOLERANCE_M);
+      expect(validation.nearestStartDistanceM).toBeGreaterThan(VALIDATION_TOLERANCE_METERS);
     });
 
     test('should handle GPX files with minimal track data', () => {
@@ -131,7 +131,7 @@ describe('File Processing Integration Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(validation.valid).toBe(true);
@@ -182,7 +182,7 @@ describe('File Processing Integration Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(validation.valid).toBe(true);
@@ -228,7 +228,7 @@ describe('File Processing Integration Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(validation.valid).toBe(false);
@@ -316,7 +316,7 @@ describe('File Processing Integration Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
       expect(validation.valid).toBe(true);
 

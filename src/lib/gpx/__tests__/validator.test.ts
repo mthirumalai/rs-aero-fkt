@@ -1,13 +1,13 @@
 import { validateGpxTrack, haversineMeters } from '../validator';
 import { computeSog, computeAvgMaxSog } from '../sog';
 import { GpxPoint } from '../parser';
+import { VALIDATION_TOLERANCE_METERS } from '../constants';
 
 // Test route coordinates (Southport to Sneads Ferry)
 const ROUTE_START_LAT = 33.948889;
 const ROUTE_START_LNG = -78.011667;
 const ROUTE_END_LAT = 34.518056;
 const ROUTE_END_LNG = -77.448056;
-const TOLERANCE_M = 10;
 
 // Helper function to create GPX points
 function createGpxPoint(lat: number, lon: number, timeOffsetSec: number): GpxPoint {
@@ -58,7 +58,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(result.valid).toBe(true);
@@ -103,7 +103,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(result.valid).toBe(true);
@@ -130,7 +130,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(result.valid).toBe(false);
@@ -156,7 +156,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(result.valid).toBe(false);
@@ -188,7 +188,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       // Current implementation will pass but with wrong timing
@@ -220,7 +220,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       // Current implementation will find first finish point within tolerance
@@ -238,8 +238,8 @@ describe('FKT Attempt Validation Tests', () => {
       const distanceInside = haversineMeters(insidePoint[0], insidePoint[1], ROUTE_START_LAT, ROUTE_START_LNG);
       const distanceOutside = haversineMeters(outsidePoint[0], outsidePoint[1], ROUTE_START_LAT, ROUTE_START_LNG);
 
-      expect(distanceInside).toBeLessThan(TOLERANCE_M);
-      expect(distanceOutside).toBeGreaterThan(TOLERANCE_M);
+      expect(distanceInside).toBeLessThan(VALIDATION_TOLERANCE_METERS);
+      expect(distanceOutside).toBeGreaterThan(VALIDATION_TOLERANCE_METERS);
     });
 
     test('should correctly calculate haversine distance', () => {
@@ -301,7 +301,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(result.valid).toBe(false);
@@ -320,7 +320,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(result.valid).toBe(false);
@@ -339,7 +339,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
 
       expect(result.valid).toBe(false);
@@ -364,7 +364,7 @@ describe('FKT Attempt Validation Tests', () => {
         ROUTE_START_LNG,
         ROUTE_END_LAT,
         ROUTE_END_LNG,
-        TOLERANCE_M
+        VALIDATION_TOLERANCE_METERS
       );
       const endTime = Date.now();
 

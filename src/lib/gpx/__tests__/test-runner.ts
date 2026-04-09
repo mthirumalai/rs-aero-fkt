@@ -9,13 +9,13 @@ import { validateGpxTrack } from '../validator';
 import { validateGpxTrackEnhanced } from '../enhanced-validator';
 import { computeSog, computeAvgMaxSog } from '../sog';
 import { parseGpx } from '../parser';
+import { VALIDATION_TOLERANCE_METERS } from '../constants';
 
 // Test route coordinates
 const ROUTE_START_LAT = 33.948889;
 const ROUTE_START_LNG = -78.011667;
 const ROUTE_END_LAT = 34.518056;
 const ROUTE_END_LNG = -77.448056;
-const TOLERANCE_M = 10;
 
 interface TestCase {
   name: string;
@@ -80,7 +80,7 @@ async function runTest(testCase: TestCase): Promise<void> {
       ROUTE_START_LNG,
       ROUTE_END_LAT,
       ROUTE_END_LNG,
-      TOLERANCE_M
+      VALIDATION_TOLERANCE_METERS
     );
 
     // Test enhanced validator
@@ -90,7 +90,7 @@ async function runTest(testCase: TestCase): Promise<void> {
       ROUTE_START_LNG,
       ROUTE_END_LAT,
       ROUTE_END_LNG,
-      TOLERANCE_M
+      VALIDATION_TOLERANCE_METERS
     );
 
     console.log(`\n📈 Original Validator:`);

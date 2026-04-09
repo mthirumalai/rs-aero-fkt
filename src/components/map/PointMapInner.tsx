@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from "re
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
+import { VALIDATION_TOLERANCE_METERS } from "@/lib/gpx/constants";
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -257,11 +258,11 @@ export default function PointMapInner({
           </Marker>
         )}
 
-        {/* 10m circle around start and finish markers (but not turning marks) */}
+        {/* Validation tolerance circle around start and finish markers (but not turning marks) */}
         {(type === "start" || type === "end") && (
           <Circle
             center={[currentLat, currentLng]}
-            radius={10}
+            radius={VALIDATION_TOLERANCE_METERS}
             color="#3b82f6"
             weight={2}
             opacity={0.6}

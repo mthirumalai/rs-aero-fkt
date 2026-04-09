@@ -1,4 +1,5 @@
 import { GpxPoint, ParsedGpx } from "./parser";
+import { VALIDATION_TOLERANCE_METERS } from "./constants";
 
 export interface ValidationResult {
   valid: boolean;
@@ -36,7 +37,7 @@ export function validateGpxTrack(
   routeStartLng: number,
   routeFinishLat: number,
   routeFinishLng: number,
-  toleranceM = 10
+  toleranceM = VALIDATION_TOLERANCE_METERS
 ): ValidationResult {
   const { points } = gpx;
 
@@ -169,7 +170,7 @@ export function validateOutAndBackGpxTrack(
   routeStartLng: number,
   turningMarkLat: number,
   turningMarkLng: number,
-  toleranceM = 10
+  toleranceM = VALIDATION_TOLERANCE_METERS
 ): ValidationResult {
   const { points } = gpx;
 
