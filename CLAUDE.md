@@ -21,6 +21,7 @@ The full product specification is in `initial_spec.md`.
 - Google/Apple OAuth authentication (no custom auth)
 - GPX or VCC track upload and validation against route lat/long (10m tolerance)
 - Interactive coordinate editing with draggable map markers
+- Marine charts with OpenSeaMap overlay and street/marine toggle on all maps
 - Public pages: landing, routes list, route details, FKT attempt details, athlete profile, guidelines
 - FKT attempt details: wind/current conditions, GPX track playback (1x/2x/5x/10x), SOG chart, photos, write-up
 - Admin email notification for route approval
@@ -106,6 +107,9 @@ npm run start:production     # Apply migrations + start (Railway/prod)
 - Binary search for performance with large track arrays
 - Interactive coordinate editing with draggable markers
 - Bidirectional sync between text inputs and map markers
+- Marine/street layer toggle on all maps (defaults to marine with OpenSeaMap overlay)
+- 10-meter validation circles around start and finish markers (not turning marks)
+- Individual point maps on course details page showing start/finish/turning mark locations
 
 ### AWS
 - Two S3 buckets: private GPX, public-read photos
@@ -168,8 +172,9 @@ Routes are categorized by country code mapping to regions:
 - `src/lib/gpx/validator.ts` — Haversine 10m proximity check
 - `src/lib/gpx/sog.ts` — SOG computation + 5-point rolling average
 - `src/components/map/TrackMapInner.tsx` — Imperative marker + RAF
+- `src/components/map/CourseMapInner.tsx` — Course overview map with marine/street toggle
 - `src/components/map/EditablePointMap.tsx` — Interactive coordinate editing with drag support
-- `src/components/map/PointMapInner.tsx` — Enhanced with editable mode and drag handlers
+- `src/components/map/PointMapInner.tsx` — Enhanced with editable mode, drag handlers, and 10m validation circles
 - `src/components/forms/CoordinateEditor.tsx` — Combined text inputs + interactive map
 - `src/components/playback/TrackPlayback.tsx` — Play/pause/speed controls
 - `src/lib/auth.ts` — NextAuth v5 configuration with account linking
