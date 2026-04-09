@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
@@ -255,6 +255,18 @@ export default function PointMapInner({
               {originalLat.toFixed(6)}, {originalLng.toFixed(6)}
             </Popup>
           </Marker>
+        )}
+
+        {/* 10m circle around start and finish markers (but not turning marks) */}
+        {(type === "start" || type === "end") && (
+          <Circle
+            center={[currentLat, currentLng]}
+            radius={10}
+            color="#3b82f6"
+            weight={2}
+            opacity={0.6}
+            fillOpacity={0.1}
+          />
         )}
 
         {/* Current marker (draggable if editable) */}

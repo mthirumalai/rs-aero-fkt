@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { distanceNm } from "@/lib/gpx/validator";
 import { CourseMap } from "@/components/map/CourseMap";
+import { PointMap } from "@/components/map/PointMap";
 import { FktAttemptsTable } from "@/components/tables/FktAttemptsTable";
 import { getPublicPhotoUrl as getPhotoUrl } from "@/lib/storage";
 
@@ -174,6 +175,71 @@ export default async function CourseDetailPage({ params }: Props) {
             turningMarkLng={course.turningMarkLng || undefined}
             turningMarkName={course.turningMarkName || undefined}
           />
+        </div>
+      </div>
+
+      {/* Individual Point Maps */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-6">Course Points</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">
+              {course.courseType === "OUT_AND_BACK" ? "Start / Finish Point" : "Start Point"}: {course.startName}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4 font-mono">
+              {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
+            </p>
+            <div className="h-[300px] rounded-lg overflow-hidden border">
+              <PointMap
+                lat={course.startLat}
+                lng={course.startLng}
+                name={course.startName}
+                type="start"
+              />
+            </div>
+          </div>
+
+          <div>
+            {course.courseType === "OUT_AND_BACK" ? (
+              // For out-and-back: show turning mark
+              course.turningMarkLat && course.turningMarkLng && course.turningMarkName ? (
+                <>
+                  <h3 className="text-lg font-semibold mb-4">Turning Mark: {course.turningMarkName}</h3>
+                  <p className="text-sm text-muted-foreground mb-4 font-mono">
+                    {course.turningMarkLat.toFixed(6)}, {course.turningMarkLng.toFixed(6)}
+                  </p>
+                  <div className="h-[300px] rounded-lg overflow-hidden border">
+                    <PointMap
+                      lat={course.turningMarkLat}
+                      lng={course.turningMarkLng}
+                      name={course.turningMarkName}
+                      type="turning"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="h-[300px] rounded-lg overflow-hidden border bg-muted flex items-center justify-center">
+                  <p className="text-muted-foreground">No turning mark defined</p>
+                </div>
+              )
+            ) : (
+              // For point-to-point: show finish point
+              <>
+                <h3 className="text-lg font-semibold mb-4">Finish Point: {course.finishName}</h3>
+                <p className="text-sm text-muted-foreground mb-4 font-mono">
+                  {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
+                </p>
+                <div className="h-[300px] rounded-lg overflow-hidden border">
+                  <PointMap
+                    lat={course.finishLat}
+                    lng={course.finishLng}
+                    name={course.finishName}
+                    type="end"
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
