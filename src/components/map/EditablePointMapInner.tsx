@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,28 @@ const createGhostIcon = (type: "start" | "end" | "turning") => {
   });
 };
 
+interface Props {
+  lat: number | null;
+  lng: number | null;
+  name: string;
+  type: "start" | "end" | "turning";
+  onCoordinateChange: (lat: number, lng: number) => void;
+  disabled?: boolean;
+}
+
+// Component to handle map view updates
+function MapViewController({ lat, lng }: { lat: number | null; lng: number | null }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (lat !== null && lng !== null) {
+      map.setView([lat, lng], 16, { animate: true });
+    }
+  }, [map, lat, lng]);
+
+  return null;
+}
+
 // Component to handle escape key for canceling drags
 function EscapeKeyHandler({ onEscape }: { onEscape: () => void }) {
   useMapEvents({
@@ -61,22 +83,13 @@ function EscapeKeyHandler({ onEscape }: { onEscape: () => void }) {
   return null;
 }
 
-interface Props {
-  lat: number;
-  lng: number;
-  name: string;
-  type: "start" | "end" | "turning";
-  editable?: boolean;
-  onCoordinateChange?: (lat: number, lng: number) => void;
-}
-
-export default function PointMapInner({
+export default function EditablePointMapInner({
   lat,
   lng,
   name,
   type,
-  editable = false,
-  onCoordinateChange
+  onCoordinateChange,
+  disabled = false
 }: Props) {
   const [marine, setMarine] = useState(true);
   const [currentLat, setCurrentLat] = useState(lat);
@@ -107,7 +120,7 @@ export default function PointMapInner({
   };
 
   const handleDragStart = () => {
-    if (editable) {
+    if (!disabled) {
       setIsDragging(true);
       setOriginalLat(currentLat);
       setOriginalLng(currentLng);
@@ -115,7 +128,7 @@ export default function PointMapInner({
   };
 
   const handleDrag = (e: L.LeafletEvent) => {
-    if (editable) {
+    if (!disabled) {
       const marker = e.target as L.Marker;
       const position = marker.getLatLng();
       setCurrentLat(position.lat);
@@ -124,7 +137,7 @@ export default function PointMapInner({
   };
 
   const handleDragEnd = (e: L.LeafletEvent) => {
-    if (editable) {
+    if (!disabled) {
       const marker = e.target as L.Marker;
       const position = marker.getLatLng();
       setCurrentLat(position.lat);
@@ -133,46 +146,45 @@ export default function PointMapInner({
       setHasChanges(true);
 
       // Immediately update parent component
-      if (onCoordinateChange) {
-        onCoordinateChange(position.lat, position.lng);
-      }
+      onCoordinateChange(position.lat, position.lng);
     }
   };
 
   const handleEscape = useCallback(() => {
-    if (isDragging) {
+    if (isDragging && originalLat !== null && originalLng !== null) {
       setCurrentLat(originalLat);
       setCurrentLng(originalLng);
       setIsDragging(false);
       setHasChanges(false);
 
       // Revert coordinates in parent component
-      if (onCoordinateChange) {
-        onCoordinateChange(originalLat, originalLng);
-      }
+      onCoordinateChange(originalLat, originalLng);
     }
   }, [isDragging, originalLat, originalLng, onCoordinateChange]);
 
   const handleUndo = () => {
-    setCurrentLat(originalLat);
-    setCurrentLng(originalLng);
-    setHasChanges(false);
+    if (originalLat !== null && originalLng !== null) {
+      setCurrentLat(originalLat);
+      setCurrentLng(originalLng);
+      setHasChanges(false);
 
-    // Update parent component back to original coordinates
-    if (onCoordinateChange) {
+      // Update parent component back to original coordinates
       onCoordinateChange(originalLat, originalLng);
     }
   };
 
   const handleSave = () => {
-    // Coordinates are already updated in parent via handleDragEnd
-    // This just confirms the changes and resets the "original" position
-    setOriginalLat(currentLat);
-    setOriginalLng(currentLng);
-    setHasChanges(false);
+    if (currentLat !== null && currentLng !== null) {
+      // Coordinates are already updated in parent via handleDragEnd
+      // This just confirms the changes and resets the "original" position
+      setOriginalLat(currentLat);
+      setOriginalLng(currentLng);
+      setHasChanges(false);
+    }
   };
 
-  const showGhost = editable && hasChanges &&
+  const hasCoordinates = currentLat !== null && currentLng !== null;
+  const showGhost = hasChanges && originalLat !== null && originalLng !== null &&
                    (originalLat !== currentLat || originalLng !== currentLng);
 
   return (
@@ -194,7 +206,7 @@ export default function PointMapInner({
       </div>
 
       {/* Control buttons */}
-      {editable && hasChanges && (
+      {hasChanges && !disabled && (
         <div className="absolute top-3 left-3 z-[1000] flex gap-2">
           <Button
             size="sm"
@@ -215,80 +227,93 @@ export default function PointMapInner({
       )}
 
       {/* Instructions */}
-      {editable && (
+      {hasCoordinates && !disabled && (
         <div className="absolute bottom-3 left-3 z-[1000] bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
           Drag marker to adjust • Press Escape to cancel
         </div>
       )}
 
-      <MapContainer
-        center={[currentLat, currentLng]}
-        zoom={16}
-        style={{ height: "100%", width: "100%" }}
-        keyboard={editable}
-        keyboardPanDelta={80}
-      >
-        {editable && <EscapeKeyHandler onEscape={handleEscape} />}
-
-        {/* Base tile layer */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {/* OpenSeaMap marine overlay - always load but conditionally visible */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openseamap.org">OpenSeaMap</a> contributors'
-          url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
-          opacity={marine ? 1 : 0}
-        />
-
-        {/* Ghost marker (original position) */}
-        {showGhost && (
-          <Marker
-            position={[originalLat, originalLng]}
-            icon={createGhostIcon(type)}
-            interactive={false}
+      <div className={`w-full h-full ${!hasCoordinates ? 'opacity-40 pointer-events-none' : ''}`}>
+        {hasCoordinates ? (
+          <MapContainer
+            center={[currentLat!, currentLng!]}
+            zoom={16}
+            style={{ height: "100%", width: "100%" }}
+            keyboard={true}
+            keyboardPanDelta={80}
           >
-            <Popup>
-              <strong>Original Position</strong><br />
-              {originalLat.toFixed(6)}, {originalLng.toFixed(6)}
-            </Popup>
-          </Marker>
-        )}
+            <MapViewController lat={currentLat} lng={currentLng} />
+            <EscapeKeyHandler onEscape={handleEscape} />
 
-        {/* Current marker (draggable if editable) */}
-        <Marker
-          position={[currentLat, currentLng]}
-          icon={getIcon()}
-          draggable={editable}
-          eventHandlers={editable ? {
-            dragstart: handleDragStart,
-            drag: handleDrag,
-            dragend: handleDragEnd,
-          } : {}}
-        >
-          <Popup>
-            <strong>{
-              type === "start" ? "Start" :
-              type === "end" ? "End" :
-              "Turning Mark"
-            }:</strong> {name}<br />
-            {currentLat.toFixed(6)}, {currentLng.toFixed(6)}
-            {editable && hasChanges && <><br /><em>Unsaved changes</em></>}
-          </Popup>
-        </Marker>
-      </MapContainer>
+            {/* Base tile layer */}
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+
+            {/* OpenSeaMap marine overlay */}
+            <TileLayer
+              attribution='&copy; <a href="https://www.openseamap.org">OpenSeaMap</a> contributors'
+              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+              opacity={marine ? 1 : 0}
+            />
+
+            {/* Ghost marker (original position) */}
+            {showGhost && (
+              <Marker
+                position={[originalLat!, originalLng!]}
+                icon={createGhostIcon(type)}
+                interactive={false}
+              >
+                <Popup>
+                  <strong>Original Position</strong><br />
+                  {originalLat!.toFixed(6)}, {originalLng!.toFixed(6)}
+                </Popup>
+              </Marker>
+            )}
+
+            {/* Current marker (draggable) */}
+            <Marker
+              position={[currentLat!, currentLng!]}
+              icon={getIcon()}
+              draggable={!disabled}
+              eventHandlers={{
+                dragstart: handleDragStart,
+                drag: handleDrag,
+                dragend: handleDragEnd,
+              }}
+            >
+              <Popup>
+                <strong>{
+                  type === "start" ? "Start" :
+                  type === "end" ? "End" :
+                  "Turning Mark"
+                }:</strong> {name}<br />
+                {currentLat!.toFixed(6)}, {currentLng!.toFixed(6)}
+                {hasChanges && <><br /><em>Unsaved changes</em></>}
+              </Popup>
+            </Marker>
+          </MapContainer>
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center border-2 border-dashed border-gray-300 rounded">
+            <div className="text-center text-muted-foreground">
+              <p className="text-sm">Enter coordinates to display map</p>
+              <p className="text-xs mt-1">Map will auto-zoom to location</p>
+            </div>
+          </div>
+        )}
+      </div>
+
       <style jsx global>{`
         .ghost-marker {
           opacity: 0.4 !important;
           filter: grayscale(50%);
         }
         .leaflet-marker-icon:not(.ghost-marker) {
-          cursor: ${editable ? 'grab' : 'default'} !important;
+          cursor: ${!disabled ? 'grab' : 'default'} !important;
         }
         .leaflet-marker-icon:not(.ghost-marker):active {
-          cursor: ${editable ? 'grabbing' : 'default'} !important;
+          cursor: ${!disabled ? 'grabbing' : 'default'} !important;
         }
         .leaflet-container {
           cursor: default;

@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { ApproveCourseForm } from "./ApproveCourseForm";
+import { ApprovalPageWithEditing } from "./ApprovalPageWithEditing";
 import { ApprovalMap } from "@/components/map/ApprovalMap";
-import { PointMap } from "@/components/map/PointMap";
 import { PageHeader } from "@/components/PageHeader";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { distanceNm } from "@/lib/gpx/validator";
@@ -148,68 +147,23 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
         )}
       </div>
 
-      {/* Point Maps - different layout for out-and-back vs point-to-point */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">
-            {course.courseType === "OUT_AND_BACK" ? "Start / Finish Point" : "Start Point"}: {course.startName}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4 font-mono">
-            {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
-          </p>
-          <div className="h-[300px] rounded-lg overflow-hidden border">
-            <PointMap
-              lat={course.startLat}
-              lng={course.startLng}
-              name={course.startName}
-              type="start"
-            />
-          </div>
-        </div>
-        <div>
-          {course.courseType === "OUT_AND_BACK" ? (
-            // For out-and-back: show turning mark
-            course.turningMarkLat && course.turningMarkLng && course.turningMarkName ? (
-              <>
-                <h3 className="text-lg font-semibold mb-4">Turning Mark: {course.turningMarkName}</h3>
-                <p className="text-sm text-muted-foreground mb-4 font-mono">
-                  {course.turningMarkLat.toFixed(6)}, {course.turningMarkLng.toFixed(6)}
-                </p>
-                <div className="h-[300px] rounded-lg overflow-hidden border">
-                  <PointMap
-                    lat={course.turningMarkLat}
-                    lng={course.turningMarkLng}
-                    name={course.turningMarkName}
-                    type="turning"
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="h-[300px] rounded-lg overflow-hidden border bg-muted flex items-center justify-center">
-                <p className="text-muted-foreground">No turning mark defined</p>
-              </div>
-            )
-          ) : (
-            // For point-to-point: show finish point
-            <>
-              <h3 className="text-lg font-semibold mb-4">Finish Point: {course.finishName}</h3>
-              <p className="text-sm text-muted-foreground mb-4 font-mono">
-                {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
-              </p>
-              <div className="h-[300px] rounded-lg overflow-hidden border">
-                <PointMap
-                  lat={course.finishLat}
-                  lng={course.finishLng}
-                  name={course.finishName}
-                  type="end"
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      <ApproveCourseForm courseId={course.id} token={token} />
+      <ApprovalPageWithEditing
+        course={{
+          id: course.id,
+          name: course.name,
+          courseType: course.courseType,
+          startName: course.startName,
+          startLat: course.startLat,
+          startLng: course.startLng,
+          finishName: course.finishName,
+          finishLat: course.finishLat,
+          finishLng: course.finishLng,
+          turningMarkName: course.turningMarkName,
+          turningMarkLat: course.turningMarkLat,
+          turningMarkLng: course.turningMarkLng,
+        }}
+        token={token}
+      />
     </div>
 
     {/* Full-width course map */}

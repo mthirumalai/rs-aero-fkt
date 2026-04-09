@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-const PointMapInner = dynamic(() => import("./PointMapInner"), {
+const EditablePointMapInner = dynamic(() => import("./EditablePointMapInner"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
@@ -12,14 +12,14 @@ const PointMapInner = dynamic(() => import("./PointMapInner"), {
 });
 
 interface Props {
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   name: string;
   type: "start" | "end" | "turning";
-  editable?: boolean;
-  onCoordinateChange?: (lat: number, lng: number) => void;
+  onCoordinateChange: (lat: number, lng: number) => void;
+  disabled?: boolean;
 }
 
-export function PointMap(props: Props) {
-  return <PointMapInner {...props} />;
+export function EditablePointMap(props: Props) {
+  return <EditablePointMapInner {...props} />;
 }

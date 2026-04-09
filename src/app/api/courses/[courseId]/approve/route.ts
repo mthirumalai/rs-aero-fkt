@@ -7,7 +7,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { courseId: string } }
 ) {
-  const { token, action, rejectionReason } = await req.json();
+  const { token, action, rejectionReason, coordinateUpdates } = await req.json();
 
   if (!token) {
     return NextResponse.json({ error: "Token required" }, { status: 400 });
@@ -34,15 +34,39 @@ export async function POST(
   const newStatus = isApprove ? "APPROVED" : "REJECTED";
 
   const updated = await prisma.$transaction(async (tx) => {
-    // Update the course status
+    // Prepare update data
+    const updateData: {
+      status: "APPROVED" | "REJECTED";
+      approvedAt: Date | null;
+      approvalToken: null;
+      rejectionReason: string | null;
+      startLat?: number;
+      startLng?: number;
+      finishLat?: number;
+      finishLng?: number;
+      turningMarkLat?: number;
+      turningMarkLng?: number;
+    } = {
+      status: newStatus,
+      approvedAt: isApprove ? new Date() : null,
+      approvalToken: null,
+      rejectionReason: isApprove ? null : rejectionReason.trim(),
+    };
+
+    // Include coordinate updates if approving and coordinates were provided
+    if (isApprove && coordinateUpdates) {
+      if (coordinateUpdates.startLat !== undefined) updateData.startLat = coordinateUpdates.startLat;
+      if (coordinateUpdates.startLng !== undefined) updateData.startLng = coordinateUpdates.startLng;
+      if (coordinateUpdates.finishLat !== undefined) updateData.finishLat = coordinateUpdates.finishLat;
+      if (coordinateUpdates.finishLng !== undefined) updateData.finishLng = coordinateUpdates.finishLng;
+      if (coordinateUpdates.turningMarkLat !== undefined) updateData.turningMarkLat = coordinateUpdates.turningMarkLat;
+      if (coordinateUpdates.turningMarkLng !== undefined) updateData.turningMarkLng = coordinateUpdates.turningMarkLng;
+    }
+
+    // Update the course status and potentially coordinates
     const updatedRoute = await tx.course.update({
       where: { id: params.courseId },
-      data: {
-        status: newStatus,
-        approvedAt: isApprove ? new Date() : null,
-        approvalToken: null,
-        rejectionReason: isApprove ? null : rejectionReason.trim(),
-      },
+      data: updateData,
     });
 
     // If approving the course, also approve any pending FKT attempts for this course
@@ -62,11 +86,17 @@ export async function POST(
   });
 
   // Record the status change in history
+  const statusChangeReason = isApprove
+    ? (coordinateUpdates
+        ? "Course approved with coordinate adjustments and associated FKT attempts"
+        : "Course approved with associated FKT attempts")
+    : rejectionReason.trim();
+
   await recordCourseStatusChange(
     params.courseId,
     course.status, // fromStatus
     newStatus, // toStatus
-    isApprove ? "Course approved with associated FKT attempts" : rejectionReason.trim(),
+    statusChangeReason,
     undefined, // changedById - we don't have admin user ID from token-based approval
     token
   );

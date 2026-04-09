@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { COUNTRY_NAMES, REGION_LABELS, getRegion } from "@/lib/regions";
-import { parseCoordinate, formatCoord } from "@/lib/coords";
+import { parseCoordinate } from "@/lib/coords";
 import { parseGpxXml } from "@/lib/gpx/parser";
 import type { GpxPoint } from "@/lib/gpx/parser";
 import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import CourseCreationMap from "@/components/map/CourseCreationMap";
+import { CoordinateEditor } from "./CoordinateEditor";
 
 type SubmissionMode = "manual" | "track_file" | "out_and_back";
 
@@ -592,42 +593,6 @@ export function CourseSubmitFormWithGpx() {
     a.localeCompare(b)
   );
 
-  function CoordField({ id, label, value, type, disabled = false }: {
-    id: keyof typeof form; label: string; value: string; type: "lat" | "lng"; disabled?: boolean;
-  }) {
-    const placeholder = type === "lat"
-      ? "50.5155  or  50° 30.93' N  or  50°30′56″ N"
-      : "-2.4579  or  2° 27.5' W  or  2°27′28″ W";
-    return (
-      <div className="space-y-1">
-        <Label htmlFor={id}>{label} *</Label>
-        <Input
-          id={id}
-          key={id}
-          value={value}
-          onChange={(e) => update(id, e.target.value)}
-          placeholder={disabled ? "Will be set by clicking on the map" : placeholder}
-          required
-          autoComplete="off"
-          disabled={disabled}
-          className={disabled ? "bg-muted" : ""}
-        />
-        {coordErrors[id] ? (
-          <p className="text-xs text-destructive">{coordErrors[id]}</p>
-        ) : (
-          (() => {
-            if (!value || disabled) return null;
-            const parsed = parseCoordinate(value);
-            return parsed !== null ? (
-              <p className="text-xs text-muted-foreground">
-                → {formatCoord(parsed)}°
-              </p>
-            ) : null;
-          })()
-        )}
-      </div>
-    );
-  }
 
   return (
     <>
@@ -1031,40 +996,50 @@ export function CourseSubmitFormWithGpx() {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <CoordField id="startLat" label="Latitude" value={form.startLat} type="lat" disabled={mode === "track_file"} />
-            <CoordField id="startLng" label="Longitude" value={form.startLng} type="lng" disabled={mode === "track_file"} />
-          </div>
+          <CoordinateEditor
+            name={form.startName}
+            lat={form.startLat}
+            lng={form.startLng}
+            type="start"
+            onLatChange={(lat) => update("startLat", lat)}
+            onLngChange={(lng) => update("startLng", lng)}
+            disabled={mode === "track_file"}
+            showMap={mode !== "track_file"}
+            latError={coordErrors.startLat}
+            lngError={coordErrors.startLng}
+          />
         </div>
 
         {/* Finish Point */}
-        <div className="border rounded-lg p-4 space-y-4">
-          <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            {mode === "out_and_back" ? "Start/Finish Point" : "Finish Point"}
-          </h3>
-          {mode === "out_and_back" ? (
+        {mode !== "out_and_back" && (
+          <div className="border rounded-lg p-4 space-y-4">
+            <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Finish Point
+            </h3>
             <div className="space-y-2">
-              {/* No content for out-and-back finish point section */}
+              <Label htmlFor="finishName">Name *</Label>
+              <Input
+                id="finishName"
+                value={form.finishName}
+                onChange={(e) => update("finishName", e.target.value)}
+                placeholder="e.g., Weymouth Harbour Entrance"
+                required
+              />
             </div>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="finishName">Name *</Label>
-                <Input
-                  id="finishName"
-                  value={form.finishName}
-                  onChange={(e) => update("finishName", e.target.value)}
-                  placeholder="e.g., Weymouth Harbour Entrance"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <CoordField id="finishLat" label="Latitude" value={form.finishLat} type="lat" disabled={mode === "track_file"} />
-                <CoordField id="finishLng" label="Longitude" value={form.finishLng} type="lng" disabled={mode === "track_file"} />
-              </div>
-            </>
-          )}
-        </div>
+            <CoordinateEditor
+              name={form.finishName}
+              lat={form.finishLat}
+              lng={form.finishLng}
+              type="end"
+              onLatChange={(lat) => update("finishLat", lat)}
+              onLngChange={(lng) => update("finishLng", lng)}
+              disabled={mode === "track_file"}
+              showMap={mode !== "track_file"}
+              latError={coordErrors.finishLat}
+              lngError={coordErrors.finishLng}
+            />
+          </div>
+        )}
 
         {/* Turning Mark (for out-and-back only) */}
         {mode === "out_and_back" && (
@@ -1082,10 +1057,18 @@ export function CourseSubmitFormWithGpx() {
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <CoordField id="turningMarkLat" label="Latitude" value={form.turningMarkLat} type="lat" disabled={false} />
-              <CoordField id="turningMarkLng" label="Longitude" value={form.turningMarkLng} type="lng" disabled={false} />
-            </div>
+            <CoordinateEditor
+              name={form.turningMarkName}
+              lat={form.turningMarkLat}
+              lng={form.turningMarkLng}
+              type="turning"
+              onLatChange={(lat) => update("turningMarkLat", lat)}
+              onLngChange={(lng) => update("turningMarkLng", lng)}
+              disabled={false}
+              showMap={true}
+              latError={coordErrors.turningMarkLat}
+              lngError={coordErrors.turningMarkLng}
+            />
           </div>
         )}
 
