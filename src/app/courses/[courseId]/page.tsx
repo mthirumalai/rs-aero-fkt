@@ -94,75 +94,75 @@ export default async function CourseDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Course Details + Map */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="space-y-4">
-          <div className="border rounded-lg p-4 space-y-3">
-            <h2 className="font-semibold">Course Details</h2>
-            {course.courseType === "OUT_AND_BACK" ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Start/Finish</p>
-                    <p className="font-medium">{course.startName}</p>
-                    <p className="font-mono text-xs text-muted-foreground">
-                      {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Turning Mark</p>
-                    <p className="font-medium">{course.turningMarkName}</p>
-                    <p className="font-mono text-xs text-muted-foreground">
-                      {course.turningMarkLat?.toFixed(6)}, {course.turningMarkLng?.toFixed(6)}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                  🔄 Out-and-back route: Start and finish at {course.startName}, round the turning mark at {course.turningMarkName}
-                </div>
+      {/* Course Details */}
+      <div className="border rounded-lg p-4 space-y-3 mb-8">
+        <h2 className="font-semibold">Course Details</h2>
+        {course.courseType === "OUT_AND_BACK" ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">Start/Finish</p>
+                <p className="font-medium">{course.startName}</p>
+                <p className="font-mono text-xs text-muted-foreground">
+                  {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
+                </p>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Start</p>
-                  <p className="font-medium">{course.startName}</p>
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Finish</p>
-                  <p className="font-medium">{course.finishName}</p>
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
-                  </p>
-                </div>
+              <div>
+                <p className="text-muted-foreground">Turning Mark</p>
+                <p className="font-medium">{course.turningMarkName}</p>
+                <p className="font-mono text-xs text-muted-foreground">
+                  {course.turningMarkLat?.toFixed(6)}, {course.turningMarkLng?.toFixed(6)}
+                </p>
               </div>
-            )}
-            <div className="text-sm">
-              <span className="text-muted-foreground">
-                {course.courseType === "OUT_AND_BACK" ? "Total distance: " : "Great-circle distance: "}
-              </span>
-              <span className="font-medium">
-                {course.courseType === "OUT_AND_BACK" && course.turningMarkLat && course.turningMarkLng
-                  ? (2 * distanceNm(course.startLat, course.startLng, course.turningMarkLat, course.turningMarkLng)).toFixed(1) + " nm"
-                  : distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng) + " nm"
-                }
-              </span>
             </div>
-            <div className="text-sm">
-              <span className="text-muted-foreground">Submitted by: </span>
-              <Link
-                href={`/athletes/${course.submittedBy.id}`}
-                className="font-medium text-primary hover:underline"
-              >
-                {course.submittedBy.name}
-              </Link>
+            <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+              🔄 Out-and-back route: Start and finish at {course.startName}, round the turning mark at {course.turningMarkName}
             </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">Start</p>
+              <p className="font-medium">{course.startName}</p>
+              <p className="font-mono text-xs text-muted-foreground">
+                {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Finish</p>
+              <p className="font-medium">{course.finishName}</p>
+              <p className="font-mono text-xs text-muted-foreground">
+                {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
+              </p>
+            </div>
+          </div>
+        )}
+        <div className="text-sm">
+          <span className="text-muted-foreground">
+            {course.courseType === "OUT_AND_BACK" ? "Total distance: " : "Great-circle distance: "}
+          </span>
+          <span className="font-medium">
+            {course.courseType === "OUT_AND_BACK" && course.turningMarkLat && course.turningMarkLng
+              ? (2 * distanceNm(course.startLat, course.startLng, course.turningMarkLat, course.turningMarkLng)).toFixed(1) + " nm"
+              : distanceNm(course.startLat, course.startLng, course.finishLat, course.finishLng) + " nm"
+            }
+          </span>
         </div>
+        <div className="text-sm">
+          <span className="text-muted-foreground">Submitted by: </span>
+          <Link
+            href={`/athletes/${course.submittedBy.id}`}
+            className="font-medium text-primary hover:underline"
+          >
+            {course.submittedBy.name}
+          </Link>
+        </div>
+      </div>
 
-        <div className="h-[300px] lg:h-auto min-h-[300px] rounded-lg overflow-hidden border">
+      {/* Full Course Overview Map */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Course Overview</h2>
+        <div className="h-[400px] rounded-lg overflow-hidden border">
           <CourseMap
             startLat={course.startLat}
             startLng={course.startLng}

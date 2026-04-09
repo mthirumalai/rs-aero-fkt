@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ApproveCourseFormWithEdit } from "./ApproveCourseFormWithEdit";
 import { PointMap } from "@/components/map/PointMap";
+import { CourseMap } from "@/components/map/CourseMap";
 import { Button } from "@/components/ui/button";
 import type { CourseType } from "@prisma/client";
 
@@ -68,6 +69,25 @@ export function ApprovalPageWithEditing({ course, token }: Props) {
 
   return (
     <>
+      {/* Full Course Overview Map */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Course Overview</h2>
+        <div className="h-[400px] rounded-lg overflow-hidden border">
+          <CourseMap
+            startLat={course.startLat}
+            startLng={course.startLng}
+            finishLat={course.finishLat}
+            finishLng={course.finishLng}
+            startName={course.startName}
+            finishName={course.finishName}
+            courseType={course.courseType}
+            turningMarkLat={course.turningMarkLat || undefined}
+            turningMarkLng={course.turningMarkLng || undefined}
+            turningMarkName={course.turningMarkName || undefined}
+          />
+        </div>
+      </div>
+
       {/* Edit Toggle Button */}
       <div className="mb-6 flex items-center justify-between">
         <div>
