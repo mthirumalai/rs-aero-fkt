@@ -648,7 +648,7 @@ export function CourseSubmitFormWithGpx() {
 
 
   return (
-    <>
+    <div>
       {heading}
 
       {/* Mode Selection - Tabs */}
@@ -750,7 +750,7 @@ export function CourseSubmitFormWithGpx() {
             </div>
 
             {trackPoints.length > 0 && (
-              <>
+              <div>
                 {selectionMode && (
                   <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                     <p className="text-sm text-yellow-700">
@@ -830,7 +830,7 @@ export function CourseSubmitFormWithGpx() {
                   </p>
 
                   {submitFkt && (
-                    <>
+                    <div>
                       {extractedDate && (
                         <div className="space-y-2">
                           <Label>Date of Attempt</Label>
@@ -991,10 +991,10 @@ export function CourseSubmitFormWithGpx() {
                           )}
                         </div>
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </div>
         )}
@@ -1158,7 +1158,6 @@ export function CourseSubmitFormWithGpx() {
             <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
               Finish Point
             </h3>
-              <>
                 <div className="space-y-2">
                   <Label htmlFor="finishName">Name *</Label>
                   <Input
@@ -1324,6 +1323,6 @@ export function CourseSubmitFormWithGpx() {
           }
         </Button>
       </form>
-    </>
+    </div>
   );
 }
