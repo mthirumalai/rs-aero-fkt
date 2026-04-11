@@ -19,6 +19,22 @@ const TrackMapDynamic = dynamic(() => import("../map/TrackMapInner"), {
 
 const SogChart = dynamic(() => import("../charts/SogChart"), { ssr: false });
 
+interface CourseInfo {
+  startLat: number;
+  startLng: number;
+  startType: "POINT" | "LINE";
+  startLine2Lat?: number;
+  startLine2Lng?: number;
+  finishLat: number;
+  finishLng: number;
+  finishType: "POINT" | "LINE";
+  finishLine2Lat?: number;
+  finishLine2Lng?: number;
+  turningMarkLat?: number;
+  turningMarkLng?: number;
+  courseType: "ONE_WAY" | "OUT_AND_BACK";
+}
+
 interface Props {
   attemptId: string;
 }
@@ -29,6 +45,9 @@ type SpeedMultiplier = (typeof SPEED_OPTIONS)[number];
 export function TrackPlayback({ attemptId }: Props) {
   const [points, setPoints] = useState<GpxPoint[]>([]);
   const [sogPoints, setSogPoints] = useState<SogPoint[]>([]);
+  const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
+  const [raceStartIndex, setRaceStartIndex] = useState<number | undefined>(undefined);
+  const [raceEndIndex, setRaceEndIndex] = useState<number | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -44,18 +63,48 @@ export function TrackPlayback({ attemptId }: Props) {
       : 0;
   const totalMs = endTimeMs - startTimeMs;
 
-  // Load track file
+  // Load track file and course info
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`/api/attempts/${attemptId}/gpx`);
-        if (!res.ok) throw new Error("Failed to fetch track file");
+        // Fetch both track file and course info in parallel
+        const [trackRes, attemptRes] = await Promise.all([
+          fetch(`/api/attempts/${attemptId}/gpx`),
+          fetch(`/api/attempts/${attemptId}`)
+        ]);
 
-        // Get the content directly (not JSON)
-        const content = await res.text();
+        if (!trackRes.ok) throw new Error("Failed to fetch track file");
+        if (!attemptRes.ok) throw new Error("Failed to fetch attempt info");
+
+        // Get the track content directly (not JSON)
+        const content = await trackRes.text();
+
+        // Get attempt info including course details
+        const attemptData = await attemptRes.json();
+
+        // Extract course information
+        setCourseInfo({
+          startLat: attemptData.course.startLat,
+          startLng: attemptData.course.startLng,
+          startType: attemptData.course.startType,
+          startLine2Lat: attemptData.course.startLine2Lat,
+          startLine2Lng: attemptData.course.startLine2Lng,
+          finishLat: attemptData.course.finishLat,
+          finishLng: attemptData.course.finishLng,
+          finishType: attemptData.course.finishType,
+          finishLine2Lat: attemptData.course.finishLine2Lat,
+          finishLine2Lng: attemptData.course.finishLine2Lng,
+          turningMarkLat: attemptData.course.turningMarkLat,
+          turningMarkLng: attemptData.course.turningMarkLng,
+          courseType: attemptData.course.courseType,
+        });
+
+        // Extract race timing indices
+        setRaceStartIndex(attemptData.attempt.raceStartIndex);
+        setRaceEndIndex(attemptData.attempt.raceEndIndex);
 
         // Determine file type from content-type header or content
-        const contentType = res.headers.get('content-type') || '';
+        const contentType = trackRes.headers.get('content-type') || '';
         let parsed: { points: GpxPoint[] };
 
         if (contentType.includes('xml') || content.trim().startsWith('<?xml')) {
@@ -170,6 +219,9 @@ export function TrackPlayback({ attemptId }: Props) {
         <TrackMapDynamic
           points={timedPoints}
           currentTimeMs={currentTimeMs}
+          courseInfo={courseInfo}
+          raceStartIndex={raceStartIndex}
+          raceEndIndex={raceEndIndex}
         />
       </div>
 

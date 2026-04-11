@@ -44,9 +44,15 @@ export async function POST(req: NextRequest) {
     finishName,
     startLat,
     startLng,
+    startType = "POINT",
+    startLine2Lat,
+    startLine2Lng,
     finishLat,
     finishLng,
-    courseType = "POINT_TO_POINT",
+    finishType = "POINT",
+    finishLine2Lat,
+    finishLine2Lng,
+    courseType = "ONE_WAY",
     turningMarkName,
     turningMarkLat,
     turningMarkLng
@@ -54,6 +60,15 @@ export async function POST(req: NextRequest) {
 
   if (!name || !country || !startName || !finishName || startLat == null || startLng == null || finishLat == null || finishLng == null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  // Validate line coordinates if line types are selected
+  if (startType === "LINE" && (startLine2Lat == null || startLine2Lng == null)) {
+    return NextResponse.json({ error: "Start line coordinates are required when start type is LINE" }, { status: 400 });
+  }
+
+  if (finishType === "LINE" && (finishLine2Lat == null || finishLine2Lng == null)) {
+    return NextResponse.json({ error: "Finish line coordinates are required when finish type is LINE" }, { status: 400 });
   }
 
   // Additional validation for out-and-back routes
@@ -73,9 +88,15 @@ export async function POST(req: NextRequest) {
     finishName,
     startLat: parseFloat(startLat),
     startLng: parseFloat(startLng),
+    startType: startType as "POINT" | "LINE",
+    startLine2Lat: startLine2Lat ? parseFloat(startLine2Lat) : null,
+    startLine2Lng: startLine2Lng ? parseFloat(startLine2Lng) : null,
     finishLat: parseFloat(finishLat),
     finishLng: parseFloat(finishLng),
-    courseType: courseType as "POINT_TO_POINT" | "OUT_AND_BACK",
+    finishType: finishType as "POINT" | "LINE",
+    finishLine2Lat: finishLine2Lat ? parseFloat(finishLine2Lat) : null,
+    finishLine2Lng: finishLine2Lng ? parseFloat(finishLine2Lng) : null,
+    courseType: courseType as "ONE_WAY" | "OUT_AND_BACK",
     submittedById: session.user.id,
     approvalToken,
     status: "PENDING" as const,

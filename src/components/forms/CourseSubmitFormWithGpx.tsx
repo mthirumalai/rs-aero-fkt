@@ -13,6 +13,7 @@ import type { GpxPoint } from "@/lib/gpx/parser";
 import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import CourseCreationMap from "@/components/map/CourseCreationMap";
+import { SimpleInteractiveMap } from "@/components/map/SimpleInteractiveMap";
 
 type SubmissionMode = "manual" | "track_file" | "out_and_back";
 
@@ -43,9 +44,15 @@ export function CourseSubmitFormWithGpx() {
     startName: "",
     startLat: "",
     startLng: "",
+    startType: "POINT" as "POINT" | "LINE",
+    startLine2Lat: "",
+    startLine2Lng: "",
     finishName: "",
     finishLat: "",
     finishLng: "",
+    finishType: "POINT" as "POINT" | "LINE",
+    finishLine2Lat: "",
+    finishLine2Lng: "",
     turningMarkName: "",
     turningMarkLat: "",
     turningMarkLng: "",
@@ -81,6 +88,32 @@ export function CourseSubmitFormWithGpx() {
     // Clear the inline error as the user types, but only if it exists
     if (coordErrors[field]) {
       setCoordErrors((e) => { const next = { ...e }; delete next[field]; return next; });
+    }
+  }
+
+  function updateCoordinates(
+    pointType: "start" | "finish",
+    lat: number,
+    lng: number,
+    lat2?: number,
+    lng2?: number
+  ) {
+    if (pointType === "start") {
+      setForm((f) => ({
+        ...f,
+        startLat: lat.toFixed(6),
+        startLng: lng.toFixed(6),
+        startLine2Lat: lat2?.toFixed(6) || "",
+        startLine2Lng: lng2?.toFixed(6) || "",
+      }));
+    } else {
+      setForm((f) => ({
+        ...f,
+        finishLat: lat.toFixed(6),
+        finishLng: lng.toFixed(6),
+        finishLine2Lat: lat2?.toFixed(6) || "",
+        finishLine2Lng: lng2?.toFixed(6) || "",
+      }));
     }
   }
 
@@ -416,6 +449,7 @@ export function CourseSubmitFormWithGpx() {
     }
 
     let startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng;
+    let startLine2Lat, startLine2Lng, finishLine2Lat, finishLine2Lng;
 
     if (mode === "manual") {
       startLat = validateCoord("startLat", form.startLat, "lat");
@@ -424,6 +458,19 @@ export function CourseSubmitFormWithGpx() {
       finishLng = validateCoord("finishLng", form.finishLng, "lng");
 
       if (startLat === null || startLng === null || finishLat === null || finishLng === null) return;
+
+      // Validate line coordinates if line types are selected
+      if (form.startType === "LINE") {
+        startLine2Lat = validateCoord("startLine2Lat", form.startLine2Lat, "lat");
+        startLine2Lng = validateCoord("startLine2Lng", form.startLine2Lng, "lng");
+        if (startLine2Lat === null || startLine2Lng === null) return;
+      }
+
+      if (form.finishType === "LINE") {
+        finishLine2Lat = validateCoord("finishLine2Lat", form.finishLine2Lat, "lat");
+        finishLine2Lng = validateCoord("finishLine2Lng", form.finishLine2Lng, "lng");
+        if (finishLine2Lat === null || finishLine2Lng === null) return;
+      }
     } else if (mode === "out_and_back") {
       startLat = validateCoord("startLat", form.startLat, "lat");
       startLng = validateCoord("startLng", form.startLng, "lng");
@@ -461,9 +508,15 @@ export function CourseSubmitFormWithGpx() {
         finishName: "", // Will be set below
         startLat,
         startLng,
+        startType: mode === "manual" ? form.startType : "POINT",
+        startLine2Lat: startLine2Lat,
+        startLine2Lng: startLine2Lng,
         finishLat,
         finishLng,
-        courseType: mode === "out_and_back" ? "OUT_AND_BACK" : "POINT_TO_POINT",
+        finishType: mode === "manual" ? form.finishType : "POINT",
+        finishLine2Lat: finishLine2Lat,
+        finishLine2Lng: finishLine2Lng,
+        courseType: mode === "out_and_back" ? "OUT_AND_BACK" : "ONE_WAY",
         turningMarkName: undefined as string | undefined,
         turningMarkLat: undefined as number | undefined,
         turningMarkLng: undefined as number | undefined,
@@ -645,7 +698,7 @@ export function CourseSubmitFormWithGpx() {
                 : "border-transparent border-t-transparent border-l-transparent text-muted-foreground hover:text-foreground hover:border-border hover:border-t-border hover:border-l-border"
             }`}
           >
-            📍 Point to Point
+            One way (Manual)
           </button>
           <button
             type="button"
@@ -656,7 +709,7 @@ export function CourseSubmitFormWithGpx() {
                 : "border-transparent border-t-transparent text-muted-foreground hover:text-foreground hover:border-border hover:border-t-border"
             }`}
           >
-            📂 Upload Track File
+            One way (Track file)
           </button>
           <button
             type="button"
@@ -667,7 +720,7 @@ export function CourseSubmitFormWithGpx() {
                 : "border-transparent border-t-transparent border-r-transparent text-muted-foreground hover:text-foreground hover:border-border hover:border-t-border hover:border-r-border"
             }`}
           >
-            🔄 Out and Back
+            Out and back (Manual)
           </button>
         </div>
         {mode === "track_file" && (
@@ -681,7 +734,7 @@ export function CourseSubmitFormWithGpx() {
         {mode === "out_and_back" && (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
             <p className="text-sm text-green-700">
-              🔄 Create an out-and-back course by specifying a start/finish point and a turning mark.
+              Create an out-and-back course by specifying a start/finish point and a turning mark.
               The start and finish coordinates should be the same location where the route begins and ends.
             </p>
           </div>
@@ -1031,10 +1084,69 @@ export function CourseSubmitFormWithGpx() {
               required
             />
           </div>
+
+          {mode === "manual" && (
+            <div className="space-y-2">
+              <Label>Type *</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="startType"
+                    value="POINT"
+                    checked={form.startType === "POINT"}
+                    onChange={(e) => update("startType", e.target.value)}
+                    className="w-4 h-4"
+                  />
+                  <span>Point</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="startType"
+                    value="LINE"
+                    checked={form.startType === "LINE"}
+                    onChange={(e) => update("startType", e.target.value)}
+                    className="w-4 h-4"
+                  />
+                  <span>Line</span>
+                </label>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <CoordField id="startLat" label="Latitude" value={form.startLat} type="lat" disabled={mode === "track_file"} />
             <CoordField id="startLng" label="Longitude" value={form.startLng} type="lng" disabled={mode === "track_file"} />
           </div>
+
+          {form.startType === "LINE" && mode === "manual" && (
+            <div className="grid grid-cols-2 gap-4">
+              <CoordField id="startLine2Lat" label="End Latitude" value={form.startLine2Lat} type="lat" disabled={false} />
+              <CoordField id="startLine2Lng" label="End Longitude" value={form.startLine2Lng} type="lng" disabled={false} />
+            </div>
+          )}
+
+          {mode === "manual" && form.startLat.trim().length > 0 && form.startLng.trim().length > 0 && !isNaN(parseFloat(form.startLat)) && !isNaN(parseFloat(form.startLng)) && (
+            <div className="space-y-2">
+              <Label>Interactive Map</Label>
+              <SimpleInteractiveMap
+                type={form.startType}
+                lat={parseFloat(form.startLat) || 0}
+                lng={parseFloat(form.startLng) || 0}
+                lat2={form.startLine2Lat ? parseFloat(form.startLine2Lat) : undefined}
+                lng2={form.startLine2Lng ? parseFloat(form.startLine2Lng) : undefined}
+                purpose="start"
+                onLocationChange={(lat, lng, lat2, lng2) => updateCoordinates("start", lat, lng, lat2, lng2)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {form.startType === "POINT" ?
+                  "Click on the map to position the point, or drag the marker to adjust." :
+                  "Click twice to draw a line, or drag the markers to adjust the line endpoints."
+                }
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Finish Point */}
@@ -1044,7 +1156,9 @@ export function CourseSubmitFormWithGpx() {
           </h3>
           {mode === "out_and_back" ? (
             <div className="space-y-2">
-              {/* No content for out-and-back finish point section */}
+              <p className="text-sm text-muted-foreground">
+                For out-and-back routes, the finish point is the same as the start point.
+              </p>
             </div>
           ) : (
             <>
@@ -1058,10 +1172,69 @@ export function CourseSubmitFormWithGpx() {
                   required
                 />
               </div>
+
+              {mode === "manual" && (
+                <div className="space-y-2">
+                  <Label>Type *</Label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="finishType"
+                        value="POINT"
+                        checked={form.finishType === "POINT"}
+                        onChange={(e) => update("finishType", e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <span>Point</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="finishType"
+                        value="LINE"
+                        checked={form.finishType === "LINE"}
+                        onChange={(e) => update("finishType", e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <span>Line</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <CoordField id="finishLat" label="Latitude" value={form.finishLat} type="lat" disabled={mode === "track_file"} />
                 <CoordField id="finishLng" label="Longitude" value={form.finishLng} type="lng" disabled={mode === "track_file"} />
               </div>
+
+              {form.finishType === "LINE" && mode === "manual" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <CoordField id="finishLine2Lat" label="End Latitude" value={form.finishLine2Lat} type="lat" disabled={false} />
+                  <CoordField id="finishLine2Lng" label="End Longitude" value={form.finishLine2Lng} type="lng" disabled={false} />
+                </div>
+              )}
+
+              {mode === "manual" && form.finishLat.trim().length > 0 && form.finishLng.trim().length > 0 && !isNaN(parseFloat(form.finishLat)) && !isNaN(parseFloat(form.finishLng)) && (
+                <div className="space-y-2">
+                  <Label>Interactive Map</Label>
+                  <SimpleInteractiveMap
+                    type={form.finishType}
+                    lat={parseFloat(form.finishLat) || 0}
+                    lng={parseFloat(form.finishLng) || 0}
+                    lat2={form.finishLine2Lat ? parseFloat(form.finishLine2Lat) : undefined}
+                    lng2={form.finishLine2Lng ? parseFloat(form.finishLine2Lng) : undefined}
+                    purpose="finish"
+                    onLocationChange={(lat, lng, lat2, lng2) => updateCoordinates("finish", lat, lng, lat2, lng2)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {form.finishType === "POINT" ?
+                      "Click on the map to position the point, or drag the marker to adjust." :
+                      "Click twice to draw a line, or drag the markers to adjust the line endpoints."
+                    }
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>

@@ -16,6 +16,9 @@ interface Props {
   lng: number;
   name: string;
   type: "start" | "end" | "turning";
+  pointType?: "POINT" | "LINE";
+  lat2?: number;
+  lng2?: number;
 }
 
 export function PointMap(props: Props) {

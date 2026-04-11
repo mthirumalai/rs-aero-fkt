@@ -1,4 +1,4 @@
-import { validateGpxTrack, haversineMeters } from '../validator';
+import { validateGpxTrack, validateGpxTrackEnhanced, haversineMeters } from '../validator';
 import { computeSog, computeAvgMaxSog } from '../sog';
 import { GpxPoint } from '../parser';
 
@@ -370,6 +370,224 @@ describe('FKT Attempt Validation Tests', () => {
 
       expect(result.valid).toBe(true);
       expect(endTime - startTime).toBeLessThan(100); // Should complete in <100ms
+    });
+  });
+
+  describe('Enhanced Line-Based Validation Tests', () => {
+    // Test coordinates for line-based validation
+    const LINE_START_LAT = 33.948889;
+    const LINE_START_LNG = -78.011667;
+    const LINE_END_LAT = 33.949000;  // ~100m north of start
+    const LINE_END_LNG = -78.011000;  // ~100m east of start
+
+    describe('Line Intersection Tests', () => {
+      test('should detect simple line intersection', () => {
+        // Use realistic coordinates (small decimal degrees)
+        // Create a horizontal finish line from (33.9488, -78.0117) to (33.9492, -78.0117)
+        // Create a vertical track that crosses it
+        const lineBaseLat = 33.9490;
+        const lineBaseLng = -78.0117;
+
+        const points: GpxPoint[] = [
+          createGpxPoint(lineBaseLat, lineBaseLng, 0),        // Start point ON the line
+          createGpxPoint(lineBaseLat - 0.001, lineBaseLng, 300), // Move south of line
+          createGpxPoint(lineBaseLat + 0.001, lineBaseLng, 600), // Move north of line (crossing)
+        ];
+
+        const result = validateGpxTrackEnhanced(
+          { points },
+          'POINT',
+          lineBaseLat,
+          lineBaseLng, // Start point same as first track point
+          'LINE',
+          lineBaseLat,
+          lineBaseLng - 0.001,  // Horizontal line start (west)
+          undefined, // startLine2Lat
+          undefined, // startLine2Lng
+          lineBaseLat,
+          lineBaseLng + 0.001,  // Horizontal line end (east)
+          100 // Large tolerance
+        );
+
+        if (!result.valid) {
+          console.log('Line intersection test result:', result.error);
+        }
+        expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('Line to Point Validation', () => {
+      test('should validate track crossing start line toward finish point', () => {
+        const points: GpxPoint[] = [
+          // Approach start line from south
+          createGpxPoint(33.948500, -78.011200, 0),
+          // Cross the start line
+          createGpxPoint(33.949200, -78.011300, 600),
+          // Continue toward finish
+          createGpxPoint(ROUTE_START_LAT + 0.1, ROUTE_START_LNG + 0.1, 1800),
+          createGpxPoint(ROUTE_END_LAT, ROUTE_END_LNG, 3600),
+        ];
+
+        const result = validateGpxTrackEnhanced(
+          { points },
+          'LINE',
+          LINE_START_LAT,
+          LINE_START_LNG,
+          'POINT',
+          ROUTE_END_LAT,
+          ROUTE_END_LNG,
+          LINE_END_LAT,
+          LINE_END_LNG,
+          undefined,
+          undefined,
+          TOLERANCE_M
+        );
+
+        expect(result.valid).toBe(true);
+        expect(result.durationSec).toBe(3000); // From line crossing to finish
+        expect(result.nearestStartLineDistanceM).toBeDefined();
+        expect(result.nearestFinishDistanceM).toBeDefined();
+      });
+
+      test('should reject track that does not cross start line', () => {
+        const points: GpxPoint[] = [
+          // Stay parallel to start line without crossing
+          createGpxPoint(33.948500, -78.011200, 0),
+          createGpxPoint(33.948600, -78.011300, 600),
+          createGpxPoint(ROUTE_END_LAT, ROUTE_END_LNG, 3600),
+        ];
+
+        const result = validateGpxTrackEnhanced(
+          { points },
+          'LINE',
+          LINE_START_LAT,
+          LINE_START_LNG,
+          'POINT',
+          ROUTE_END_LAT,
+          ROUTE_END_LNG,
+          LINE_END_LAT,
+          LINE_END_LNG,
+          undefined,
+          undefined,
+          TOLERANCE_M
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('does not cross start line');
+      });
+    });
+
+    describe('Point to Line Validation', () => {
+      test('should validate track from start point crossing finish line', () => {
+        // Create a clear east-west finish line
+        const finishLineStart = { lat: ROUTE_END_LAT - 0.01, lng: ROUTE_END_LNG }; // West end
+        const finishLineEnd = { lat: ROUTE_END_LAT + 0.01, lng: ROUTE_END_LNG };   // East end
+
+        const points: GpxPoint[] = [
+          createGpxPoint(ROUTE_START_LAT, ROUTE_START_LNG, 0),
+          createGpxPoint(ROUTE_START_LAT + 0.1, ROUTE_START_LNG + 0.1, 1800),
+          // Approach finish line from south
+          createGpxPoint(ROUTE_END_LAT, ROUTE_END_LNG - 0.01, 3000),
+          // Cross finish line going north
+          createGpxPoint(ROUTE_END_LAT, ROUTE_END_LNG + 0.01, 3600),
+        ];
+
+        const result = validateGpxTrackEnhanced(
+          { points },
+          'POINT',
+          ROUTE_START_LAT,
+          ROUTE_START_LNG,
+          'LINE',
+          finishLineStart.lat,
+          finishLineStart.lng,
+          undefined,
+          undefined,
+          finishLineEnd.lat,
+          finishLineEnd.lng,
+          TOLERANCE_M
+        );
+
+        if (!result.valid) {
+          console.log('Point to Line validation failed:', result.error);
+        }
+        expect(result.valid).toBe(true);
+        expect(result.nearestStartDistanceM).toBeDefined();
+        expect(result.nearestFinishLineDistanceM).toBeDefined();
+      });
+    });
+
+    describe('Line to Line Validation', () => {
+      test('should validate track crossing both start and finish lines', () => {
+        // Create a clear east-west finish line
+        const finishLineStart = { lat: ROUTE_END_LAT - 0.01, lng: ROUTE_END_LNG }; // West end
+        const finishLineEnd = { lat: ROUTE_END_LAT + 0.01, lng: ROUTE_END_LNG };   // East end
+
+        const points: GpxPoint[] = [
+          // Approach start line from south
+          createGpxPoint(33.948500, -78.011200, 0),
+          // Cross start line going north
+          createGpxPoint(33.949200, -78.011300, 600),
+          // Continue toward finish line
+          createGpxPoint(ROUTE_START_LAT + 0.1, ROUTE_START_LNG + 0.1, 1800),
+          // Approach finish line from south
+          createGpxPoint(ROUTE_END_LAT, ROUTE_END_LNG - 0.01, 3000),
+          // Cross finish line going north
+          createGpxPoint(ROUTE_END_LAT, ROUTE_END_LNG + 0.01, 3600),
+        ];
+
+        const result = validateGpxTrackEnhanced(
+          { points },
+          'LINE',
+          LINE_START_LAT,
+          LINE_START_LNG,
+          'LINE',
+          finishLineStart.lat,
+          finishLineStart.lng,
+          LINE_END_LAT,
+          LINE_END_LNG,
+          finishLineEnd.lat,
+          finishLineEnd.lng,
+          TOLERANCE_M
+        );
+
+        if (!result.valid) {
+          console.log('Line to Line validation failed:', result.error);
+        }
+        expect(result.valid).toBe(true);
+        expect(result.nearestStartLineDistanceM).toBeDefined();
+        expect(result.nearestFinishLineDistanceM).toBeDefined();
+      });
+    });
+
+    describe('Line Crossing Direction Tests', () => {
+      test('should handle multiple line crossings and use the correct one', () => {
+        const points: GpxPoint[] = [
+          // First crossing (wrong direction - ignored)
+          createGpxPoint(33.949200, -78.011300, 0),
+          createGpxPoint(33.948500, -78.011200, 300), // Cross back
+          // Second crossing (correct direction)
+          createGpxPoint(33.949200, -78.011300, 600),
+          createGpxPoint(ROUTE_END_LAT, ROUTE_END_LNG, 3600),
+        ];
+
+        const result = validateGpxTrackEnhanced(
+          { points },
+          'LINE',
+          LINE_START_LAT,
+          LINE_START_LNG,
+          'POINT',
+          ROUTE_END_LAT,
+          ROUTE_END_LNG,
+          LINE_END_LAT,
+          LINE_END_LNG,
+          undefined,
+          undefined,
+          TOLERANCE_M
+        );
+
+        expect(result.valid).toBe(true);
+        expect(result.durationSec).toBe(3000); // Should use the second crossing at 600s
+      });
     });
   });
 });

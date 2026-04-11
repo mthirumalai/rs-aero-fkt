@@ -29,8 +29,13 @@ enum AttemptStatus {
 }
 
 enum CourseType {
-  POINT_TO_POINT
+  ONE_WAY
   OUT_AND_BACK
+}
+
+enum PointType {
+  POINT
+  LINE
 }
 
 model Account {
@@ -91,16 +96,29 @@ model Course {
   name          String
   description   String?
   country       String
-  courseType    CourseType   @default(POINT_TO_POINT)
+  courseType    CourseType   @default(ONE_WAY)
+
+  // Start configuration
   startName     String
+  startType     PointType    @default(POINT)
+  startLat      Float        // For POINT: the point. For LINE: endpoint 1
+  startLng      Float        // For POINT: the point. For LINE: endpoint 1
+  startLine2Lat Float?       // For LINE: endpoint 2
+  startLine2Lng Float?       // For LINE: endpoint 2
+
+  // Finish configuration
   finishName    String
-  startLat      Float
-  startLng      Float
-  finishLat     Float
-  finishLng     Float
+  finishType    PointType    @default(POINT)
+  finishLat     Float        // For POINT: the point. For LINE: endpoint 1
+  finishLng     Float        // For POINT: the point. For LINE: endpoint 1
+  finishLine2Lat Float?      // For LINE: endpoint 2
+  finishLine2Lng Float?      // For LINE: endpoint 2
+
+  // Turning mark (always POINT for out-and-back)
   turningMarkName String?
   turningMarkLat  Float?
   turningMarkLng  Float?
+
   distanceKm    Float?
   status        CourseStatus @default(PENDING)
   submittedById String
@@ -145,6 +163,8 @@ model FktAttempt {
   sailorEmail      String?
   status           AttemptStatus @default(PENDING)
   submittedAt    DateTime      @default(now())
+  raceStartIndex   Int?
+  raceEndIndex     Int?
 
   course  Course         @relation(fields: [courseId], references: [id])
   athlete User           @relation(fields: [athleteId], references: [id])

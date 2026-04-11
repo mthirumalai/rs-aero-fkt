@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Polyline, Marker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, Marker, useMap, LayersControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GpxPoint } from "@/lib/gpx/parser";
@@ -179,10 +179,27 @@ export default function CourseCreationMapInner({ points, selectedStartIndex, sel
   return (
     <div className={`w-full h-full ${cursorClass}`}>
       <MapContainer center={center} zoom={12} style={{ height: "100%", width: "100%" }}>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <LayersControl position="topright">
+          <LayersControl.BaseLayer checked name="Marine Chart">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+          </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="Street Map">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+          </LayersControl.BaseLayer>
+          <LayersControl.Overlay checked name="Nautical Information">
+            <TileLayer
+              attribution='&copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+              maxZoom={18}
+            />
+          </LayersControl.Overlay>
+        </LayersControl>
         <Polyline positions={polyline} color="#0ea5e9" weight={3} opacity={0.7} />
         <MapContent
           points={points}

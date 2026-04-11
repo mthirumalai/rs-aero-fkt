@@ -21,7 +21,13 @@ interface Props {
   turningMarkLat?: number;
   turningMarkLng?: number;
   turningMarkName?: string;
-  courseType?: "POINT_TO_POINT" | "OUT_AND_BACK";
+  courseType?: "ONE_WAY" | "OUT_AND_BACK";
+  startType?: "POINT" | "LINE";
+  startLine2Lat?: number | null;
+  startLine2Lng?: number | null;
+  finishType?: "POINT" | "LINE";
+  finishLine2Lat?: number | null;
+  finishLine2Lng?: number | null;
 }
 
 export function CourseMap(props: Props) {
