@@ -396,15 +396,33 @@ export async function POST(req: NextRequest) {
       const timedPoints = normalizedParsed.points.filter((p) => p.time !== null);
       const allPoints = normalizedParsed.points;
 
+      // Create a mapping from timed point indices to all points indices
+      const timedToAllPointsMap = new Map<number, number>();
+      let timedIndex = 0;
+      for (let allIndex = 0; allIndex < allPoints.length; allIndex++) {
+        if (allPoints[allIndex].time !== null) {
+          timedToAllPointsMap.set(timedIndex, allIndex);
+          timedIndex++;
+        }
+      }
+
       // Find the corresponding indices in the full points array
       if (validation.timingDetails.lastStartCrossingIndex !== undefined) {
-        const timedStartPoint = timedPoints[validation.timingDetails.lastStartCrossingIndex];
-        raceStartIndex = allPoints.findIndex(p => p === timedStartPoint);
+        const mappedIndex = timedToAllPointsMap.get(validation.timingDetails.lastStartCrossingIndex);
+        if (mappedIndex !== undefined) {
+          raceStartIndex = mappedIndex;
+        } else {
+          console.warn('⚠️ Failed to map race start index from timedPoints to allPoints');
+        }
       }
 
       if (validation.timingDetails.firstFinishCrossingIndex !== undefined) {
-        const timedFinishPoint = timedPoints[validation.timingDetails.firstFinishCrossingIndex];
-        raceEndIndex = allPoints.findIndex(p => p === timedFinishPoint);
+        const mappedIndex = timedToAllPointsMap.get(validation.timingDetails.firstFinishCrossingIndex);
+        if (mappedIndex !== undefined) {
+          raceEndIndex = mappedIndex;
+        } else {
+          console.warn('⚠️ Failed to map race end index from timedPoints to allPoints');
+        }
       }
 
       console.log('🎯 Race timing indices detected:', {
@@ -415,7 +433,8 @@ export async function POST(req: NextRequest) {
         startCrossings: validation.timingDetails.startLineCrossings,
         finishCrossings: validation.timingDetails.finishLineCrossings,
         totalPoints: allPoints.length,
-        timedPoints: timedPoints.length
+        timedPoints: timedPoints.length,
+        mappingSize: timedToAllPointsMap.size
       });
     }
 
