@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -37,19 +37,33 @@ const turningMarkIcon = new L.Icon({
   popupAnchor: [1, -34],
 });
 
-function FitBounds({ startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng }: {
+function FitBounds({
+  startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng,
+  startLine2Lat, startLine2Lng, finishLine2Lat, finishLine2Lng
+}: {
   startLat: number; startLng: number; finishLat: number; finishLng: number;
   turningMarkLat?: number; turningMarkLng?: number;
+  startLine2Lat?: number | null; startLine2Lng?: number | null;
+  finishLine2Lat?: number | null; finishLine2Lng?: number | null;
 }) {
   const map = useMap();
   useEffect(() => {
     const points = [[startLat, startLng], [finishLat, finishLng]] as [number, number][];
+
+    // Add line endpoints to bounds
+    if (startLine2Lat !== null && startLine2Lat !== undefined && startLine2Lng !== null && startLine2Lng !== undefined) {
+      points.push([startLine2Lat, startLine2Lng]);
+    }
+    if (finishLine2Lat !== null && finishLine2Lat !== undefined && finishLine2Lng !== null && finishLine2Lng !== undefined) {
+      points.push([finishLine2Lat, finishLine2Lng]);
+    }
+
     if (turningMarkLat !== undefined && turningMarkLng !== undefined) {
       points.push([turningMarkLat, turningMarkLng]);
     }
     const bounds = L.latLngBounds(points);
     map.fitBounds(bounds, { padding: [40, 40] });
-  }, [map, startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng]);
+  }, [map, startLat, startLng, finishLat, finishLng, turningMarkLat, turningMarkLng, startLine2Lat, startLine2Lng, finishLine2Lat, finishLine2Lng]);
   return null;
 }
 
@@ -63,7 +77,13 @@ interface Props {
   turningMarkLat?: number;
   turningMarkLng?: number;
   turningMarkName?: string;
-  courseType?: "POINT_TO_POINT" | "OUT_AND_BACK";
+  courseType?: "ONE_WAY" | "OUT_AND_BACK";
+  startType?: "POINT" | "LINE";
+  startLine2Lat?: number | null;
+  startLine2Lng?: number | null;
+  finishType?: "POINT" | "LINE";
+  finishLine2Lat?: number | null;
+  finishLine2Lng?: number | null;
 }
 
 export default function CourseMapInner({
@@ -76,9 +96,15 @@ export default function CourseMapInner({
   turningMarkLat,
   turningMarkLng,
   turningMarkName,
-  courseType
+  courseType,
+  startType = "POINT",
+  startLine2Lat,
+  startLine2Lng,
+  finishType = "POINT",
+  finishLine2Lat,
+  finishLine2Lng
 }: Props) {
-  const [marine, setMarine] = useState(true);
+  const [marine, setMarine] = useState(true); // Default to Marine
   const centerLat = (startLat + finishLat) / 2;
   const centerLng = (startLng + finishLng) / 2;
 
@@ -105,15 +131,18 @@ export default function CourseMapInner({
         zoom={10}
         style={{ height: "100%", width: "100%" }}
       >
+        {/* Base tile layer */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
         {/* OpenSeaMap marine overlay - always load but conditionally visible */}
         <TileLayer
           attribution='&copy; <a href="https://www.openseamap.org">OpenSeaMap</a> contributors'
           url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
           opacity={marine ? 1 : 0}
+          maxZoom={18}
         />
       <FitBounds
         startLat={startLat}
@@ -122,12 +151,36 @@ export default function CourseMapInner({
         finishLng={finishLng}
         turningMarkLat={turningMarkLat}
         turningMarkLng={turningMarkLng}
+        startLine2Lat={startLine2Lat}
+        startLine2Lng={startLine2Lng}
+        finishLine2Lat={finishLine2Lat}
+        finishLine2Lng={finishLine2Lng}
       />
+      {/* Start markers and lines */}
       <Marker position={[startLat, startLng]} icon={startIcon}>
         <Popup>
-          <strong>{courseType === "OUT_AND_BACK" ? "Start/Finish:" : "Start:"}</strong> {startName}
+          <strong>{courseType === "OUT_AND_BACK" ? "Start/Finish:" : "Start:"}</strong> {startName}<br />
+          {startType === "LINE" ? "Line Start: " : ""}{startLat.toFixed(6)}, {startLng.toFixed(6)}
         </Popup>
       </Marker>
+
+      {startType === "LINE" && startLine2Lat !== null && startLine2Lat !== undefined &&
+       startLine2Lng !== null && startLine2Lng !== undefined && (
+        <>
+          <Marker position={[startLine2Lat, startLine2Lng]} icon={startIcon}>
+            <Popup>
+              <strong>{courseType === "OUT_AND_BACK" ? "Start/Finish:" : "Start:"}</strong> {startName}<br />
+              Line End: {startLine2Lat.toFixed(6)}, {startLine2Lng.toFixed(6)}
+            </Popup>
+          </Marker>
+          <Polyline
+            positions={[[startLat, startLng], [startLine2Lat, startLine2Lng]]}
+            color="green"
+            weight={4}
+            opacity={0.8}
+          />
+        </>
+      )}
       {courseType === "OUT_AND_BACK" ? (
         turningMarkLat !== undefined && turningMarkLng !== undefined && turningMarkName && (
           <>
@@ -144,9 +197,33 @@ export default function CourseMapInner({
         )
       ) : (
         <>
+          {/* Finish markers and lines */}
           <Marker position={[finishLat, finishLng]} icon={endIcon}>
-            <Popup><strong>Finish:</strong> {finishName}</Popup>
+            <Popup>
+              <strong>Finish:</strong> {finishName}<br />
+              {finishType === "LINE" ? "Line Start: " : ""}{finishLat.toFixed(6)}, {finishLng.toFixed(6)}
+            </Popup>
           </Marker>
+
+          {finishType === "LINE" && finishLine2Lat !== null && finishLine2Lat !== undefined &&
+           finishLine2Lng !== null && finishLine2Lng !== undefined && (
+            <>
+              <Marker position={[finishLine2Lat, finishLine2Lng]} icon={endIcon}>
+                <Popup>
+                  <strong>Finish:</strong> {finishName}<br />
+                  Line End: {finishLine2Lat.toFixed(6)}, {finishLine2Lng.toFixed(6)}
+                </Popup>
+              </Marker>
+              <Polyline
+                positions={[[finishLat, finishLng], [finishLine2Lat, finishLine2Lng]]}
+                color="red"
+                weight={4}
+                opacity={0.8}
+              />
+            </>
+          )}
+
+          {/* Course route line */}
           <Polyline
             positions={[[startLat, startLng], [finishLat, finishLng]]}
             color="#3b82f6"
@@ -155,7 +232,7 @@ export default function CourseMapInner({
           />
         </>
       )}
-      </MapContainer>
+    </MapContainer>
     </div>
   );
 }

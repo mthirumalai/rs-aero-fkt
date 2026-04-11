@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,9 @@ interface Props {
   lng: number;
   name: string;
   type: "start" | "end" | "turning";
+  pointType?: "POINT" | "LINE";
+  lat2?: number;
+  lng2?: number;
   editable?: boolean;
   onCoordinateChange?: (lat: number, lng: number) => void;
 }
@@ -76,10 +79,13 @@ export default function PointMapInner({
   lng,
   name,
   type,
+  pointType = "POINT",
+  lat2,
+  lng2,
   editable = false,
   onCoordinateChange
 }: Props) {
-  const [marine, setMarine] = useState(true);
+  const [marine, setMarine] = useState(true); // Default to Marine
   const [currentLat, setCurrentLat] = useState(lat);
   const [currentLng, setCurrentLng] = useState(lng);
   const [originalLat, setOriginalLat] = useState(lat);
@@ -287,10 +293,35 @@ export default function PointMapInner({
               type === "end" ? "End" :
               "Turning Mark"
             }:</strong> {name}<br />
-            {currentLat.toFixed(6)}, {currentLng.toFixed(6)}
+            {pointType === "LINE" ? "Line Start: " : ""}{editable ? currentLat.toFixed(6) : lat.toFixed(6)}, {editable ? currentLng.toFixed(6) : lng.toFixed(6)}
             {editable && hasChanges && <><br /><em>Unsaved changes</em></>}
           </Popup>
         </Marker>
+
+        {pointType === "LINE" && lat2 !== undefined && lng2 !== undefined && (
+          <>
+            <Marker position={[lat2, lng2]} icon={
+              type === "start" ? startIcon :
+              type === "end" ? endIcon :
+              turningMarkIcon
+            }>
+              <Popup>
+                <strong>{
+                  type === "start" ? "Start" :
+                  type === "end" ? "End" :
+                  "Turning Mark"
+                }:</strong> {name}<br />
+                Line End: {lat2.toFixed(6)}, {lng2.toFixed(6)}
+              </Popup>
+            </Marker>
+            <Polyline
+              positions={[[lat, lng], [lat2, lng2]]}
+              color={type === "start" ? "green" : type === "end" ? "red" : "blue"}
+              weight={4}
+              opacity={0.8}
+            />
+          </>
+        )}
       </MapContainer>
       <style jsx global>{`
         .ghost-marker {

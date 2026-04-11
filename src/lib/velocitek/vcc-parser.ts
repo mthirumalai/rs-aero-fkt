@@ -18,7 +18,7 @@ export interface VccParseResult {
 
 function parseDateTime(dateTimeStr: string): Date | null {
   if (!dateTimeStr?.trim()) {
-    console.log('🚫 Empty dateTime string');
+    // console.log('🚫 Empty dateTime string');
     return null;
   }
 
@@ -26,13 +26,13 @@ function parseDateTime(dateTimeStr: string): Date | null {
     // VCC format: "2020-09-07T16:00:23-07:00"
     const date = new Date(dateTimeStr);
     if (!isNaN(date.getTime())) {
-      console.log('✅ Parsed dateTime:', dateTimeStr, '->', date.toISOString());
+      // console.log('✅ Parsed dateTime:', dateTimeStr, '->', date.toISOString());
       return date;
     } else {
-      console.log('❌ Invalid date created from:', dateTimeStr);
+      // console.log('❌ Invalid date created from:', dateTimeStr);
     }
-  } catch (error) {
-    console.log('💥 Error parsing dateTime:', dateTimeStr, error);
+  } catch {
+    // console.log('💥 Error parsing dateTime:', dateTimeStr, error);
   }
 
   return null;
@@ -145,11 +145,11 @@ export function parseVccXml(xmlText: string): VccParseResult {
 
     // Set start and end times
     if (result.points.length > 0) {
-      console.log('📊 VCC parsing complete:', {
-        totalPoints: result.points.length,
-        pointsWithTime: result.points.filter(p => p.time !== null).length,
-        firstFewPoints: result.points.slice(0, 3).map(p => ({ lat: p.lat, lon: p.lon, time: p.time?.toISOString() }))
-      });
+      // console.log('📊 VCC parsing complete:', {
+      //   totalPoints: result.points.length,
+      //   pointsWithTime: result.points.filter(p => p.time !== null).length,
+      //   firstFewPoints: result.points.slice(0, 3).map(p => ({ lat: p.lat, lon: p.lon, time: p.time?.toISOString() }))
+      // });
 
       const firstPoint = result.points.find(p => p.time !== null);
       const lastPoint = result.points.reverse().find(p => p.time !== null);
@@ -158,10 +158,10 @@ export function parseVccXml(xmlText: string): VccParseResult {
       result.startTime = firstPoint?.time || undefined;
       result.endTime = lastPoint?.time || undefined;
 
-      console.log('🕐 VCC startTime/endTime:', {
-        startTime: result.startTime?.toISOString(),
-        endTime: result.endTime?.toISOString()
-      });
+      // console.log('🕐 VCC startTime/endTime:', {
+      //   startTime: result.startTime?.toISOString(),
+      //   endTime: result.endTime?.toISOString()
+      // });
     }
 
   } catch (error) {

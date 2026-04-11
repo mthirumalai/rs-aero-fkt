@@ -20,7 +20,7 @@ type CourseRow = {
   id: string;
   name: string;
   country: string;
-  courseType: "POINT_TO_POINT" | "OUT_AND_BACK";
+  courseType: "ONE_WAY" | "OUT_AND_BACK";
   startName: string;
   startLat: number;
   startLng: number;

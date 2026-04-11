@@ -6,7 +6,8 @@ import { readFileContent } from "@/lib/storage";
 import { parseGpxXml } from "@/lib/gpx/parser";
 import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import { parseVelocitkCsv } from "@/lib/velocitek/parser";
-import { validateGpxTrack, validateOutAndBackGpxTrack } from "@/lib/gpx/validator";
+import { validateGpxTrackEnhanced, validateOutAndBackGpxTrack } from "@/lib/gpx/validator";
+import { validateGpxTrackForLines } from "@/lib/gpx/line-validator";
 import { computeSog, computeAvgMaxSog } from "@/lib/gpx/sog";
 import type { RigSize } from "@prisma/client";
 import type { ParsedGpx } from "@/lib/gpx/parser";
@@ -211,6 +212,7 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
+    // Use existing validation for out-and-back courses (not yet updated for lines)
     validation = validateOutAndBackGpxTrack(
       normalizedParsed,
       course.startLat,
@@ -219,36 +221,95 @@ export async function POST(req: NextRequest) {
       course.turningMarkLng
     );
   } else {
-    validation = validateGpxTrack(
-      normalizedParsed,
-      course.startLat,
-      course.startLng,
-      course.finishLat,
-      course.finishLng
-    );
+    // For ONE_WAY courses, use enhanced validation that supports both points and lines
+    // Default to 'POINT' type for existing courses that don't have type fields set
+    const startType = course.startType || 'POINT';
+    const finishType = course.finishType || 'POINT';
+
+    // Use line intersection validation for line-to-line courses
+    if (startType === 'LINE' && finishType === 'LINE' &&
+        course.startLine2Lat && course.startLine2Lng &&
+        course.finishLine2Lat && course.finishLine2Lng) {
+
+      console.log("🔍 Using LINE INTERSECTION validation for line-to-line course");
+      validation = validateGpxTrackForLines(
+        normalizedParsed,
+        { lat: course.startLat, lng: course.startLng },
+        { lat: course.startLine2Lat, lng: course.startLine2Lng },
+        { lat: course.finishLat, lng: course.finishLng },
+        { lat: course.finishLine2Lat, lng: course.finishLine2Lng }
+      );
+    } else {
+      // Use proximity-based validation for point/line mixed courses
+      console.log("🔍 Using PROXIMITY validation for point/mixed course");
+      validation = validateGpxTrackEnhanced(
+        normalizedParsed,
+        startType,
+        course.startLat,
+        course.startLng,
+        finishType,
+        course.finishLat,
+        course.finishLng,
+        course.startLine2Lat || undefined,
+        course.startLine2Lng || undefined,
+        course.finishLine2Lat || undefined,
+        course.finishLine2Lng || undefined
+      );
+    }
   }
 
   if (!validation.valid) {
-    console.log('❌ FKT Submission: GPX validation failed:', {
+    const logData: Record<string, unknown> = {
       error: validation.error,
-      nearestStartDistanceM: validation.nearestStartDistanceM,
-      nearestFinishDistanceM: validation.nearestFinishDistanceM,
-      nearestTurningMarkDistanceM: validation.nearestTurningMarkDistanceM,
       courseName: course.name,
       courseType: course.courseType
-    });
+    };
+
+    // Add distance fields if they exist (for proximity-based validation)
+    if ('nearestStartDistanceM' in validation) {
+      logData.nearestStartDistanceM = validation.nearestStartDistanceM;
+      logData.nearestFinishDistanceM = validation.nearestFinishDistanceM;
+      logData.nearestTurningMarkDistanceM = validation.nearestTurningMarkDistanceM;
+    }
+
+    // Add timing details if they exist (for line-based validation)
+    if ('timingDetails' in validation && validation.timingDetails) {
+      logData.timingDetails = validation.timingDetails;
+    }
+
+    console.log('❌ FKT Submission: GPX validation failed:', logData);
 
     let detailedError = validation.error;
-    if (course.courseType === "OUT_AND_BACK") {
-      if (validation.nearestStartDistanceM !== undefined) {
-        detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start/finish point.`;
-      }
-      if (validation.nearestTurningMarkDistanceM !== undefined) {
-        detailedError += ` Your track came within ${validation.nearestTurningMarkDistanceM.toFixed(1)}m of the turning mark.`;
-      }
-    } else {
-      if (validation.nearestStartDistanceM !== undefined && validation.nearestFinishDistanceM !== undefined) {
-        detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start and ${validation.nearestFinishDistanceM.toFixed(1)}m of the finish. Tracks must pass within 10m of both points.`;
+
+    // Only add distance details for proximity-based validation (not line intersection validation)
+    if ('nearestStartDistanceM' in validation) {
+      if (course.courseType === "OUT_AND_BACK") {
+        if (validation.nearestStartDistanceM !== undefined) {
+          detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start/finish point.`;
+        }
+        if (validation.nearestTurningMarkDistanceM !== undefined) {
+          detailedError += ` Your track came within ${validation.nearestTurningMarkDistanceM.toFixed(1)}m of the turning mark.`;
+        }
+      } else {
+        // Handle both point and line distance reporting for ONE_WAY courses
+        const startType = course.startType || 'POINT';
+        const finishType = course.finishType || 'POINT';
+
+        if (startType === 'POINT' && validation.nearestStartDistanceM !== undefined) {
+          detailedError = `${validation.error} Your track came within ${validation.nearestStartDistanceM.toFixed(1)}m of the start point.`;
+        } else if (startType === 'LINE' && 'nearestStartLineDistanceM' in validation && validation.nearestStartLineDistanceM !== undefined) {
+          detailedError = `${validation.error} Your track came within ${validation.nearestStartLineDistanceM.toFixed(1)}m of the start line.`;
+        }
+
+        if (finishType === 'POINT' && validation.nearestFinishDistanceM !== undefined) {
+          detailedError += ` Your track came within ${validation.nearestFinishDistanceM.toFixed(1)}m of the finish point.`;
+        } else if (finishType === 'LINE' && 'nearestFinishLineDistanceM' in validation && validation.nearestFinishLineDistanceM !== undefined) {
+          detailedError += ` Your track came within ${validation.nearestFinishLineDistanceM.toFixed(1)}m of the finish line.`;
+        }
+
+        if ((startType === 'POINT' || finishType === 'POINT')) {
+          detailedError += ` Tracks must pass within 10m of all points.`;
+        }
       }
     }
 
@@ -283,12 +344,29 @@ export async function POST(req: NextRequest) {
 
     const errorResponse: Record<string, unknown> = {
       error: detailedError,
-      nearestStartDistanceM: validation.nearestStartDistanceM,
-      nearestFinishDistanceM: validation.nearestFinishDistanceM,
     };
 
-    if (course.courseType === "OUT_AND_BACK" && validation.nearestTurningMarkDistanceM !== undefined) {
-      errorResponse.nearestTurningMarkDistanceM = validation.nearestTurningMarkDistanceM;
+    // Add distance information only for proximity-based validation
+    if ('nearestStartDistanceM' in validation) {
+      errorResponse.nearestStartDistanceM = validation.nearestStartDistanceM;
+      errorResponse.nearestFinishDistanceM = validation.nearestFinishDistanceM;
+
+      // Add line distance information for enhanced validation
+      if ('nearestStartLineDistanceM' in validation && validation.nearestStartLineDistanceM !== undefined) {
+        errorResponse.nearestStartLineDistanceM = validation.nearestStartLineDistanceM;
+      }
+      if ('nearestFinishLineDistanceM' in validation && validation.nearestFinishLineDistanceM !== undefined) {
+        errorResponse.nearestFinishLineDistanceM = validation.nearestFinishLineDistanceM;
+      }
+
+      if (course.courseType === "OUT_AND_BACK" && validation.nearestTurningMarkDistanceM !== undefined) {
+        errorResponse.nearestTurningMarkDistanceM = validation.nearestTurningMarkDistanceM;
+      }
+    }
+
+    // Add timing information for line-based validation
+    if ('timingDetails' in validation && validation.timingDetails) {
+      errorResponse.timingDetails = validation.timingDetails;
     }
 
     return NextResponse.json(errorResponse, { status: 422 });
@@ -309,6 +387,22 @@ export async function POST(req: NextRequest) {
   console.log('📋 FKT status will be:', attemptStatus, 'based on course status:', course.status);
 
   try {
+    // Extract race timing indices from line validator if available
+    let raceStartIndex: number | undefined;
+    let raceEndIndex: number | undefined;
+
+    if ('timingDetails' in validation && validation.timingDetails) {
+      raceStartIndex = validation.timingDetails.lastStartCrossingIndex;
+      raceEndIndex = validation.timingDetails.firstFinishCrossingIndex;
+
+      console.log('🎯 Race timing indices detected:', {
+        raceStartIndex,
+        raceEndIndex,
+        startCrossings: validation.timingDetails.startLineCrossings,
+        finishCrossings: validation.timingDetails.finishLineCrossings
+      });
+    }
+
     const attempt = await prisma.fktAttempt.create({
       data: {
         courseId,
@@ -328,6 +422,8 @@ export async function POST(req: NextRequest) {
         sailorName: sailorName || null,
         sailorEmail: sailorEmail || null,
         status: attemptStatus,
+        raceStartIndex,
+        raceEndIndex,
       },
     });
 

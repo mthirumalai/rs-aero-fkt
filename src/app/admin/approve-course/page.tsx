@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { ApprovalPageWithEditing } from "./ApprovalPageWithEditing";
+import { ApproveCourseForm } from "./ApproveCourseForm";
 import { ApprovalMap } from "@/components/map/ApprovalMap";
+import { PointMap } from "@/components/map/PointMap";
 import { PageHeader } from "@/components/PageHeader";
 import { COUNTRY_NAMES } from "@/lib/regions";
 import { distanceNm } from "@/lib/gpx/validator";
@@ -34,9 +35,15 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
         startName: true,
         startLat: true,
         startLng: true,
+        startType: true,
+        startLine2Lat: true,
+        startLine2Lng: true,
         finishName: true,
         finishLat: true,
         finishLng: true,
+        finishType: true,
+        finishLine2Lat: true,
+        finishLine2Lng: true,
         turningMarkName: true,
         turningMarkLat: true,
         turningMarkLng: true,
@@ -147,22 +154,106 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
         )}
       </div>
 
-      <ApprovalPageWithEditing
-        course={{
+      {/* Point Maps - different layout for out-and-back vs point-to-point */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div>
+          <h3 className="text-lg font-semibold mb-4">
+            {course.courseType === "OUT_AND_BACK" ? "Start / Finish Point" : "Start Point"}: {course.startName}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4 font-mono">
+            {course.startType === "LINE" ? "Line: " : "Point: "}
+            {course.startLat.toFixed(6)}, {course.startLng.toFixed(6)}
+            {course.startType === "LINE" && course.startLine2Lat && course.startLine2Lng && (
+              <> ↔ {course.startLine2Lat.toFixed(6)}, {course.startLine2Lng.toFixed(6)}</>
+            )}
+          </p>
+          <div className="h-[300px] rounded-lg overflow-hidden border">
+            <PointMap
+              lat={course.startLat}
+              lng={course.startLng}
+              name={course.startName}
+              type="start"
+              pointType={course.startType}
+              lat2={course.startLine2Lat || undefined}
+              lng2={course.startLine2Lng || undefined}
+            />
+          </div>
+        </div>
+        <div>
+          {course.courseType === "OUT_AND_BACK" ? (
+            // For out-and-back: show turning mark
+            course.turningMarkLat && course.turningMarkLng && course.turningMarkName ? (
+              <>
+                <h3 className="text-lg font-semibold mb-4">Turning Mark: {course.turningMarkName}</h3>
+                <p className="text-sm text-muted-foreground mb-4 font-mono">
+                  {course.turningMarkLat.toFixed(6)}, {course.turningMarkLng.toFixed(6)}
+                </p>
+                <div className="h-[300px] rounded-lg overflow-hidden border">
+                  <PointMap
+                    lat={course.turningMarkLat}
+                    lng={course.turningMarkLng}
+                    name={course.turningMarkName}
+                    type="turning"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="h-[300px] rounded-lg overflow-hidden border bg-muted flex items-center justify-center">
+                <p className="text-muted-foreground">No turning mark defined</p>
+              </div>
+            )
+          ) : (
+            // For one-way: show finish point
+            <>
+              <h3 className="text-lg font-semibold mb-4">Finish Point: {course.finishName}</h3>
+              <p className="text-sm text-muted-foreground mb-4 font-mono">
+                {course.finishType === "LINE" ? "Line: " : "Point: "}
+                {course.finishLat.toFixed(6)}, {course.finishLng.toFixed(6)}
+                {course.finishType === "LINE" && course.finishLine2Lat && course.finishLine2Lng && (
+                  <> ↔ {course.finishLine2Lat.toFixed(6)}, {course.finishLine2Lng.toFixed(6)}</>
+                )}
+              </p>
+              <div className="h-[300px] rounded-lg overflow-hidden border">
+                <PointMap
+                  lat={course.finishLat}
+                  lng={course.finishLng}
+                  name={course.finishName}
+                  type="end"
+                  pointType={course.finishType}
+                  lat2={course.finishLine2Lat || undefined}
+                  lng2={course.finishLine2Lng || undefined}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <ApproveCourseForm
+        courseId={course.id}
+        token={token}
+        courseData={{
           id: course.id,
           name: course.name,
+          description: course.description,
+          country: course.country,
           courseType: course.courseType,
           startName: course.startName,
           startLat: course.startLat,
           startLng: course.startLng,
+          startType: course.startType,
+          startLine2Lat: course.startLine2Lat,
+          startLine2Lng: course.startLine2Lng,
           finishName: course.finishName,
           finishLat: course.finishLat,
           finishLng: course.finishLng,
+          finishType: course.finishType,
+          finishLine2Lat: course.finishLine2Lat,
+          finishLine2Lng: course.finishLine2Lng,
           turningMarkName: course.turningMarkName,
           turningMarkLat: course.turningMarkLat,
           turningMarkLng: course.turningMarkLng,
         }}
-        token={token}
       />
     </div>
 
@@ -179,6 +270,12 @@ export default async function ApproveCoursePage({ searchParams }: Props) {
             startName={course.startName}
             finishName={course.finishName}
             courseType={course.courseType}
+            startType={course.startType}
+            startLine2Lat={course.startLine2Lat}
+            startLine2Lng={course.startLine2Lng}
+            finishType={course.finishType}
+            finishLine2Lat={course.finishLine2Lat}
+            finishLine2Lng={course.finishLine2Lng}
             turningMarkLat={course.turningMarkLat}
             turningMarkLng={course.turningMarkLng}
             turningMarkName={course.turningMarkName}

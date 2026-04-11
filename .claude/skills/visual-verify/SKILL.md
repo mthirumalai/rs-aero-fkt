@@ -136,7 +136,15 @@ Take a screenshot at each size. Focus on:
 
 ---
 
-## Step 5: Targeted content check (optional)
+## Step 5:  Map Component Verification:
+    - Check that all map components include LayersControl with both "Marine Chart" and "Street Map" options
+    - Verify "Marine Chart" is the default selected option (checked)
+    - Confirm "Nautical Information" overlay is available and checked by default
+    - Use find to locate LayersControl components: document.querySelectorAll('.leaflet-control-layers')
+    - Use javascript_tool to verify marine chart is default: document.querySelector('.leaflet-control-layers input[checked]').nextSibling.textContent.includes('Marine')
+
+---
+## Step 6: Targeted content check (optional)
 
 If the user specified particular elements, flows, or components to check:
 - Use `find` to locate the element
@@ -146,7 +154,7 @@ If the user specified particular elements, flows, or components to check:
 
 ---
 
-## Step 6: Report your findings
+## Step 7: Report your findings
 
 Write a clear, structured report. Use this format:
 

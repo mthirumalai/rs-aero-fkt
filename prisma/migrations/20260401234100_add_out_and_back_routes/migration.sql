@@ -1,6 +1,5 @@
 -- CreateEnum
--- Note: CourseType enum was created manually
--- CREATE TYPE "CourseType" AS ENUM ('POINT_TO_POINT', 'OUT_AND_BACK');
+CREATE TYPE "CourseType" AS ENUM ('POINT_TO_POINT', 'OUT_AND_BACK');
 
 -- AlterTable
 -- Add support for out-and-back routes with turning mark coordinates
