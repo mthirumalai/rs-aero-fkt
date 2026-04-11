@@ -392,14 +392,30 @@ export async function POST(req: NextRequest) {
     let raceEndIndex: number | undefined;
 
     if ('timingDetails' in validation && validation.timingDetails) {
-      raceStartIndex = validation.timingDetails.lastStartCrossingIndex;
-      raceEndIndex = validation.timingDetails.firstFinishCrossingIndex;
+      // Convert indices from timedPoints to full points array
+      const timedPoints = normalizedParsed.points.filter((p) => p.time !== null);
+      const allPoints = normalizedParsed.points;
+
+      // Find the corresponding indices in the full points array
+      if (validation.timingDetails.lastStartCrossingIndex !== undefined) {
+        const timedStartPoint = timedPoints[validation.timingDetails.lastStartCrossingIndex];
+        raceStartIndex = allPoints.findIndex(p => p === timedStartPoint);
+      }
+
+      if (validation.timingDetails.firstFinishCrossingIndex !== undefined) {
+        const timedFinishPoint = timedPoints[validation.timingDetails.firstFinishCrossingIndex];
+        raceEndIndex = allPoints.findIndex(p => p === timedFinishPoint);
+      }
 
       console.log('🎯 Race timing indices detected:', {
-        raceStartIndex,
-        raceEndIndex,
+        timedPointsRaceStart: validation.timingDetails.lastStartCrossingIndex,
+        timedPointsRaceEnd: validation.timingDetails.firstFinishCrossingIndex,
+        allPointsRaceStart: raceStartIndex,
+        allPointsRaceEnd: raceEndIndex,
         startCrossings: validation.timingDetails.startLineCrossings,
-        finishCrossings: validation.timingDetails.finishLineCrossings
+        finishCrossings: validation.timingDetails.finishLineCrossings,
+        totalPoints: allPoints.length,
+        timedPoints: timedPoints.length
       });
     }
 
