@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Polyline, Marker, useMap, LayersControl } from "react-leaflet";
+import { useEffect, useMemo, useState } from "react";
+import { MapContainer, TileLayer, Polyline, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GpxPoint } from "@/lib/gpx/parser";
-
-// Fix marker icons
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+import { useLeafletInit } from "@/lib/map/leaflet-init";
+import { LayerToggleControl } from "@/components/map/shared/LayerToggleControl";
 
 // Create icons dynamically to ensure they're visible
 const createTrackPointIcon = (selectionMode: "start" | "end" | null) => new L.DivIcon({
@@ -159,6 +153,9 @@ interface Props {
 }
 
 export default function CourseCreationMapInner({ points, selectedStartIndex, selectedEndIndex, onPointSelect, selectionMode }: Props) {
+  useLeafletInit();
+  const [marine, setMarine] = useState(true);
+
   const polyline = useMemo(
     () => points.map((p): [number, number] => [p.lat, p.lon]),
     [points]
@@ -177,29 +174,21 @@ export default function CourseCreationMapInner({ points, selectedStartIndex, sel
   const cursorClass = selectionMode ? "cursor-crosshair" : "cursor-default";
 
   return (
-    <div className={`w-full h-full ${cursorClass}`}>
+    <div className={`w-full h-full ${cursorClass} relative`}>
       <MapContainer center={center} zoom={12} style={{ height: "100%", width: "100%" }}>
-        <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="Marine Chart">
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Street Map">
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.Overlay checked name="Nautical Information">
-            <TileLayer
-              attribution='&copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
-              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
-              maxZoom={18}
-            />
-          </LayersControl.Overlay>
-        </LayersControl>
+        {/* Base layer */}
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {/* Marine overlay (conditional) */}
+        {marine && (
+          <TileLayer
+            attribution='&copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+            url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+            maxZoom={18}
+          />
+        )}
         <Polyline positions={polyline} color="#0ea5e9" weight={3} opacity={0.7} />
         <MapContent
           points={points}
@@ -209,6 +198,9 @@ export default function CourseCreationMapInner({ points, selectedStartIndex, sel
           selectionMode={selectionMode}
         />
       </MapContainer>
+
+      {/* Layer toggle control */}
+      <LayerToggleControl marine={marine} onToggle={setMarine} />
     </div>
   );
 }

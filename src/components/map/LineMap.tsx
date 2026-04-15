@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
 // Create a complete dynamic map component to avoid SSR and hook issues
-const InteractiveLineMapInner = dynamic(
-  () => import("./InteractiveLineMapInner").then((mod) => mod.InteractiveLineMapInner),
+const LineMapInner = dynamic(
+  () => import("./LineMapInner").then((mod) => mod.LineMapInner),
   {
     ssr: false,
     loading: () => (
@@ -26,7 +26,7 @@ interface Props {
   className?: string;
 }
 
-export function InteractiveLineMap({ type, lat, lng, lat2, lng2, onLocationChange, className }: Props) {
+export function LineMap({ type, lat, lng, lat2, lng2, onLocationChange, className }: Props) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function InteractiveLineMap({ type, lat, lng, lat2, lng2, onLocationChang
 
   return (
     <div className={className || "h-[300px]"}>
-      <InteractiveLineMapInner
+      <LineMapInner
         type={type}
         lat={lat}
         lng={lng}

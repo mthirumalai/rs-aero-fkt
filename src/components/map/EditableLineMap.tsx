@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
 // Simple wrapper for the interactive map to avoid SSR and multiple rendering issues
-const MapComponentInner = dynamic(() => import("./SimpleInteractiveMapInner"), {
+const MapComponentInner = dynamic(() => import("./EditableLineMapInner"), {
   ssr: false,
   loading: () => (
     <div className="bg-muted rounded-lg flex items-center justify-center h-[300px]">
@@ -23,7 +23,7 @@ interface Props {
   onLocationChange: (lat: number, lng: number, lat2?: number, lng2?: number) => void;
 }
 
-export function SimpleInteractiveMap({ type, lat, lng, lat2, lng2, purpose, onLocationChange }: Props) {
+export function EditableLineMap({ type, lat, lng, lat2, lng2, purpose, onLocationChange }: Props) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {

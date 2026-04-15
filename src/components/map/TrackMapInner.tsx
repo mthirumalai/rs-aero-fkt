@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
-import { MapContainer, TileLayer, Polyline, Marker, useMap, LayersControl } from "react-leaflet";
-import L from "leaflet";
+import { useEffect, useRef, useMemo, useState } from "react";
+import { MapContainer, TileLayer, Polyline, Marker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { GpxPoint } from "@/lib/gpx/parser";
+import { useLeafletInit } from "@/lib/map/leaflet-init";
+import { MARKER_ICONS } from "@/lib/map/marker-icons";
+import { LayerToggleControl } from "@/components/map/shared/LayerToggleControl";
 
 interface CourseInfo {
   startLat: number;
@@ -22,14 +24,6 @@ interface CourseInfo {
   courseType: "ONE_WAY" | "OUT_AND_BACK";
 }
 
-// Fix marker icons
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
 const boatIcon = new L.DivIcon({
   className: "",
   html: `<div style="
@@ -41,31 +35,6 @@ const boatIcon = new L.DivIcon({
   "></div>`,
   iconSize: [20, 20],
   iconAnchor: [10, 10],
-});
-
-// Create custom icons for start/finish points
-const startIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const finishIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const turningMarkIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
 });
 
 // Binary search: find index of largest point.time <= targetMs
@@ -152,6 +121,9 @@ interface Props {
 }
 
 export default function TrackMapInner({ points, currentTimeMs, courseInfo, raceStartIndex, raceEndIndex }: Props) {
+  useLeafletInit();
+  const [marine, setMarine] = useState(true);
+
   const polylineSegments = useMemo(() => {
     const allPositions = points.map((p): [number, number] => [p.lat, p.lon]);
 
@@ -200,28 +172,21 @@ export default function TrackMapInner({ points, currentTimeMs, courseInfo, raceS
   const center: [number, number] = [points[0].lat, points[0].lon];
 
   return (
-    <MapContainer center={center} zoom={12} style={{ height: "100%", width: "100%" }}>
-      <LayersControl position="topright">
-        <LayersControl.BaseLayer checked name="Marine Chart">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Street Map">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.Overlay checked name="Nautical Information">
+    <div className="relative h-full">
+      <MapContainer center={center} zoom={12} style={{ height: "100%", width: "100%" }}>
+        {/* Base layer */}
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {/* Marine overlay (conditional) */}
+        {marine && (
           <TileLayer
             attribution='&copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
             url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
             maxZoom={18}
           />
-        </LayersControl.Overlay>
-      </LayersControl>
+        )}
       {/* Track polylines with color coding */}
       {polylineSegments.map((segment, index) => (
         <Polyline
@@ -240,13 +205,13 @@ export default function TrackMapInner({ points, currentTimeMs, courseInfo, raceS
           {/* Start point/line */}
           <Marker
             position={[courseInfo.startLat, courseInfo.startLng]}
-            icon={startIcon}
+            icon={MARKER_ICONS.start}
           />
           {courseInfo.startType === "LINE" && courseInfo.startLine2Lat && courseInfo.startLine2Lng && (
             <>
               <Marker
                 position={[courseInfo.startLine2Lat, courseInfo.startLine2Lng]}
-                icon={startIcon}
+                icon={MARKER_ICONS.start}
               />
               <Polyline
                 positions={[[courseInfo.startLat, courseInfo.startLng], [courseInfo.startLine2Lat, courseInfo.startLine2Lng]]}
@@ -262,13 +227,13 @@ export default function TrackMapInner({ points, currentTimeMs, courseInfo, raceS
             <>
               <Marker
                 position={[courseInfo.finishLat, courseInfo.finishLng]}
-                icon={finishIcon}
+                icon={MARKER_ICONS.end}
               />
               {courseInfo.finishType === "LINE" && courseInfo.finishLine2Lat && courseInfo.finishLine2Lng && (
                 <>
                   <Marker
                     position={[courseInfo.finishLine2Lat, courseInfo.finishLine2Lng]}
-                    icon={finishIcon}
+                    icon={MARKER_ICONS.end}
                   />
                   <Polyline
                     positions={[[courseInfo.finishLat, courseInfo.finishLng], [courseInfo.finishLine2Lat, courseInfo.finishLine2Lng]]}
@@ -285,11 +250,15 @@ export default function TrackMapInner({ points, currentTimeMs, courseInfo, raceS
           {courseInfo.courseType === "OUT_AND_BACK" && courseInfo.turningMarkLat && courseInfo.turningMarkLng && (
             <Marker
               position={[courseInfo.turningMarkLat, courseInfo.turningMarkLng]}
-              icon={turningMarkIcon}
+              icon={MARKER_ICONS.turningMark}
             />
           )}
         </>
       )}
-    </MapContainer>
+      </MapContainer>
+
+      {/* Layer toggle control */}
+      <LayerToggleControl marine={marine} onToggle={setMarine} />
+    </div>
   );
 }

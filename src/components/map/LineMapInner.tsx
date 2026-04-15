@@ -140,7 +140,7 @@ function LineDrawingComponent({ type, lat, lng, lat2, lng2, onLocationChange }: 
   );
 }
 
-export function InteractiveLineMapInner({ type, lat, lng, lat2, lng2, onLocationChange }: Props) {
+export function LineMapInner({ type, lat, lng, lat2, lng2, onLocationChange }: Props) {
   const center: [number, number] = [lat, lng];
   const zoom = 14;
 

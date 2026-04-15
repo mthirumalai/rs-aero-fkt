@@ -173,7 +173,7 @@ export default function ApprovalMapInner({
               </Marker>
               <Polyline
                 positions={[[startLat, startLng], [turningMarkLat, turningMarkLng]]}
-                color="#ec008c"
+                color="#3b82f6"
                 weight={2}
                 dashArray="6 4"
                 opacity={0.8}
@@ -211,7 +211,7 @@ export default function ApprovalMapInner({
             {/* Course route line */}
             <Polyline
               positions={[[startLat, startLng], [finishLat, finishLng]]}
-              color="#ec008c"
+              color="#3b82f6"
               weight={2}
               dashArray="6 4"
               opacity={0.8}

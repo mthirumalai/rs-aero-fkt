@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { parseGpxXml } from "@/lib/gpx/parser";
 import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import { parseVelocitkCsv } from "@/lib/velocitek/parser";
+import { StatusMessage, SuccessCard } from "@/components/ui/alert";
 
 interface Props {
   courseId: string;
@@ -374,25 +375,15 @@ export function FktSubmitForm({ courseId, submitterName, submitterEmail, preferr
   if (success) {
     return (
       <div className="space-y-4">
-        <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
-          <p className="text-2xl font-bold text-green-800 mb-2">FKT Submitted!</p>
-          <p className="text-green-700">
-            Your GPX track has been validated. Redirecting to your attempt page...
-          </p>
-        </div>
+        <SuccessCard
+          title="FKT Submitted!"
+          description="Your GPX track has been validated. Redirecting to your attempt page..."
+        />
 
         {photoUploadWarning && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md text-sm">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <span className="text-yellow-400">⚠️</span>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">Photo Upload Issue</h3>
-                <p className="mt-1 text-sm text-yellow-700">{photoUploadWarning}</p>
-              </div>
-            </div>
-          </div>
+          <StatusMessage variant="warning" title="Photo Upload Issue">
+            {photoUploadWarning}
+          </StatusMessage>
         )}
       </div>
     );
@@ -401,14 +392,16 @@ export function FktSubmitForm({ courseId, submitterName, submitterEmail, preferr
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div ref={errorRef} className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-          {error}
+        <div ref={errorRef}>
+          <StatusMessage variant="error">
+            {error}
+          </StatusMessage>
         </div>
       )}
       {uploadProgress && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md text-sm">
+        <StatusMessage variant="info">
           {uploadProgress}
-        </div>
+        </StatusMessage>
       )}
 
       {/* Sailor Details */}

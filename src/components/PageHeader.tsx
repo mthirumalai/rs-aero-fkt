@@ -6,7 +6,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
   return (
-    <div style={{ backgroundColor: "#ffffff", height: "60px" }} className="border-b flex items-center px-4 relative">
+    <div className="bg-background h-[60px] border-b flex items-center px-4 relative">
       {/* Center - Title */}
       <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col justify-center text-center">
         <h1 className="text-2xl font-bold text-foreground whitespace-nowrap">{title}</h1>

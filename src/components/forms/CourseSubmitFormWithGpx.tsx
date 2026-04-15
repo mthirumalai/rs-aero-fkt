@@ -13,7 +13,7 @@ import type { GpxPoint } from "@/lib/gpx/parser";
 import { parseVelocitkCsv } from "@/lib/velocitek/parser";
 import { parseVccXml } from "@/lib/velocitek/vcc-parser";
 import CourseCreationMap from "@/components/map/CourseCreationMap";
-import { SimpleInteractiveMap } from "@/components/map/SimpleInteractiveMap";
+import { EditableLineMap } from "@/components/map/EditableLineMap";
 import { CoordinateEditor } from "@/components/forms/CoordinateEditor";
 
 type SubmissionMode = "manual" | "track_file" | "out_and_back";
@@ -1133,7 +1133,7 @@ export function CourseSubmitFormWithGpx() {
           {mode === "manual" && form.startLat.trim().length > 0 && form.startLng.trim().length > 0 && !isNaN(parseFloat(form.startLat)) && !isNaN(parseFloat(form.startLng)) && (
             <div className="space-y-2">
               <Label>Interactive Map</Label>
-              <SimpleInteractiveMap
+              <EditableLineMap
                 type={form.startType}
                 lat={parseFloat(form.startLat) || 0}
                 lng={parseFloat(form.startLng) || 0}
@@ -1252,7 +1252,7 @@ export function CourseSubmitFormWithGpx() {
                 {mode === "manual" && form.finishLat.trim().length > 0 && form.finishLng.trim().length > 0 && !isNaN(parseFloat(form.finishLat)) && !isNaN(parseFloat(form.finishLng)) && (
                   <div className="space-y-2">
                     <Label>Interactive Map</Label>
-                    <SimpleInteractiveMap
+                    <EditableLineMap
                       type={form.finishType}
                       lat={parseFloat(form.finishLat) || 0}
                       lng={parseFloat(form.finishLng) || 0}

@@ -8,14 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { COUNTRY_NAMES, REGION_LABELS, getRegion } from "@/lib/regions";
 import { parseCoordinate, formatCoord } from "@/lib/coords";
+import { useFormState } from "@/hooks/useFormState";
+import { SuccessCard, StatusMessage } from "@/components/ui/alert";
+import { FormSection } from "@/components/forms/FormSection";
 
 export function CourseSubmitForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const [form, setForm] = useState({
+  // Use shared form state hook
+  const formState = useFormState({
     name: "",
     description: "",
     country: "US",
@@ -94,18 +95,16 @@ export function CourseSubmitForm() {
     <h1 className="text-3xl font-bold mb-8">Submit a Course</h1>
   );
 
-  if (success) {
+  if (formState.success) {
     return (
-      <div className="text-center py-12 bg-green-50 rounded-lg border border-green-200">
-        <p className="text-2xl font-bold text-green-800 mb-2">Route Submitted!</p>
-        <p className="text-green-700">
-          Your route has been submitted for admin review. You&apos;ll see it appear on the
-          courses page once approved.
-        </p>
+      <SuccessCard
+        title="Route Submitted!"
+        description="Your route has been submitted for admin review. You'll see it appear on the courses page once approved."
+      >
         <Button className="mt-6" variant="outline" onClick={() => router.push("/courses")}>
           Back to Courses
         </Button>
-      </div>
+      </SuccessCard>
     );
   }
 

@@ -52,6 +52,29 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Status colors for alerts and messages
+        status: {
+          success: {
+            light: "#dcfce7",     // bg-green-50 equivalent
+            DEFAULT: "#16a34a",   // bg-green-600 equivalent
+            dark: "#15803d",      // text-green-700 equivalent
+          },
+          error: {
+            light: "#fee2e2",     // bg-red-50 equivalent
+            DEFAULT: "#dc2626",   // bg-red-600 equivalent
+            dark: "#b91c1c",      // text-red-700 equivalent
+          },
+          warning: {
+            light: "#fef3c7",     // bg-yellow-50 equivalent
+            DEFAULT: "#d97706",   // bg-yellow-600 equivalent
+            dark: "#92400e",      // text-yellow-700 equivalent
+          },
+          info: {
+            light: "#dbeafe",     // bg-blue-50 equivalent
+            DEFAULT: "#2563eb",   // bg-blue-600 equivalent
+            dark: "#1d4ed8",      // text-blue-700 equivalent
+          },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

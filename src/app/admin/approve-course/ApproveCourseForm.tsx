@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { SimpleInteractiveMap } from "@/components/map/SimpleInteractiveMap";
+import { EditableLineMap } from "@/components/map/EditableLineMap";
 
 interface CourseData {
   id: string;
@@ -275,7 +275,7 @@ export function ApproveCourseForm({ courseId, token, courseData }: Props) {
             </div>
           </div>
 
-          <SimpleInteractiveMap
+          <EditableLineMap
             type={editedCourse.startType}
             lat={editedCourse.startLat}
             lng={editedCourse.startLng}
@@ -327,7 +327,7 @@ export function ApproveCourseForm({ courseId, token, courseData }: Props) {
               </div>
             </div>
 
-            <SimpleInteractiveMap
+            <EditableLineMap
               type={editedCourse.finishType}
               lat={editedCourse.finishLat}
               lng={editedCourse.finishLng}

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { StatusMessage } from "@/components/ui/alert";
 
 interface Provider {
   id: string;
@@ -68,17 +69,19 @@ export default function SignInPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
-          {error === "OAuthSignin" && "Error occurred during OAuth sign-in"}
-          {error === "OAuthCallback" && "Error occurred during OAuth callback"}
-          {error === "OAuthCreateAccount" && "Could not create OAuth account"}
-          {error === "EmailCreateAccount" && "Could not create email account"}
-          {error === "Callback" && "Error in callback handler"}
-          {error === "OAuthAccountNotLinked" && "Account already exists with different provider"}
-          {error === "EmailSignin" && "Error sending email"}
-          {error === "CredentialsSignin" && "Invalid credentials"}
-          {error === "SessionRequired" && "Please sign in to access this page"}
-          {!["OAuthSignin", "OAuthCallback", "OAuthCreateAccount", "EmailCreateAccount", "Callback", "OAuthAccountNotLinked", "EmailSignin", "CredentialsSignin", "SessionRequired"].includes(error) && "An error occurred during sign-in"}
+        <div className="mb-6">
+          <StatusMessage variant="error">
+            {error === "OAuthSignin" && "Error occurred during OAuth sign-in"}
+            {error === "OAuthCallback" && "Error occurred during OAuth callback"}
+            {error === "OAuthCreateAccount" && "Could not create OAuth account"}
+            {error === "EmailCreateAccount" && "Could not create email account"}
+            {error === "Callback" && "Error in callback handler"}
+            {error === "OAuthAccountNotLinked" && "Account already exists with different provider"}
+            {error === "EmailSignin" && "Error sending email"}
+            {error === "CredentialsSignin" && "Invalid credentials"}
+            {error === "SessionRequired" && "Please sign in to access this page"}
+            {!["OAuthSignin", "OAuthCallback", "OAuthCreateAccount", "EmailCreateAccount", "Callback", "OAuthAccountNotLinked", "EmailSignin", "CredentialsSignin", "SessionRequired"].includes(error) && "An error occurred during sign-in"}
+          </StatusMessage>
         </div>
       )}
 

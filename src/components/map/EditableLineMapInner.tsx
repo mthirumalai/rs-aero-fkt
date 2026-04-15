@@ -1,35 +1,13 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, LayersControl } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
-
-// Fix default marker icons in Next.js (required for Leaflet to work)
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
-// Create custom icons for different purposes
-const greenIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const redIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+import { useLeafletInit } from "@/lib/map/leaflet-init";
+import { MARKER_ICONS } from "@/lib/map/marker-icons";
+import { LayerToggleControl } from "@/components/map/shared/LayerToggleControl";
 
 interface Props {
   type: "POINT" | "LINE";
@@ -72,7 +50,10 @@ function MapClickHandler({ type, onLocationChange }: {
   return null;
 }
 
-export default function SimpleInteractiveMapInner({ type, lat, lng, lat2, lng2, purpose, onLocationChange }: Props) {
+export default function EditableLineMapInner({ type, lat, lng, lat2, lng2, purpose, onLocationChange }: Props) {
+  useLeafletInit();
+  const [marine, setMarine] = useState(true);
+
   // Local state for undo/save functionality
   const [originalCoords, setOriginalCoords] = useState({ lat, lng, lat2, lng2 });
   const [currentCoords, setCurrentCoords] = useState({ lat, lng, lat2, lng2 });
@@ -124,15 +105,15 @@ export default function SimpleInteractiveMapInner({ type, lat, lng, lat2, lng2, 
   }, [originalCoords]);
 
   // Determine colors based on purpose
-  const primaryIcon = purpose === "start" ? greenIcon : redIcon;
-  const secondaryIcon = purpose === "start" ? greenIcon : redIcon;
+  const primaryIcon = purpose === "start" ? MARKER_ICONS.start : MARKER_ICONS.end;
+  const secondaryIcon = purpose === "start" ? MARKER_ICONS.start : MARKER_ICONS.end;
   const lineColor = purpose === "start" ? "green" : "red";
 
   const center: [number, number] = [currentCoords.lat, currentCoords.lng];
 
   return (
     <div className="space-y-2">
-      <div className="h-[300px] w-full border border-gray-300 rounded-lg overflow-hidden">
+      <div className="h-[300px] w-full border border-gray-300 rounded-lg overflow-hidden relative">
         <MapContainer
           center={center}
           zoom={15}
@@ -142,27 +123,19 @@ export default function SimpleInteractiveMapInner({ type, lat, lng, lat2, lng2, 
           doubleClickZoom={true}
           scrollWheelZoom={true}
         >
-          <LayersControl position="topright">
-            <LayersControl.BaseLayer checked name="Marine Chart">
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Street Map">
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.Overlay checked name="Nautical Information">
-              <TileLayer
-                attribution='&copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
-                url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
-                maxZoom={18}
-              />
-            </LayersControl.Overlay>
-          </LayersControl>
+          {/* Base layer */}
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {/* Marine overlay (conditional) */}
+          {marine && (
+            <TileLayer
+              attribution='&copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+              maxZoom={18}
+            />
+          )}
 
           <MapClickHandler type={type} onLocationChange={(lat, lng, lat2, lng2) => {
             const newCoords = { lat, lng, lat2, lng2 };
@@ -205,6 +178,9 @@ export default function SimpleInteractiveMapInner({ type, lat, lng, lat2, lng2, 
             </>
           )}
         </MapContainer>
+
+        {/* Layer toggle control */}
+        <LayerToggleControl marine={marine} onToggle={setMarine} />
       </div>
 
       {/* Undo/Save buttons */}
