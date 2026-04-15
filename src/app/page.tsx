@@ -9,7 +9,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="bg-primary text-white py-20 px-4">
         <div className="container mx-auto max-w-3xl text-center">
-          <h1 className="font-display mb-4 tracking-widest uppercase whitespace-nowrap text-[clamp(1.8rem,5.5vw,4.5rem)]">
+          <h1 className="font-display mb-4 tracking-widest uppercase text-balance text-[clamp(1.8rem,5.5vw,4.5rem)]">
             RS Aero Fastest Known Times
           </h1>
           <p className="text-lg text-white/80 mb-8 font-sans">

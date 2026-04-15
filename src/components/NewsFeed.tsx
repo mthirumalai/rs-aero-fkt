@@ -116,7 +116,8 @@ export function NewsFeed() {
         </h2>
 
         <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px]">
             <tbody>
               {events.map((event) => (
                 <tr key={event.id} className="border-b last:border-b-0">
@@ -170,6 +171,7 @@ export function NewsFeed() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="text-center mt-8 space-x-4">
